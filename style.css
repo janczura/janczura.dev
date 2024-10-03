@@ -1,0 +1,135 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+/* Stylowanie zdjęcia w nagłówku */
+.photo {
+    margin-bottom: 20px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Ogólny styl sekcji */
+.section {
+    position: relative;
+    width: 100%;
+    color: #fff;
+    padding: 100px 0;
+    text-align: center;
+    transform: skewY(-12deg);
+    overflow: hidden;
+}
+
+.section-content {
+    transform: skewY(12deg);
+    padding: 40px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Stylowanie różnych sekcji */
+.header {
+    background-color: #4a90e2;
+}
+
+.header h1 {
+    font-size: 48px;
+    color: #fff;
+}
+
+.about {
+    background-color: #50b3a2;
+}
+
+.about h2 {
+    font-size: 36px;
+}
+
+.skills {
+    background-color: #34495e;
+}
+
+.skills h2 {
+    font-size: 36px;
+}
+
+.experience {
+    background-color: #e74c3c;
+}
+
+.education {
+    background-color: #ae55b0fd;
+}
+
+.experience h2 {
+    font-size: 36px;
+}
+
+/* Lista umiejętności */
+.skills-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.skills-list li {
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 10px;
+    padding: 20px;
+    border-radius: 10px;
+    flex: 1 1 calc(33% - 20px);
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Styl stopki */
+footer {
+    background-color: #333;
+    padding: 20px;
+    color: #fff;
+    text-align: center;
+}
+
+footer a {
+    color: #4a90e2;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: #fff;
+}
