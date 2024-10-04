@@ -1,4 +1,17 @@
-/* Reset */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@font-face {
+    font-family: 'GTA';
+    src: url('../fonts/gta.ttf') format('truetype');
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,8 +19,10 @@
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #f4f4f4;
+    font-family: "Sriracha", cursive;
+    font-weight: 700;
+    font-style: normal;
+    background-color: #e3e3e3;
     color: #333;
     display: flex;
     justify-content: center;
@@ -23,7 +38,6 @@ body {
     margin: 0 auto;
 }
 
-/* Stylowanie zdjęcia w nagłówku */
 .photo {
     margin-bottom: 20px;
     width: 150px;
@@ -40,32 +54,33 @@ body {
     object-fit: cover;
 }
 
-/* Ogólny styl sekcji */
 .section {
     position: relative;
     width: 100%;
     color: #fff;
     padding: 100px 0;
     text-align: center;
-    transform: skewY(-12deg);
+    transform: skewY(-18deg);
     overflow: hidden;
+    animation: fadeIn 2s ease-in forwards;
 }
 
 .section-content {
-    transform: skewY(12deg);
+    transform: skewY(18deg);
     padding: 40px;
     max-width: 800px;
     margin: 0 auto;
 }
 
-/* Stylowanie różnych sekcji */
 .header {
-    background-color: #4a90e2;
+    background-color: #000000;
+    font-family: 'GTA',sans-serif;
 }
 
 .header h1 {
     font-size: 48px;
     color: #fff;
+    text-shadow: 2.5px 1px 0px rgb(248, 5, 249);
 }
 
 .about {
@@ -89,14 +104,13 @@ body {
 }
 
 .education {
-    background-color: #ae55b0fd;
+    background-color: #bd2ffffd;
 }
 
 .experience h2 {
     font-size: 36px;
 }
 
-/* Lista umiejętności */
 .skills-list {
     list-style-type: none;
     padding: 0;
@@ -115,12 +129,14 @@ body {
     font-weight: bold;
 }
 
-/* Styl stopki */
 footer {
     background-color: #333;
     padding: 20px;
-    color: #fff;
+    color: #fbff00;
     text-align: center;
+    transform: skewY(5deg);
+    position: relative;
+    z-index: 1;
 }
 
 footer a {
@@ -128,6 +144,10 @@ footer a {
     text-decoration: none;
     font-weight: bold;
     transition: color 0.3s ease;
+}
+
+footer p {
+    transform: skewY(0deg);
 }
 
 footer a:hover {
