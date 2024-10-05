@@ -4,58 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anna Nowak - Tłumacz Przysięgły Języka Ukraińskiego</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div class="container">
-        <!-- Nagłówek -->
-        <header>
-            <div class="header-content">
+    <header>
+        <div class="header-content">
+            <div>
                 <h1>Anna Nowak</h1>
                 <p>Tłumacz Przysięgły Języka Ukraińskiego</p>
             </div>
-        </header>
-
-        <!-- O mnie -->
-        <section class="section about">
-            <div class="section-content">
-                <h2>O mnie</h2>
-                <p>Jestem doświadczonym tłumaczem przysięgłym języka ukraińskiego z wieloletnią praktyką w tłumaczeniach dokumentów urzędowych, sądowych oraz prywatnych. Oferuję tłumaczenia pisemne i ustne, z dbałością o najwyższą jakość i zgodność z obowiązującymi przepisami. Gwarantuję profesjonalizm, terminowość oraz pełną poufność wszystkich powierzonych zleceń.</p>
+            <div class="language-switch">
+                <button onclick="changeLanguage('pl')" class="lang-btn">Polski</button>
+                <button onclick="changeLanguage('ua')" class="lang-btn">Українська</button>
             </div>
-        </section>
+        </div>
+    </header>
+    
 
-        <!-- Usługi -->
-        <section class="section services">
-            <div class="section-content">
-                <h2>Zakres usług</h2>
-                <ul>
-                    <li>Tłumaczenia przysięgłe dokumentów urzędowych</li>
-                    <li>Tłumaczenia sądowe i prawnicze</li>
-                    <li>Tłumaczenia aktów notarialnych i umów</li>
-                    <li>Tłumaczenia pism urzędowych</li>
-                    <li>Tłumaczenia ustne podczas spotkań i konferencji</li>
-                </ul>
-            </div>
-        </section>
+    <section class="section about">
+        <div class="section-content">
+            <h2>O mnie</h2>
+            <p>Jestem doświadczonym tłumaczem przysięgłym języka ukraińskiego z wieloletnią praktyką w tłumaczeniach dokumentów urzędowych, sądowych oraz prywatnych. Oferuję tłumaczenia pisemne i ustne, z dbałością o najwyższą jakość i zgodność z obowiązującymi przepisami. Gwarantuję profesjonalizm, terminowość oraz pełną poufność wszystkich powierzonych zleceń.</p>
+        </div>
+    </section>
 
-        <!-- Kontakt -->
-        <section class="section contact">
-            <div class="section-content">
-                <h2>Kontakt</h2>
-                <p><strong>Email:</strong> <a href="mailto:anna.nowak@example.com">anna.nowak@example.com</a></p>
-                <p><strong>Telefon:</strong> +48 123 456 789</p>
-                <p><strong>Adres:</strong> ul. Główna 123, 00-123 Warszawa</p>
-                <p>Zapraszam do kontaktu w celu omówienia szczegółów współpracy lub wyceny tłumaczenia.</p>
-            </div>
-        </section>
+    <section class="section services">
+        <div class="section-content">
+            <h2>Zakres usług</h2>
+            <ul>
+                <li>Tłumaczenia przysięgłe dokumentów urzędowych</li>
+                <li>Tłumaczenia sądowe i prawnicze</li>
+                <li>Tłumaczenia aktów notarialnych i umów</li>
+                <li>Tłumaczenia pism urzędowych</li>
+                <li>Tłumaczenia ustne podczas spotkań i konferencji</li>
+            </ul>
+        </div>
+    </section>
 
-        <!-- Stopka -->
-        <footer>
-            <p>&copy; 2024 Anna Nowak. Wszelkie prawa zastrzeżone.</p>
-        </footer>
-    </div>
+    <section class="section contact">
+        <div class="section-content">
+            <h2>Kontakt</h2>
+            <p><strong>Email:</strong> <a href="mailto:anna.nowak@example.com" id="contact-email">anna.nowak@example.com</a></p>
+            <p><strong>Telefon:</strong> <span id="contact-phone">+48 123 456 789</span></p>
+            <p><strong>Adres:</strong> <span id="contact-address">ul. Główna 123, 00-123 Warszawa</span></p>
+            <p id="contact-description">Zapraszam do kontaktu w celu omówienia szczegółów współpracy lub wyceny tłumaczenia.</p>
+        </div>
+    </section>
+    
 
+    <footer>
+        <p>&copy; 2024 Anna Nowak. Wszelkie prawa zastrzeżone.</p>
+    </footer>
+
+    <script>
+        const translations = {};
+      
+        function loadLanguage(lang) {
+          fetch(`json/${lang}.json`)
+            .then(response => response.json())
+            .then(data => {
+              translations[lang] = data;
+              applyTranslations(lang);
+            })
+            .catch(error => console.error('Error loading language:', error));
+        }
+      
+        function applyTranslations(lang) {
+    document.title = translations[lang].title;
+    document.querySelector('header h1').textContent = translations[lang].header.name;
+    document.querySelector('header p').textContent = translations[lang].header.profession;
+    document.querySelector('.about h2').textContent = translations[lang].about.title;
+    document.querySelector('.about p').textContent = translations[lang].about.description;
+    document.querySelector('.services h2').textContent = translations[lang].services.title;
+
+    const servicesList = document.querySelectorAll('.services ul li');
+    translations[lang].services.list.forEach((item, index) => {
+        servicesList[index].textContent = item;
+    });
+
+    document.querySelector('.contact h2').textContent = translations[lang].contact.title;
+    document.querySelector('#contact-email').textContent = translations[lang].contact.email;
+    document.querySelector('#contact-phone').textContent = translations[lang].contact.phone;
+    document.querySelector('#contact-address').textContent = translations[lang].contact.address;
+    document.querySelector('#contact-description').textContent = translations[lang].contact.description;
+    
+    document.querySelector('footer p').textContent = translations[lang].footer;
+}
+
+      
+        function changeLanguage(lang) {
+          if (!translations[lang]) {
+            loadLanguage(lang);
+          } else {
+            applyTranslations(lang);
+          }
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.lang-btn[onclick="changeLanguage('${lang}')"]`).classList.add('active');
+        }
+      
+        loadLanguage('pl');
+    </script>
+          
 </body>
 </html>

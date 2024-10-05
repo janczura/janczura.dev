@@ -18,11 +18,18 @@ body {
 }
 
 header {
-    background: linear-gradient(to bottom, #0057b7, #ffd700); /* Niebieski do żółtego */
+    background: linear-gradient(to bottom, #0057b7, #ffd700);
     color: #fff;
-    text-align: center;
     padding: 100px 20px;
     animation: fadeIn 2s ease-in;
+    position: relative;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 header h1 {
@@ -36,6 +43,31 @@ header p {
     font-weight: 400;
 }
 
+.language-switch {
+    display: flex;
+    gap: 10px;
+    margin-top: 0;
+}
+
+.lang-btn {
+    background-color: #0057b7;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.lang-btn:hover {
+    background-color: #ffd700;
+}
+
+.lang-btn.active {
+    background-color: #ffd700;
+    color: #0057b7;
+}
 
 section {
     background-color: #fff;
@@ -93,7 +125,6 @@ footer {
     margin-top: 20px;
 }
 
-/* Animacje */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -111,5 +142,21 @@ footer {
     to {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .language-switch {
+        margin-top: 10px;
+    }
+
+    .lang-btn {
+        padding: 8px 15px;
+        font-size: 14px;
     }
 }
