@@ -103,8 +103,12 @@ body {
     background-color: #e74c3c;
 }
 
+.projects {
+    background-color: #ffa224;
+}
+
 .education {
-    background-color: #bd2ffffd;
+    background-color: rgba(129, 0, 232, 0.99);
 }
 
 .experience h2 {
