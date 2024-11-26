@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Dane o przedmiotach
     const items = [
         {
             id: "item1",
@@ -27,18 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemList = document.getElementById("item-list");
     const itemsContainer = document.getElementById("items-container");
 
-    // Generowanie listy po lewej stronie
     items.forEach(item => {
         const listItem = document.createElement("li");
         listItem.textContent = item.title;
         listItem.dataset.target = item.id;
         listItem.addEventListener("click", () => {
-            document.getElementById(item.id).scrollIntoView({ behavior: "smooth" });
+            document.getElementById(item.id).scrollIntoView({behavior: "smooth"});
         });
         itemList.appendChild(listItem);
     });
 
-    // Generowanie szczegółów przedmiotów
     items.forEach(item => {
         const itemSection = document.createElement("div");
         itemSection.className = "item";

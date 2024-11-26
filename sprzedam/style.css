@@ -213,27 +213,27 @@ footer a:hover {
 .contact-section a:hover {
     color: #e3e3e3;
 }
+
 /* Stylowanie przycisków */
 button {
-    background-color: #ffd38c;  /* Kolor tła */
-    color: #fff;               /* Kolor tekstu */
-    font-size: 18px;           /* Rozmiar czcionki */
-    font-weight: bold;         /* Pogrubiony tekst */
-    padding: 10px 20px;        /* Wewnętrzne odstępy */
-    border: none;              /* Brak obramowania */
-    border-radius: 5px;        /* Zaokrąglone rogi */
-    cursor: pointer;          /* Kursor wskazujący kliknięcie */
-    transition: background-color 0.3s ease, transform 0.3s ease;  /* Efekt przejścia */
-    margin: 10px;              /* Odstępy między przyciskami */
+    background-color: #ffd38c;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    margin: 10px;
 }
 
-/* Styl przycisku po najechaniu */
 button:hover {
-    background-color: #9c4000;  /* Zmiana tła po najechaniu */
-    transform: translateY(-3px); /* Lekkie uniesienie przycisku */
+    background-color: #9c4000;
+    transform: translateY(-3px);
 }
 
-/* Stylowanie przycisku w stanie aktywnym (po kliknięciu) */
+
 button:active {
-    transform: translateY(0);   /* Zwrócenie do początkowej pozycji po kliknięciu */
+    transform: translateY(0);
 }
