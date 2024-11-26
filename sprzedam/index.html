@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Na Sprzedaż</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1>Przedmioty na Sprzedaż</h1>
+    </header>
+
+    <div class="offer-section">
+        <h2>Nasza Oferta</h2>
+        <ul class="offer-list">
+            <li><a href="#item4">Komputer stacjonarny PC</a></li>
+        </ul>
+    </div>
+
+    <div class="product-detail">
+        <div id="item4" class="item">
+            <div class="photo">
+                <img src="https://via.placeholder.com/150" alt="Komputer PC">
+            </div>
+            <h2>Komputer PC</h2>
+            <p><strong>Wysokowydajny zestaw PC – idealny dla graczy i profesjonalistów</strong></p>
+            <p>
+                Ten zestaw komputerowy został zaprojektowany z myślą o najbardziej wymagających użytkownikach, którzy oczekują najwyższej jakości, wydajności i niezawodności. Doskonały wybór zarówno dla graczy szukających płynnej rozgrywki w najwyższych ustawieniach graficznych, jak i profesjonalistów pracujących z wymagającymi aplikacjami do renderowania, edycji wideo czy modelowania 3D.
+            </p>
+            <p>
+                Komputer wyposażony jest w procesor AMD Ryzen 7 3700X, który zapewnia niezwykłą wydajność dzięki 8 rdzeniom i 16 wątkom. Dzięki niemu możesz bez problemu obsługiwać najbardziej wymagające zadania. Z kolei karta graficzna Sapphire Radeon RX 5700 XT PULSE 8GB GDDR6 zagwarantuje Ci płynność obrazu w najnowszych grach, nawet w 4K.
+            </p>
+            <p>
+                Zestaw dysków (ADATA 1TB M.2 PCIe NVMe XPG GAMMIX S5 oraz KIOXIA 500GB M.2 PCIe NVMe EXCERIA) umożliwia błyskawiczny dostęp do danych i szybkie uruchamianie systemu oraz aplikacji. Pamięć RAM G.SKILL 64GB (4x16GB) 3600MHz TridentZ RGB Neo nie tylko zapewnia dużą pojemność i wysoką prędkość, ale również dodaje estetyki dzięki efektownemu podświetleniu RGB.
+            </p>
+            <p>
+                Wysokiej jakości chłodzenie SilentiumPC Fortis 5 ARGB 140mm utrzymuje temperatury na optymalnym poziomie, nawet podczas intensywnego obciążenia. A całość jest zamknięta w eleganckiej obudowie Corsair Crystal Series 680X RGB High Airflow TG White, która zapewnia doskonały przepływ powietrza i świetny wygląd.
+            </p>
+            <p>
+                <strong>Specyfikacja zestawu:</strong>
+            <ul>
+                <li>SilentiumPC Fortis 5 ARGB 140mm</li>
+                <li>G.SKILL 64GB (4x16GB) 3600MHz CL16 TridentZ RGB Neo</li>
+                <li>Dysk dodatkowy: KIOXIA 500GB M.2 PCIe NVMe EXCERIA</li>
+                <li>Główny dysk: ADATA 1TB M.2 PCIe NVMe XPG GAMMIX S5</li>
+                <li>Corsair TX650M 650W 80 Plus Gold</li>
+                <li>Corsair Crystal Series 680X RGB High Airflow TG White</li>
+                <li>Gigabyte B450 AORUS ELITE</li>
+                <li>Sapphire Radeon RX 5700 XT PULSE 8GB GDDR6</li>
+                <li>AMD Ryzen 7 3700X</li>
+                <li>Thermal Grizzly Carbonaut Thermal Pad (CPU)</li>
+                <li><strong>Gratis:</strong> SilentiumPC Navis Evo ARGB 240 2x120mm</li>
+            </ul>
+            </p>
+            <p><strong>Cena: 4200 zł</strong></p>
+        </div>
+    </div>
+
+    <div class="contact-section">
+        <h2>Skontaktuj się z nami</h2>
+        <p>Jeśli masz jakiekolwiek pytania, skontaktuj się z nami.</p>
+
+        <p id="phone-number" style="display: none;">
+            Telefon: <span id="phone-display"></span>
+        </p>
+        <p id="email-number" style="display: none;">
+            E-mail: <span id="email-display"></span>
+        </p>
+
+        <button id="reveal-phone-btn">Pokaż telefon</button>
+        <button id="reveal-email-btn">Pokaż e-mail</button>
+    </div>
+
+    <script>
+        document.getElementById('reveal-phone-btn').addEventListener('click', function() {
+            var phoneNumber = '873162804866596311218';
+            var modifiedPhoneNumber = phoneNumber.replace(/[168]/g, '');
+            document.getElementById('phone-display').textContent = modifiedPhoneNumber;
+            document.getElementById('phone-number').style.display = 'block';
+            this.style.display = 'none';
+        });
+        document.getElementById('reveal-email-btn').addEventListener('click', function() {
+            var email = 'yyxsweqrhgipushzbjapxynpxyczufrwa@gmwxail.cwxoym';
+            var modifiedEmail = email.replace(/[bdfhkpqtvwxy]/g, '');
+            document.getElementById('email-display').textContent = modifiedEmail;
+            document.getElementById('email-number').style.display = 'block';
+            this.style.display = 'none';
+        });
+    </script>
+
+    <footer>
+        <p>
+            <a href="https://www.linkedin.com/in/serq0/">LinkedIn</a>
+        </p>
+        <p>&copy; <span id="current-year"></span> Sergiusz Jańczura. All rights reserved.</p>
+    </footer>
+</div>
+
+
+</body>
+</html>

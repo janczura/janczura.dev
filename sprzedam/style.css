@@ -1,0 +1,239 @@
+/* Animacja wczytywania */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Wczytanie fontu */
+@font-face {
+    font-family: 'GTA';
+    src: url('../fonts/gta.ttf') format('truetype');
+}
+
+/* Resetowanie domyślnych styli */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Stylowanie główne */
+body {
+    font-family: "Sriracha", cursive;
+    font-weight: 700;
+    font-style: normal;
+    background-color: #e3e3e3;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Kontener główny */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+/* Nagłówek strony */
+.header {
+    background-color: #000;
+    padding: 40px 20px;
+    text-align: center;
+    animation: fadeIn 2s ease-in forwards;
+}
+
+.header h1 {
+    font-family: 'GTA', sans-serif;
+    font-size: 48px;
+    color: #fff;
+    text-shadow: 2.5px 1px 0px rgb(248, 5, 249);
+}
+
+/* Sekcja z ofertami */
+.offer-section {
+    background-color: #50b3a2;
+    color: #fff;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.offer-section h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+}
+
+/* Lista ofert */
+.offer-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.offer-list li {
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 10px;
+    padding: 20px;
+    border-radius: 10px;
+    flex: 1 1 calc(33% - 20px);
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+.offer-list li a {
+    text-decoration: none;
+    color: #fff;
+}
+
+.offer-list li:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Sekcja szczegółów produktu */
+.product-detail {
+    margin-bottom: 40px;
+    text-align: center;
+    padding: 20px;
+    background-color: #34495e;
+    color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 2s ease-in forwards;
+}
+
+/* Zdjęcie produktu */
+.product-image {
+    margin-bottom: 20px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Tytuł i opis produktu */
+.product-detail h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.product-detail p {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+/* Lista cech produktu */
+.product-detail ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    text-align: left;
+    margin: 10px auto;
+    max-width: 600px;
+}
+
+.product-detail ul li {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+/* Cena produktu */
+.product-detail strong {
+    font-size: 20px;
+    color: #e74c3c;
+}
+
+/* Stopka */
+footer {
+    background-color: #333;
+    padding: 20px;
+    color: #fbff00;
+    text-align: center;
+}
+
+footer p {
+    margin: 0;
+}
+
+footer a {
+    color: #4a90e2;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: #fff;
+}
+
+/* Sekcja kontaktowa */
+.contact-section {
+    background-color: #ffa224;
+    color: #fff;
+    padding: 40px 20px;
+    text-align: center;
+    animation: fadeIn 2s ease-in forwards;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.contact-section h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+}
+
+.contact-section p {
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+.contact-section a {
+    color: #fff;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.contact-section a:hover {
+    color: #e3e3e3;
+}
+/* Stylowanie przycisków */
+button {
+    background-color: #ffd38c;  /* Kolor tła */
+    color: #fff;               /* Kolor tekstu */
+    font-size: 18px;           /* Rozmiar czcionki */
+    font-weight: bold;         /* Pogrubiony tekst */
+    padding: 10px 20px;        /* Wewnętrzne odstępy */
+    border: none;              /* Brak obramowania */
+    border-radius: 5px;        /* Zaokrąglone rogi */
+    cursor: pointer;          /* Kursor wskazujący kliknięcie */
+    transition: background-color 0.3s ease, transform 0.3s ease;  /* Efekt przejścia */
+    margin: 10px;              /* Odstępy między przyciskami */
+}
+
+/* Styl przycisku po najechaniu */
+button:hover {
+    background-color: #9c4000;  /* Zmiana tła po najechaniu */
+    transform: translateY(-3px); /* Lekkie uniesienie przycisku */
+}
+
+/* Stylowanie przycisku w stanie aktywnym (po kliknięciu) */
+button:active {
+    transform: translateY(0);   /* Zwrócenie do początkowej pozycji po kliknięciu */
+}
