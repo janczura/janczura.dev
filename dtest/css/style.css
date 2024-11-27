@@ -18,11 +18,7 @@ body {
 }
 
 header {
-    background: linear-gradient(to bottom, #0057b7, #ffd700);
-    color: #fff;
-    padding: 100px 20px;
-    animation: fadeIn 2s ease-in;
-    position: relative;
+
 }
 
 .header-content {
@@ -42,6 +38,21 @@ header p {
     font-size: 22px;
     font-weight: 400;
 }
+
+.header {
+    background:
+            url('../img/Przezroczysty.png'),
+            linear-gradient(to bottom, #005bbb, #ffd700);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 40vh;
+}
+
+
+
+
 
 .language-switch {
     display: flex;
@@ -85,6 +96,19 @@ section h2 {
     text-align: center;
 }
 
+section h3 {
+    text-align: center;
+    color: #00264d;
+    margin-bottom: 10px;
+}
+
+.section.about {
+    text-align: center;
+}
+.section.contact{
+    text-align: center;
+}
+
 section p,
 section ul {
     font-size: 18px;
@@ -108,6 +132,19 @@ ul li:hover {
     background-color: #cce5ff;
 }
 
+.cert-image {
+    width: 15%;
+    height: auto;
+    margin-right: 20px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.cert-image:hover {
+    transform: scale(1.1);
+}
+
+
+
 .contact a {
     color: #00264d;
     text-decoration: none;
@@ -118,12 +155,109 @@ ul li:hover {
 }
 
 footer {
-    text-align: center;
+    background-color: #333;
+    color: white;
     padding: 20px;
-    background-color: #00264d;
-    color: #fff;
-    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    position: relative;
+    bottom: 0;
+    width: 100%;
 }
+
+footer a {
+    color: #fff;
+    text-shadow: 0.5px 1px 0px rgb(248, 5, 249);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+.section.services {
+    background-color: #f9f9f9;
+    padding: 40px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    animation: slideIn 1s ease-out;
+}
+
+/* Nagłówek sekcji */
+.section.services h2 {
+    font-size: 36px;
+    color: #00264d;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Karty usług */
+.service-card {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+}
+
+.service-card h3 {
+    font-size: 24px;
+    color: #0057b7;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.service-card ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.service-card ul li {
+    background-color: #e6f2ff;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+.service-card ul li:hover {
+    background-color: #cce5ff;
+}
+
+@media (max-width: 768px) {
+    .section.services .section-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .service-card {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .section.services h2 {
+        font-size: 28px;
+    }
+
+    .service-card h3 {
+        font-size: 20px;
+    }
+
+    .service-card ul li {
+        font-size: 14px;
+    }
+}
+
+
 
 @keyframes fadeIn {
     from {
@@ -145,18 +279,4 @@ footer {
     }
 }
 
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        text-align: center;
-    }
 
-    .language-switch {
-        margin-top: 10px;
-    }
-
-    .lang-btn {
-        padding: 8px 15px;
-        font-size: 14px;
-    }
-}
