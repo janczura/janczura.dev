@@ -41,8 +41,8 @@ header p {
 
 .header {
     background:
-            url('../img/Przezroczysty.png'),
-            linear-gradient(to bottom, #005bbb, #ffd700);
+            url('../img/Oryginalny.png'),
+            linear-gradient(to bottom, #ffffff, #ffffff);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
