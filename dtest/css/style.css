@@ -235,3 +235,21 @@ footer a:hover {
         opacity: 1;
     }
 }
+
+@media (max-width: 768px) {
+    .service-cards {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .service-cards .card {
+        width: 100%;
+        padding: 20px;
+    }
+
+    #services h2 {
+        font-size: 1.8em;
+        margin-bottom: 20px;
+    }
+}
+
