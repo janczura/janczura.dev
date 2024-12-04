@@ -94,7 +94,7 @@
 
     <footer>
         <p>
-            <a href="https://forms.gle/mEJDJd3c1UGfHYFY6">Contact form</a>
+            E-mail: <span id="email-display"></span> <button id="reveal-email-btn">Show</button>
             LinkedIn:
             <a href="https://www.linkedin.com/in/serq0/">Sergiusz Jańczura</a>
         </p>
@@ -104,6 +104,14 @@
 
 <script>
     document.getElementById("current-year").textContent = new Date().getFullYear();
+
+    document.getElementById('reveal-email-btn').addEventListener('click', function () {
+            var email = 'kqjabndczxyuradhseqqqrgikvuvhsqvxyzk@prbdotbwdonmbdail.cxomy';
+            var modifiedEmail = email.replace(/[bdfhkqvwxy]/g, '');
+            document.getElementById('email-display').textContent = modifiedEmail;
+            document.getElementById('reveal-email-btn').style.display = 'block';
+            this.style.display = 'none';
+        });
 </script>
 </body>
 </html>
