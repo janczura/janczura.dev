@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Elusive - WoW Guild</title>
+    <style>
+        /* Global styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Times New Roman', serif;
+            background-color: #0a0a0a;
+            color: #e0cc80;
+            background-image: url('https://wow.zamimg.com/images/bg/bg-repeater.jpg');
+            background-attachment: fixed;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+            border: 1px solid #3a3a3a;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+        }
+
+        .guild-name {
+            font-family: 'LifeCraft', 'Times New Roman', serif;
+            font-size: 48px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px #000, 0 0 10px #8a5c2e;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .guild-motto {
+            font-style: italic;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+
+        /* Navigation */
+        nav {
+            background: linear-gradient(to bottom, #1e1e1e, #121212);
+            border: 1px solid #3a3a3a;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-menu li {
+            margin: 0 15px;
+        }
+
+        .nav-menu a {
+            color: #e0cc80;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 5px 10px;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            color: #ffd700;
+            border-color: #8a5c2e;
+            background-color: rgba(138, 92, 46, 0.2);
+            text-shadow: 0 0 5px #ffd700;
+        }
+
+        /* Sections */
+        .section {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #3a3a3a;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .section-title {
+            color: #ffd700;
+            font-family: 'LifeCraft', 'Times New Roman', serif;
+            font-size: 28px;
+            border-bottom: 1px solid #8a5c2e;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+
+        /* About section */
+        .about-content {
+            display: flex;
+            align-items: center;
+        }
+
+        .about-text {
+            flex: 1;
+            padding-right: 20px;
+        }
+
+        .about-image {
+            flex: 1;
+            text-align: center;
+        }
+
+        .about-image img {
+            max-width: 100%;
+            border: 1px solid #8a5c2e;
+            border-radius: 5px;
+        }
+
+        /* Members section */
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .member-card {
+            background: linear-gradient(to bottom, #1a1a1a, #121212);
+            border: 1px solid #3a3a3a;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .member-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .member-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid #8a5c2e;
+            margin: 0 auto 10px;
+            background-color: #0a0a0a;
+        }
+
+        .member-name {
+            color: #ffd700;
+            font-size: 18px;
+            margin: 5px 0;
+        }
+
+        .member-class {
+            color: #a0a0a0;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .member-rank {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #8a5c2e;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #a0a0a0;
+            font-size: 14px;
+            border-top: 1px solid #3a3a3a;
+            margin-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .about-content {
+                flex-direction: column;
+            }
+            
+            .about-text {
+                padding-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .nav-menu {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-menu li {
+                margin: 5px 0;
+            }
+        }
+
+        /* Custom font for WoW feel */
+        @font-face {
+            font-family: 'LifeCraft';
+            src: url('https://www.dafontfree.net/data/10/l/1732/LifeCraft.ttf') format('truetype');
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="guild-name">The Elusive</h1>
+            <p class="guild-motto">"Shadows Gather, Victory Follows"</p>
+        </header>
+
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#members">Members</a></li>
+                <li><a href="#achievements">Achievements</a></li>
+                <li><a href="#recruitment">Recruitment</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <section id="about" class="section">
+            <h2 class="section-title">About The Elusive</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>Founded in the shadows of Azeroth, The Elusive is a guild of skilled adventurers who specialize in overcoming the most challenging content World of Warcraft has to offer.</p>
+                    <p>We value teamwork, dedication, and a passion for the game. Our members come from all walks of life but share a common goal: to conquer every raid, dungeon, and challenge while maintaining a strong community spirit.</p>
+                    <p>Whether you're a veteran player or new to the game, The Elusive offers a home for those who seek excellence in their WoW experience.</p>
+                </div>
+                <div class="about-image">
+                    <img src="https://wow.zamimg.com/uploads/screenshots/normal/1050398.jpg" alt="Guild Group Photo">
+                </div>
+            </div>
+        </section>
+
+        <section id="members" class="section">
+            <h2 class="section-title">Our Members</h2>
+            <div class="members-grid">
+                <div class="member-card">
+                    <div class="member-avatar" style="background-image: url('https://wow.zamimg.com/images/wow/icons/large/classicon_rogue.jpg'); background-size: cover;"></div>
+                    <h3 class="member-name">Shadowstrike</h3>
+                    <p class="member-class">Night Elf Rogue</p>
+                    <span class="member-rank">Guild Master</span>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar" style="background-image: url('https://wow.zamimg.com/images/wow/icons/large/classicon_druid.jpg'); background-size: cover;"></div>
+                    <h3 class="member-name">Moonwhisper</h3>
+                    <p class="member-class">Tauren Druid</p>
+                    <span class="member-rank">Officer</span>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar" style="background-image: url('https://wow.zamimg.com/images/wow/icons/large/classicon_mage.jpg'); background-size: cover;"></div>
+                    <h3 class="member-name">Frostweaver</h3>
+                    <p class="member-class">Human Mage</p>
+                    <span class="member-rank">Raider</span>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar" style="background-image: url('https://wow.zamimg.com/images/wow/icons/large/classicon_paladin.jpg'); background-size: cover;"></div>
+                    <h3 class="member-name">Lightbringer</h3>
+                    <p class="member-class">Draenei Paladin</p>
+                    <span class="member-rank">Officer</span>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar" style="background-image: url('https://wow.zamimg.com/images/wow/icons/large/classicon_hunter.jpg'); background-size: cover;"></div>
+                    <h3 class="member-name">Beastwhisper</h3>
+                    <p class="member-class">Orc Hunter</p>
+                    <span class="member-rank">Raider</span>
+                </div>
+                <div class="member-card">
+                    <div class="member-avatar" style="background-image: url('https://wow.zamimg.com/images/wow/icons/large/classicon_priest.jpg'); background-size: cover;"></div>
+                    <h3 class="member-name">Soulmender</h3>
+                    <p class="member-class">Undead Priest</p>
+                    <span class="member-rank">Healer</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="achievements" class="section">
+            <h2 class="section-title">Guild Achievements</h2>
+            <ul>
+                <li>Server First: Castle Nathria Cleared</li>
+                <li>Realm Top 10: Sanctum of Domination</li>
+                <li>Mythic+ Season 4: All +20s Timed</li>
+                <li>Ahead of the Curve: Every Raid Tier Since Legion</li>
+                <li>PvP: Gladiator Season Achievements</li>
+            </ul>
+            <p>We continue to push content and set new goals with each expansion and season.</p>
+        </section>
+
+        <section id="recruitment" class="section">
+            <h2 class="section-title">Recruitment</h2>
+            <p>The Elusive is currently looking for skilled players to join our ranks. We're particularly interested in:</p>
+            <ul>
+                <li>Exceptional Healers (Resto Druid, Holy Priest)</li>
+                <li>Skilled Tanks (Protection Paladin, Blood DK)</li>
+                <li>DPS with Mythic+ experience</li>
+            </ul>
+            <p>Requirements:</p>
+            <ul>
+                <li>Consistent raid attendance (3 nights/week)</li>
+                <li>Willingness to learn and improve</li>
+                <li>Positive attitude and teamwork</li>
+                <li>Properly geared for current content</li>
+            </ul>
+            <p>We value performance over gear score. If you think you have what it takes, contact us!</p>
+        </section>
+
+        <section id="contact" class="section">
+            <h2 class="section-title">Contact Us</h2>
+            <p>Interested in joining The Elusive or have questions?</p>
+            <p>Reach out to us through:</p>
+            <ul>
+                <li>In-game: /w Shadowstrike, Moonwhisper, or Lightbringer</li>
+                <li>Discord: discord.gg/theelusive (example link)</li>
+                <li>Battle.net: GuildMaster#1234</li>
+            </ul>
+            <p>We look forward to hearing from you!</p>
+        </section>
+
+        <footer>
+            <p id="copyright">&copy; <span id="year"></span> The Elusive Guild. All rights reserved.</p>
+            <script>
+                document.getElementById("year").textContent = new Date().getFullYear();
+            </script>
+            <p>World of Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc.</p>
+        </footer>
+    </div>
+</body>
+</html>
