@@ -21,6 +21,7 @@
           rel="stylesheet">
 </head>
 <body>
+<canvas id="background-canvas"></canvas>
 
 <div class="container">
     <section class="section header">
@@ -123,5 +124,167 @@
             this.style.display = 'none';
         });
 </script>
+
+
+<script>
+    const canvas = document.getElementById('background-canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let mouse = {
+        x: null,
+        y: null,
+        radius: 100
+    };
+
+    window.addEventListener('mousemove', function(e) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    window.addEventListener('resize', function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    function getWindX() {
+        return Math.sin(Date.now() / 2000) * 0.03;
+    }
+
+
+    class Ball {
+        constructor(x, y, dx, dy, radius) {
+            this.x = x;
+            this.y = y;
+            this.dx = dx;
+            this.dy = dy;
+            this.radius = radius;
+            this.mass = Math.random() * 4 + 6; // 6-10
+            this.random = Math.random() * (1 - 0.9) + 0.9; // 0.9 - 1
+            this.alpha = Math.random();
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgb(255,255,255)';
+            ctx.shadowColor = 'rgb(208,2,251)';
+            ctx.shadowBlur = 20;
+            ctx.globalAlpha = this.alpha;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        update(balls) {
+            this.dx += getWindX();
+
+            this.dx *= this.random;
+            this.dy *= this.random;
+
+            if (this.x + this.radius > canvas.width || this.x - this.radius < 0) this.dx = -this.dx;
+            if (this.y + this.radius > canvas.height || this.y - this.radius < 0) this.dy = -this.dy;
+
+            const dxMouse = this.x - mouse.x;
+            const dyMouse = this.y - mouse.y;
+            const distanceMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+            if (distanceMouse < mouse.radius + this.radius) {
+                const angle = Math.atan2(dyMouse, dxMouse);
+                const force = (mouse.radius - distanceMouse) / mouse.radius;
+                const repulse = force * 0.5;
+                this.dx += Math.cos(angle) * repulse;
+                this.dy += Math.sin(angle) * repulse;
+            }
+
+            for (let i = 0; i < balls.length; i++) {
+                if (this === balls[i]) continue;
+                const dx = this.x - balls[i].x;
+                const dy = this.y - balls[i].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < this.radius + balls[i].radius) {
+                    resolveCollision(this, balls[i]);
+                }
+            }
+
+            this.x += this.dx;
+            this.y += this.dy;
+            this.draw();
+        }
+    }
+
+    function resolveCollision(p1, p2) {
+        const xVelocityDiff = p1.dx - p2.dx;
+        const yVelocityDiff = p1.dy - p2.dy;
+        const xDist = p2.x - p1.x;
+        const yDist = p2.y - p1.y;
+
+        if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
+            const angle = -Math.atan2(p2.y - p1.y, p2.x - p1.x);
+            const m1 = p1.mass;
+            const m2 = p2.mass;
+
+            const u1 = rotate({ x: p1.dx, y: p1.dy }, angle);
+            const u2 = rotate({ x: p2.dx, y: p2.dy }, angle);
+
+            const v1 = {
+                x: u1.x * (m1 - m2) / (m1 + m2) + u2.x * 2 * m2 / (m1 + m2),
+                y: u1.y
+            };
+            const v2 = {
+                x: u2.x * (m2 - m1) / (m1 + m2) + u1.x * 2 * m1 / (m1 + m2),
+                y: u2.y
+            };
+
+            const finalV1 = rotate(v1, -angle);
+            const finalV2 = rotate(v2, -angle);
+
+            p1.dx = finalV1.x;
+            p1.dy = finalV1.y;
+            p2.dx = finalV2.x;
+            p2.dy = finalV2.y;
+        }
+    }
+
+    function rotate(velocity, angle) {
+        return {
+            x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
+            y: velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle)
+        };
+    }
+
+    let balls = [];
+    const numberOfBalls = 120;
+
+    for (let i = 0; i < numberOfBalls; i++) {
+        let radius = 5;
+        let x = Math.random() * (canvas.width - radius * 2) + radius;
+        let y = Math.random() * (canvas.height - radius * 2) + radius;
+        let dx = (Math.random() - 0.5) * 1.5;
+        let dy = (Math.random() - 0.5) * 1.5;
+
+        if (i !== 0) {
+            for (let j = 0; j < balls.length; j++) {
+                const dist = Math.hypot(x - balls[j].x, y - balls[j].y);
+                if (dist - radius * 2 < 0) {
+                    x = Math.random() * (canvas.width - radius * 2) + radius;
+                    y = Math.random() * (canvas.height - radius * 2) + radius;
+                    j = -1;
+                }
+            }
+        }
+
+        balls.push(new Ball(x, y, dx, dy, radius));
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        balls.forEach(ball => ball.update(balls));
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+</script>
+
 </body>
 </html>
