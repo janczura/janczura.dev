@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ARC Raiders – Skill Calculator</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+<div class="bg-arc"></div>
+<div id="tooltip"></div>
+<h1 class="title">ARC Raiders – Skill Calculator</h1>
+
+<div class="tree-wrapper">
+    <svg id="skillTree" width="1000" height="1200"></svg>
+    <div class="side-panel">
+        <h2 id="spentPoints">Spent points: <span id="totalPoints">0</span></h2>
+
+        <h3 id="shareBuild">Share build:</h3>
+        <input id="buildLink" type="text" readonly />
+
+        <button id="copyLinkBtn">Copy</button>
+        <span id="copyFeedback" style="margin-left:10px; color:#0f0; opacity:0;">Copied!</span>
+
+        <h3>JSON:</h3>
+        <textarea id="buildOutput"></textarea>
+        <button id="loadBuild">Load build from JSON</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

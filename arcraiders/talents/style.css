@@ -1,0 +1,202 @@
+body {
+    background: #0c0e12;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: white;
+    text-align: center;
+}
+
+.title {
+    margin-top: 20px;
+    font-size: 32px;
+    color: #ffffff;
+    text-shadow: 0 0 15px #fff;
+}
+
+.tree-container {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+svg {
+    background: transparent;
+}
+
+/* Węzły */
+.skill-node {
+    transition: stroke-width 0.15s ease-out;
+}
+.skill-node:hover {
+    stroke-width: 6;
+    cursor: pointer;
+}
+
+
+.node-text {
+    font-size: 14px;
+    font-weight: bold;
+    fill: white;
+    pointer-events: none;
+}
+
+.node-points {
+    font-size: 20px;
+    fill: white;
+    stroke: black;
+    stroke-width: 0.4px;
+    stroke-linejoin: round;
+    text-anchor: middle;
+    pointer-events: none;
+}
+
+/* Neonowe kolory */
+.green { stroke: #00ffa6; }
+.yellow { stroke: #ffd23f; }
+.red { stroke: #ff3131; }
+
+.locked {
+    opacity: 0.25;
+}
+
+.tree-wrapper {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.side-panel {
+    width: 260px;
+    text-align: left;
+    background: #11151d;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px #000;
+
+    max-height: 550px;     /* ograniczenie wysokości */
+}
+
+
+#buildOutput {
+    width: 100%;
+    height: 180px;
+    background: #0c0e12;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    resize: none;
+    border-radius: 8px;
+}
+
+#shareBuild {
+    display: block;
+    text-align: center;
+}
+
+#spentPoints {
+    display: block;
+    text-align: center;
+}
+
+#buildLink {
+    width: calc(100% - 10px);
+    margin: 5px 5px 0 -5px;
+    padding: 8px;
+    border-radius: 6px;
+    background: #0c0e12;
+    border: 1px solid #444;
+    color: #fff;
+}
+
+
+#tooltip {
+    position: absolute;
+    background: rgba(20, 20, 30, 0.95);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    color: #fff;
+    font-size: 14px;
+    max-width: 250px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -120%);
+    transition: opacity .15s ease-out;
+    z-index: 999;
+}
+
+body {
+    margin: 0;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: url("bg.png") no-repeat center center fixed;
+    background-size: cover;
+
+    /* Domyślna jasność — 100% */
+    filter: brightness(0.6);
+
+    /* Wysyłamy pod całą treść */
+    z-index: -1;
+}
+
+.skill-lock {
+    pointer-events: none;  /* lock nie przeszkadza w klikaniu node */
+    opacity: 0.9;
+}
+
+#totalPoints {
+    color: #E7362E;
+}
+
+
+#copyLinkBtn {
+    margin: 6px auto 4px auto;
+    display: block;
+    padding: 6px 14px;
+    background:#222;
+    color:white;
+    border:1px solid #555;
+    border-radius:6px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+#copyLinkBtn:hover {
+    background:#333;
+    border-color:#888;
+}
+
+#loadBuild {
+   margin: 6px auto 4px auto;
+   display: block;
+   padding: 6px 14px;
+   background:#222;
+   color:white;
+   border:1px solid #555;
+   border-radius:6px;
+   cursor:pointer;
+   transition:0.2s;
+}
+
+#loadBuild:hover {
+    background:#333;
+    border-color:#888;
+}
+
+
+#copyFeedback {
+    display: block;
+    text-align: center;   /* środek */
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
