@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ARC Raiders - Blueprint Exchange</title>
+    <link rel="icon" type="svg" href="icon.svg">
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="app">
+    <header class="topbar">
+        <h1>ARC Raiders — Blueprint Exchange</h1>
+        <p class="tagline">Select blueprints, enter contact details, choose an option — the link updates automatically.</p>
+    </header>
+
+    <section class="controls">
+        <label class="label">
+            Your name / contact / Embark ID / Discord:
+            <input id="contact" type="text" placeholder="np. Discord: Player#1234" />
+        </label>
+
+        <label class="label">
+            Option:
+            <select id="mode">
+                <option value="sell">Selling</option>
+                <option value="buy">Buying</option>
+            </select>
+        </label>
+
+        <div class="actions">
+            <button id="copyBtn" class="btn ghost">Copy link</button>
+        </div>
+
+        <div id="output" class="link-output"></div>
+    </section>
+
+    <section class="grid-wrap">
+        <h2 class="grid-title">Blueprints</h2>
+        <div id="blueprintGrid" class="blueprint-grid"></div>
+    </section>
+
+    <footer class="footer">
+        <small>The shared link contains only encrypted data: contact details, mode, and selected blueprints.</small>
+    </footer>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="Dodanie img, edycja index.html" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;janczura&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/janczura/janczura.dev.git&quot;,
+    &quot;accountId&quot;: &quot;14c78e3c-f32d-4727-8802-a7abca739b6d&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="36ZH2jZiyQqfK4zOy2KHkmuMPf5" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/deserROG/IdeaProjects/janczura.dev/arcraiders/market"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\market" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.26199.169" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="" />
+      <created>1765206967188</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1765206967188</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Arc Raiders - talent calculator">
+      <option name="closed" value="true" />
+      <created>1765218002301</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1765218002301</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Poprawki favicon">
+      <option name="closed" value="true" />
+      <created>1765219948278</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1765219948278</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Poprawki favicon">
+      <option name="closed" value="true" />
+      <created>1765221004035</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1765221004035</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Zmiana favicon">
+      <option name="closed" value="true" />
+      <created>1765221905381</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1765221905381</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Zmiana favicon">
+      <option name="closed" value="true" />
+      <created>1765222606071</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1765222606071</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Dodanie img, edycja index.html">
+      <option name="closed" value="true" />
+      <created>1765242712245</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1765242712245</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Dodanie img, edycja index.html">
+      <option name="closed" value="true" />
+      <created>1765242722144</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1765242722144</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Dodanie img, edycja index.html">
+      <option name="closed" value="true" />
+      <created>1765242772498</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1765242772498</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Dodanie img, edycja index.html">
+      <option name="closed" value="true" />
+      <created>1765242788144</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1765242788144</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Arc Raiders - talent calculator" />
+    <MESSAGE value="Poprawki favicon" />
+    <MESSAGE value="Zmiana favicon" />
+    <MESSAGE value="Dodanie img, edycja index.html" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dodanie img, edycja index.html" />
+  </component>
+</project>
