@@ -4,7 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="Dodanie img, edycja index.html" />
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="Dodanie img, edycja index.html">
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/bg.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/icon.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/script.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/styles.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/damageLeapers.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/destroyTicks.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/harvestPlants.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/img/damageLeapers.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/searchFirstWaveHusks.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/searchFrozenRaiderContainers.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/template.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -48,13 +62,28 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/deserROG/IdeaProjects/janczura.dev/arcraiders/market"
+    "last_opened_file_path": "C:/Users/deserROG/IdeaProjects/janczura.dev/arcraiders/trials/trials"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\trials\trials" />
+      <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\trials" />
       <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\market" />
     </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="janczura.dev" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="janczura.dev" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -143,7 +172,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765242788144</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Dodanie img, edycja index.html">
+      <option name="closed" value="true" />
+      <created>1765242936854</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1765242936854</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
