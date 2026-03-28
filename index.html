@@ -14,6 +14,12 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sergiusz Jańczura — Java Developer z Poznania. Specjalista backend z doświadczeniem w Spring, PostgreSQL, Docker i dużych systemach e-commerce.">
+    <meta property="og:title" content="Sergiusz Jańczura — Java Developer">
+    <meta property="og:description" content="Backend specialist with experience in Spring, PostgreSQL, Docker and large-scale e-commerce systems.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://janczura.dev">
+    <meta property="og:image" content="https://janczura.dev/img/foto.jpg">
     <title>Sergiusz Jańczura</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,6 +30,16 @@
 <body>
 <canvas id="background-canvas"></canvas>
 
+<nav class="site-nav">
+    <div class="nav-inner">
+        <a href="#about">#about</a>
+        <a href="#experience">#experience</a>
+        <a href="#projects">#projects</a>
+        <a href="#skills">#skills</a>
+        <a href="#education">#education</a>
+    </div>
+</nav>
+
 <div class="container">
     <section class="section header">
         <div class="section-content">
@@ -32,10 +48,15 @@
             </div>
             <h1>Sergiusz Jańczura</h1>
             <p>Java Developer | Poznań</p>
+            <div class="header-links">
+                <a class="header-link-btn github" href="https://github.com/janczura" target="_blank" rel="noopener noreferrer">↗ GitHub</a>
+                <a class="header-link-btn gitlab" href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer">↗ GitLab</a>
+                <span class="header-link-btn cv">↓ Download CV <span class="soon-badge">SOON</span></span>
+            </div>
         </div>
     </section>
 
-    <section class="section about">
+    <section id="about" class="section about">
         <div class="section-content">
             <h2>About me</h2>
             <p>I am a Java Developer with many years of experience in building and maintaining complex backend
@@ -49,7 +70,7 @@
         </div>
     </section>
 
-    <section class="section experience">
+    <section id="experience" class="section experience">
         <div class="section-content">
             <h2>Experience</h2>
             <p>Java Developer @ <a href="https://hummerce.com/">Hummerce</a> (03.2020 - Current)</p>
@@ -58,7 +79,7 @@
         </div>
     </section>
 
-    <section class="section projects">
+    <section id="projects" class="section projects">
         <div class="section-content">
             <h2>Some projects</h2>
             <p>WoW Fishing Bot</p>
@@ -68,7 +89,7 @@
         </div>
     </section>
 
-    <section class="section skills">
+    <section id="skills" class="section skills">
         <div class="section-content">
             <h2>Skills</h2>
             <ul class="skills-list">
@@ -99,7 +120,7 @@
         </div>
     </section>
 
-    <section class="section education">
+    <section id="education" class="section education">
         <div class="section-content">
             <h2>Education</h2>
             <p><u>Master of Computer Science</u> 2020 - 2021 (Adam Mickiewicz University)</p>
@@ -110,8 +131,12 @@
     <footer>
         <p>
             E-mail: <span id="email-display"></span> <button id="reveal-email-btn">Show</button>
-            LinkedIn:
-            <a href="https://www.linkedin.com/in/serq0/">Sergiusz Jańczura</a>
+            &nbsp;·&nbsp;
+            LinkedIn: <a href="https://www.linkedin.com/in/serq0/">Sergiusz Jańczura</a>
+            &nbsp;·&nbsp;
+            GitHub: <a href="https://github.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
+            &nbsp;·&nbsp;
+            GitLab: <a href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
         </p>
         <p>&copy; <span id="current-year"></span> Sergiusz Jańczura. All rights reserved.</p>
     </footer>
