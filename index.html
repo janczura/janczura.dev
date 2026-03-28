@@ -120,10 +120,22 @@
     document.getElementById("current-year").textContent = new Date().getFullYear();
 
     document.getElementById('reveal-email-btn').addEventListener('click', function () {
-            var email = 'cmgoxbniytxxxfkkhacisbt@jiaybncizwwxxgfpxbura.dimpxxehkybvkxf';
-            var modifiedEmail = email.replace(/[bfghiklmpswxy]/g, '');
-            document.getElementById('email-display').textContent = modifiedEmail;
-            document.getElementById('reveal-email-btn').style.display = 'block';
+            // Encoded: base64( caesar+7( email ) ) with ZZ noise every 10 chars
+            var encoded = 'htMbF3w1jtZZMgGEQuhECgZZlrIdjt90i2ZZ5aFDszStUcZZiX==';
+
+            // Step 1 — .replace(): strip noise characters
+            var cleaned = encoded.replace(/ZZ/g, '');
+
+            // Step 2 — reverse Caesar cipher (shift −7)
+            var decaesared = cleaned.replace(/[a-zA-Z]/g, function (c) {
+                var base = c <= 'Z' ? 65 : 97;
+                return String.fromCharCode(((c.charCodeAt(0) - base - 7 + 26) % 26) + base);
+            });
+
+            // Step 3 — base64 decode
+            var email = atob(decaesared);
+
+            document.getElementById('email-display').textContent = email;
             this.style.display = 'none';
         });
 </script>
