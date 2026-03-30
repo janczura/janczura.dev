@@ -1093,6 +1093,15 @@ footer a:hover {
     border-color: var(--scarlet);
 }
 
+/* ─── Calligraphy stage ──────────────────────────────────────────────────── */
+#calligraphy-stage {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
 /* ─── Canvas ─────────────────────────────────────────────────────────────── */
 #background-canvas {
     position: fixed;
@@ -1101,7 +1110,133 @@ footer a:hover {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    opacity: 0.22;
+    opacity: 0.32;
+}
+
+/* ─── Lanterns ───────────────────────────────────────────────────────────── */
+@keyframes lanternSway {
+    0%, 100% { transform: rotate(-5deg); }
+    50%       { transform: rotate( 5deg); }
+}
+
+@keyframes lanternGlowFlicker {
+    0%, 100% {
+        box-shadow:
+            0 0 18px rgba(220,40,10,0.75),
+            0 0 40px rgba(200,60,0,0.30),
+            inset 0 0 14px rgba(255,120,0,0.20);
+    }
+    50% {
+        box-shadow:
+            0 0 30px rgba(255,70,20,0.95),
+            0 0 60px rgba(230,80,0,0.45),
+            inset 0 0 20px rgba(255,140,0,0.30);
+    }
+}
+
+.lantern {
+    position: fixed;
+    top: 56px;
+    z-index: 99;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: lanternSway 5s ease-in-out infinite;
+    transform-origin: top center;
+}
+
+.lantern-left  { left:  max(12px, calc(50% - 465px)); }
+.lantern-right {
+    right: max(12px, calc(50% - 465px));
+    animation-direction: reverse;
+}
+
+.lantern-string {
+    width: 1px;
+    height: 28px;
+    background: linear-gradient(to bottom, rgba(180,130,20,0.8), rgba(180,130,20,0.2));
+}
+
+.lantern-cap {
+    width: 30px;
+    height: 7px;
+    background: linear-gradient(135deg, rgba(255,220,60,0.95), rgba(180,120,0,0.9));
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(255,190,0,0.5);
+}
+
+.lantern-body {
+    width: 42px;
+    height: 62px;
+    background: radial-gradient(
+        ellipse 65% 55% at 38% 33%,
+        rgba(255,90,30,0.9) 0%,
+        rgba(200,10,10,0.97) 100%
+    );
+    border-radius: 50% / 44%;
+    position: relative;
+    overflow: hidden;
+    animation: lanternGlowFlicker 2.8s ease-in-out infinite;
+}
+
+.lantern-body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0, transparent 9px,
+        rgba(110,0,0,0.25) 9px, rgba(110,0,0,0.25) 10px
+    );
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.lantern-body::after {
+    content: attr(data-char);
+    font-family: var(--calligraphy);
+    font-size: 24px;
+    color: rgba(255,230,90,0.95);
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-shadow: 0 0 10px rgba(255,210,0,0.8);
+    line-height: 1;
+}
+
+.lantern-fringe {
+    display: flex;
+    gap: 4px;
+    padding: 0 4px;
+}
+
+.lantern-fringe span {
+    display: block;
+    width: 2px;
+    height: 16px;
+    background: linear-gradient(
+        to bottom,
+        rgba(255,200,40,0.95),
+        rgba(200,140,0,0.15)
+    );
+    border-radius: 0 0 50% 50%;
+}
+
+.lantern-tassel {
+    width: 2px;
+    height: 28px;
+    background: linear-gradient(
+        to bottom,
+        rgba(255,180,30,0.9),
+        rgba(200,130,0,0.1)
+    );
+    border-radius: 0 0 50% 50%;
+    margin-top: 2px;
+}
+
+@media (max-width: 980px) {
+    .lantern { display: none; }
 }
 
 /* ─── Fireworks ─────────────────────────────────────────────────────────── */

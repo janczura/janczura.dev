@@ -4,20 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="Dodanie img, edycja index.html">
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/bg.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/icon.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/script.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/styles.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/damageLeapers.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/destroyTicks.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/harvestPlants.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/img/damageLeapers.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/searchFirstWaveHusks.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/searchFrozenRaiderContainers.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/arcraiders/trials/trials/template.html" afterDir="false" />
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="Updated chinese style">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,19 +44,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/deserROG/IdeaProjects/janczura.dev/arcraiders/trials/trials"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/deserROG/IdeaProjects/janczura.dev/css&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\css" />
+      <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev" />
       <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\trials\trials" />
       <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\trials" />
       <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\market" />
@@ -180,7 +174,71 @@
       <option name="project" value="LOCAL" />
       <updated>1765242936854</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Dodanie sekcji trials, dodanie 5 triali, opisów, obrazków">
+      <option name="closed" value="true" />
+      <created>1766857224300</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1766857224300</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Updated style.css, email address changed">
+      <option name="closed" value="true" />
+      <created>1774711699336</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1774711699336</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Updated description and skills">
+      <option name="closed" value="true" />
+      <created>1774714007701</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1774714007701</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Updated github/gitlab">
+      <option name="closed" value="true" />
+      <created>1774719060472</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1774719060472</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Updated style.css">
+      <option name="closed" value="true" />
+      <created>1774812384691</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1774812384691</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Updated style.css">
+      <option name="closed" value="true" />
+      <created>1774822046709</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1774822046710</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Updated chinese style">
+      <option name="closed" value="true" />
+      <created>1774893632050</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1774893632050</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Updated chinese style">
+      <option name="closed" value="true" />
+      <created>1774895629721</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1774895629721</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -199,6 +257,12 @@
     <MESSAGE value="Poprawki favicon" />
     <MESSAGE value="Zmiana favicon" />
     <MESSAGE value="Dodanie img, edycja index.html" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dodanie img, edycja index.html" />
+    <MESSAGE value="Dodanie sekcji trials, dodanie 5 triali, opisów, obrazków" />
+    <MESSAGE value="Updated style.css, email address changed" />
+    <MESSAGE value="Updated description and skills" />
+    <MESSAGE value="Updated github/gitlab" />
+    <MESSAGE value="Updated style.css" />
+    <MESSAGE value="Updated chinese style" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated chinese style" />
   </component>
 </project>

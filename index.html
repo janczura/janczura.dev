@@ -29,7 +29,24 @@
 </head>
 <body>
 <canvas id="background-canvas"></canvas>
+<div id="calligraphy-stage"></div>
 
+<div class="lantern lantern-left">
+    <div class="lantern-string"></div>
+    <div class="lantern-cap"></div>
+    <div class="lantern-body" data-char="福"></div>
+    <div class="lantern-cap"></div>
+    <div class="lantern-fringe"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="lantern-tassel"></div>
+</div>
+<div class="lantern lantern-right">
+    <div class="lantern-string"></div>
+    <div class="lantern-cap"></div>
+    <div class="lantern-body" data-char="龍"></div>
+    <div class="lantern-cap"></div>
+    <div class="lantern-fringe"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="lantern-tassel"></div>
+</div>
 <nav class="site-nav">
     <div class="nav-inner">
         <a href="#about">#about</a>
@@ -383,6 +400,136 @@
         }
     }
 
+    // ── BambooStalk class ──────────────────────────────────────────────────
+    class BambooStalk {
+        constructor(xFrac, opts = {}) {
+            this.xFrac   = xFrac;
+            this.segH    = (opts.segH || 62) + Math.random() * 22;
+            this.segs    = (opts.segs || 9)  + Math.floor(Math.random() * 4);
+            this.w       = (opts.w    || 8)  + Math.random() * 3;
+            this.sway    = Math.random() * Math.PI * 2;
+            this.swaySpd = 0.0032 + Math.random() * 0.003;
+            this.swayAmp = 2.2 + Math.random() * 2.8;
+            this.leaves  = [];
+            for (let i = 1; i < this.segs; i++) {
+                if (Math.random() < 0.65) {
+                    this.leaves.push({
+                        seg:   i,
+                        side:  Math.random() < 0.5 ? 1 : -1,
+                        angle: Math.PI / 5 + Math.random() * Math.PI / 9,
+                        n:     2 + Math.floor(Math.random() * 2),
+                    });
+                }
+            }
+        }
+        get x() { return this.xFrac * canvas.width; }
+        draw() {
+            this.sway += this.swaySpd;
+            ctx.save();
+            ctx.translate(this.x, canvas.height);
+            for (let s = 0; s < this.segs; s++) {
+                const taper = 1 - (s / this.segs) * 0.38;
+                const sw    = this.w * taper;
+                const botY  = -s * this.segH;
+                const topY  = -(s + 1) * this.segH;
+                const drift = Math.sin(this.sway + s * 0.45) * this.swayAmp * (s / this.segs);
+                /* segment body */
+                const g = ctx.createLinearGradient(drift - sw / 2, 0, drift + sw / 2, 0);
+                g.addColorStop(0,   'rgba(28,62,14,0.88)');
+                g.addColorStop(0.4, 'rgba(62,118,28,0.84)');
+                g.addColorStop(1,   'rgba(22,50,10,0.88)');
+                ctx.fillStyle = g;
+                ctx.fillRect(drift - sw / 2, topY, sw, this.segH);
+                /* node */
+                ctx.fillStyle = 'rgba(15,38,7,0.95)';
+                ctx.fillRect(drift - sw / 2 - 2, botY - 3, sw + 4, 4);
+            }
+            /* leaves */
+            for (const lf of this.leaves) {
+                const s     = lf.seg;
+                const nodeY = -s * this.segH - 3;
+                const drift = Math.sin(this.sway + s * 0.45) * this.swayAmp * (s / this.segs);
+                const lsway = Math.sin(this.sway * 1.4 + s * 0.9) * 0.1;
+                ctx.save();
+                ctx.translate(drift + lf.side * (this.w * 0.5), nodeY);
+                ctx.rotate(lf.side * (lf.angle + lsway));
+                for (let li = 0; li < lf.n; li++) {
+                    ctx.save();
+                    ctx.rotate(li * lf.side * 0.28 - 0.14);
+                    ctx.beginPath();
+                    ctx.ellipse(20, 0, 24, 4, 0, 0, Math.PI * 2);
+                    ctx.fillStyle   = 'rgba(46,104,20,0.72)';
+                    ctx.shadowColor = 'rgba(20,60,8,0.4)';
+                    ctx.shadowBlur  = 5;
+                    ctx.fill();
+                    ctx.restore();
+                }
+                ctx.restore();
+                ctx.shadowBlur = 0;
+            }
+            ctx.restore();
+        }
+    }
+
+    // ── Petal class — falling plum blossoms ────────────────────────────────
+    class Petal {
+        constructor(initial) {
+            this._init(initial);
+        }
+        _init(initial) {
+            this.x    = Math.random() * canvas.width;
+            this.y    = initial ? Math.random() * canvas.height : -14;
+            this.vx   = (Math.random() - 0.5) * 0.7;
+            this.vy   = 0.55 + Math.random() * 0.85;
+            this.rot  = Math.random() * Math.PI * 2;
+            this.vrot = (Math.random() - 0.5) * 0.025;
+            this.sz   = 3.5 + Math.random() * 3.5;
+            this.sway = Math.random() * Math.PI * 2;
+            this.swaySpd = 0.018 + Math.random() * 0.018;
+            this.alpha   = 0.55 + Math.random() * 0.35;
+            const palettes = [
+                [255,150,175], [255,110,145], [255,195,210],
+                [235,65,85],   [255,215,225], [220,80,110],
+            ];
+            this.col = palettes[Math.floor(Math.random() * palettes.length)];
+        }
+        update() {
+            this.sway += this.swaySpd;
+            this.x   += this.vx + Math.sin(this.sway) * 0.55;
+            this.y   += this.vy;
+            this.rot += this.vrot;
+            if (this.y > canvas.height + 20) this._init(false);
+        }
+        draw() {
+            const [r, g, b] = this.col;
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rot);
+            ctx.globalAlpha = this.alpha;
+            for (let i = 0; i < 5; i++) {
+                ctx.save();
+                ctx.rotate((i * Math.PI * 2) / 5);
+                ctx.beginPath();
+                ctx.ellipse(0, -this.sz * 0.72, this.sz * 0.38, this.sz * 0.72, 0, 0, Math.PI * 2);
+                ctx.fillStyle   = `rgba(${r},${g},${b},0.88)`;
+                ctx.shadowColor = `rgba(${r},${g},${b},0.4)`;
+                ctx.shadowBlur  = 5;
+                ctx.fill();
+                ctx.restore();
+            }
+            ctx.beginPath();
+            ctx.arc(0, 0, this.sz * 0.28, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,240,190,0.9)';
+            ctx.fill();
+            ctx.restore();
+            ctx.shadowBlur  = 0;
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // ── 40 falling plum-blossom petals ─────────────────────────────────────
+    const petals = Array.from({ length: 40 }, () => new Petal(true));
+
     // ── Two dragons with different Lissajous paths ─────────────────────────
     const d1 = new Dragon({
         segments: 90, spacing: 13, speed: 0.0021, tOffset: 0,
@@ -393,6 +540,18 @@
         scale: 0.58, rx: 0.27, ry: 0.21, freqY: 2.4,  phaseY: 2.2
     });
 
+    // ── Bamboo groves — left side (low x fractions) · right side (high x) ─
+    const bamboos = [
+        new BambooStalk(0.030, { segs: 11, segH: 62, w:  9 }),
+        new BambooStalk(0.062, { segs:  9, segH: 68, w:  7 }),
+        new BambooStalk(0.098, { segs: 12, segH: 57, w: 10 }),
+        new BambooStalk(0.136, { segs:  8, segH: 73, w:  7 }),
+        new BambooStalk(0.864, { segs:  9, segH: 65, w:  8 }),
+        new BambooStalk(0.902, { segs: 12, segH: 59, w: 10 }),
+        new BambooStalk(0.938, { segs:  8, segH: 70, w:  7 }),
+        new BambooStalk(0.970, { segs: 10, segH: 63, w:  9 }),
+    ];
+
     window.addEventListener('resize', function() {
         resize();
         d1._init();
@@ -402,6 +561,8 @@
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1;
+        bamboos.forEach(function (b) { b.draw(); });
+        for (const p of petals) { p.update(); p.draw(); }
         d1.update(); d1.draw();
         d2.update(); d2.draw();
         requestAnimationFrame(animate);
@@ -410,5 +571,126 @@
     animate();
 </script>
 
+<!-- hanzi-writer — stroke-by-stroke Chinese calligraphy animation -->
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3/dist/hanzi-writer.min.js"></script>
+<script>
+(function () {
+    /* ── configurable character list ──────────────────────────────────────── */
+    var CHARS = [
+        '天','月','年','是','爱','钱','人','水','火','山','木','日','大',
+        '小','中','上','下','好','学','生','家','国','心'
+    ];
+
+    /* ── tuning knobs ─────────────────────────────────────────────────────── */
+    var SIZE           = 160;   /* px  — rendered size of each character      */
+    var PAUSE_MS       = 1000;  /* ms  — pause after fully drawn              */
+    var ERASE_STEP_MS  = 160;   /* ms  — delay between erasing each stroke    */
+    var SPAWN_EVERY_MS = 4500;  /* ms  — base interval between new characters */
+
+    var COLORS = [
+        'rgba(250, 250, 250, 0.80)',  /* white */
+        'rgba(250, 250, 250, 0.80)',  /* white */
+        'rgba(250, 250, 250, 0.80)',  /* white */
+        /*'rgba(220, 20, 60, 0.80)',*/  /* scarlet */
+        /*'rgba(240,180, 41, 0.75)',*/  /* gold    */
+        /*'rgba(175,  8,  8, 0.78)',*/  /* crimson */
+    ];
+
+    var stage = document.getElementById('calligraphy-stage');
+    if (!stage) return;
+
+    function waitForLib(cb) {
+        if (typeof HanziWriter !== 'undefined') { cb(); return; }
+        var t = 0;
+        var iv = setInterval(function () {
+            if (typeof HanziWriter !== 'undefined') { clearInterval(iv); cb(); return; }
+            if (++t > 40) { clearInterval(iv); console.warn('hanzi-writer failed to load'); }
+        }, 250);
+    }
+
+    /* Returns visible stroke <path> elements — excludes paths inside <clipPath> */
+    function getStrokePaths(wrap) {
+        return Array.from(wrap.querySelectorAll('svg path')).filter(function (p) {
+            var parent = p.parentElement;
+            /* SVG clipPath tagName preserves case */
+            return !parent || parent.tagName !== 'clipPath';
+        });
+    }
+
+    function spawn() {
+        var char  = CHARS[Math.floor(Math.random() * CHARS.length)];
+        var color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        var half  = SIZE / 2;
+        var x     = half + Math.random() * Math.max(0, window.innerWidth  - SIZE);
+        var y     = half + Math.random() * Math.max(0, window.innerHeight - SIZE);
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText =
+            'position:absolute;' +
+            'left:'   + (x - half) + 'px;' +
+            'top:'    + (y - half) + 'px;' +
+            'width:'  + SIZE + 'px;' +
+            'height:' + SIZE + 'px;';
+        stage.appendChild(wrap);
+
+        var writer = HanziWriter.create(wrap, char, {
+            width:                SIZE,
+            height:               SIZE,
+            padding:              14,
+            strokeColor:          color,
+            outlineColor:         'rgba(0,0,0,0)',
+            showCharacter:        false,
+            showOutline:          false,
+            strokeAnimationSpeed: 0.9,
+            delayBetweenStrokes:  200,
+            charDataLoader: function (char, onLoad) {
+                var url = 'https://cdn.jsdelivr.net/npm/hanzi-writer-data@2/' + char + '.json';
+                fetch(url).then(function (r) { return r.json(); }).then(onLoad);
+            },
+        });
+
+        writer.animateCharacter({
+            onComplete: function () {
+                setTimeout(function () {
+                    var paths = getStrokePaths(wrap);
+
+                    if (paths.length === 0) {
+                        /* fallback: fade the whole container if SVG structure unexpected */
+                        wrap.style.transition = 'opacity 1s ease';
+                        wrap.style.opacity    = '0';
+                        setTimeout(function () {
+                            if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+                        }, 1100);
+                        return;
+                    }
+
+                    /* erase stroke by stroke — first drawn fades first */
+                    paths.forEach(function (p, i) {
+                        setTimeout(function () {
+                            p.style.transition = 'opacity 0.45s ease';
+                            p.style.opacity    = '0';
+                        }, i * ERASE_STEP_MS);
+                    });
+
+                    setTimeout(function () {
+                        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+                    }, paths.length * ERASE_STEP_MS + 550);
+                }, PAUSE_MS);
+            }
+        });
+    }
+
+    function loop() {
+        spawn();
+        setTimeout(loop, SPAWN_EVERY_MS + Math.random() * 2000);
+    }
+
+    /* staggered start — wait for library, then spawn two immediately */
+    waitForLib(function () {
+        setTimeout(spawn, 300);
+        setTimeout(function () { spawn(); setTimeout(loop, 2800); }, 1400);
+    });
+})();
+</script>
 </body>
 </html>
