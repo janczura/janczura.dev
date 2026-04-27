@@ -4,8 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="Updated chinese style">
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="Updated README.md">
+      <change afterPath="$PROJECT_DIR$/cv/1558968250668.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cv/cv.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cv/document.aux" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cv/document.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cv/document.out" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cv/document.synctex.gz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cv/document.tex" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,23 +50,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/deserROG/IdeaProjects/janczura.dev/css&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/deserROG/IdeaProjects/janczura.dev",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\css" />
       <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev" />
+      <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\css" />
       <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\trials\trials" />
       <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\trials" />
       <recent name="C:\Users\deserROG\IdeaProjects\janczura.dev\arcraiders\market" />
@@ -252,7 +260,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774900468831</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="Updated README.md">
+      <option name="closed" value="true" />
+      <created>1774901116728</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1774901116728</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -277,6 +293,7 @@
     <MESSAGE value="Updated github/gitlab" />
     <MESSAGE value="Updated style.css" />
     <MESSAGE value="Updated chinese style" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated chinese style" />
+    <MESSAGE value="Updated README.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated README.md" />
   </component>
 </project>

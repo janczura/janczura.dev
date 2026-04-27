@@ -1,0 +1,263 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[a4paper, top=0pt, bottom=0pt, left=0pt, right=0pt]{geometry}
+\usepackage[dvipsnames,svgnames]{xcolor}
+\usepackage{tikz}
+\usepackage{fontawesome5}
+\usepackage{paracol}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{tcolorbox}
+\usepackage{etoolbox}
+\usepackage{calc}
+
+\tcbuselibrary{skins}
+
+% ── Palette (janczura.dev: warm dark + crimson, zero blue) ────────────────────
+\definecolor{sidebar}{HTML}{1A1515}     % warm near-black (no blue)
+\definecolor{heading}{HTML}{3B1515}     % very dark maroon for headings
+\definecolor{accent}{HTML}{C0392B}      % crimson
+\definecolor{accentlight}{HTML}{E74C3C} % lighter crimson for icons
+\definecolor{datecol}{HTML}{8A8080}     % warm gray
+\definecolor{tagbg}{HTML}{FDECEC}       % light pink
+\definecolor{tagrule}{HTML}{DEB5B5}     % muted pink border
+\definecolor{subtlegray}{HTML}{5A4E4E}  % warm dark gray
+
+% ── Skill tag ────────────────────────────────────────────────────────────────
+\newtcbox{\stag}{on line, arc=2.5pt,
+  colback=tagbg, colframe=tagrule,
+  boxsep=0pt, left=3.5pt, right=3.5pt, top=1.5pt, bottom=1.5pt,
+  boxrule=0.4pt,
+  fontupper=\scriptsize\color{heading}}
+
+% ── Sidebar section heading ──────────────────────────────────────────────────
+\newcommand{\sideSection}[1]{%
+  \vspace*{8pt}%
+  {\color{white}\small\textls[200]{\textbf{\MakeUppercase{#1}}}\par}%
+  \vspace*{2pt}%
+  \noindent\textcolor{accent!55!white}{\rule{\linewidth}{0.6pt}}\par%
+  \vspace*{5pt}%
+}
+
+% ── Main section heading ────────────────────────────────────────────────────
+\newcommand{\mainSection}[1]{%
+  \vspace*{6pt}%
+  \noindent{\color{heading}\normalsize\textls[180]{\textbf{\MakeUppercase{#1}}}}\par%
+  \vspace*{2pt}%
+  \noindent{\color{accent}\rule{\linewidth}{1pt}}\par%
+  \vspace*{4pt}%
+}
+
+% ── CV entry (#1 date  #2 title  #3 company  #4 tech  #5 description) ───────
+\newcommand{\cvEntry}[5]{%
+  \noindent\begin{tabularx}{\linewidth}%
+    {@{}p{2cm}@{\hspace{5pt}}X@{}}%
+    {\footnotesize\color{datecol}\raggedright #1} &
+      {\small\textbf{#2}}%
+      \ifstrempty{#3}{}{\newline{\footnotesize\color{accent}\textit{#3}}}%
+      \ifstrempty{#4}{}{\newline{\scriptsize\color{accent!65!black}\textit{#4}}}%
+      \ifstrempty{#5}{}{\newline{\footnotesize #5}}%
+    \\[5pt]
+  \end{tabularx}%
+}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{document}
+
+% ── Full-page sidebar background (always fills entire page height) ──
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[sidebar] (current page.north west) rectangle
+    ([xshift=0.31\paperwidth]current page.south west);
+  % subtle thin accent line at sidebar edge
+  \fill[accent] ([xshift=0.31\paperwidth]current page.north west) rectangle
+    ([xshift=0.31\paperwidth+1.5pt]current page.south west);
+\end{tikzpicture}
+
+% ── RODO pinned to bottom-right (only on the white area) ──
+\begin{tikzpicture}[remember picture, overlay]
+  \node[anchor=south west, text width=0.65\paperwidth, align=center]
+    at ([xshift=0.32\paperwidth, yshift=5pt]current page.south west) {%
+    \fontsize{5.5}{7}\selectfont\color{gray!50}%
+    Wyrażam zgodę na przetwarzanie moich danych osobowych dla potrzeb niezbędnych do realizacji procesu rekrutacji, zgodnie z art. 6 ust. 1 lit. a Rozporządzenia Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. (RODO).\enspace
+    I consent to the processing of my personal data for the purposes necessary to carry out the recruitment process, in accordance with Article 6(1)(a) of Regulation (EU) 2016/679 of the European Parliament and of the Council of 27 April 2016 (GDPR).%
+  };
+\end{tikzpicture}
+
+\setlength{\columnsep}{0pt}
+\columnratio{0.31}
+
+\begin{paracol}{2}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+%% LEFT COLUMN  (12pt padding each side via minipage)
+%% ═══════════════════════════════════════════════════════════════════════════
+\hspace*{12pt}\begin{minipage}[t]{\dimexpr\linewidth-24pt\relax}
+
+\vspace*{14pt}
+
+% ── Photo ──
+{\centering
+\begin{tikzpicture}
+  \begin{scope}
+    \clip (0,0) circle (1.65cm);
+    \node at (0,0.1) {\includegraphics[width=3.3cm]{1558968250668.jpg}};
+  \end{scope}
+  \draw[accent, line width=2pt] (0,0) circle (1.65cm);
+\end{tikzpicture}\par}
+
+\vspace*{7pt}
+
+% ── Name ──
+{\centering\color{white}\fontsize{16}{19}\selectfont
+  \textls[80]{\textbf{SERGIUSZ}}\par}
+\vspace*{1pt}
+{\centering\color{white}\fontsize{16}{19}\selectfont
+  \textls[80]{\textbf{JAŃCZURA}}\par}
+\vspace*{3pt}
+{\centering\color{accentlight!70!white}\small\textit{Software Engineer}\par}
+\vspace*{1pt}
+{\centering\color{white!50}\scriptsize Poznań, Poland\par}
+
+% ── PROFILE ──
+\sideSection{Profile}
+
+{\color{white!85}\footnotesize\setlength{\parskip}{3pt}
+Java Developer with extensive back-end experience building
+and maintaining complex e-commerce systems. Designing scalable
+solutions, optimising performance, and integrating with
+external platforms. Interested in lower-level programming,
+particularly Rust.\par}
+
+% ── CONTACT ──
+\sideSection{Contact}
+
+{\color{white}\footnotesize
+\begin{tabular}{@{}c@{\hspace{6pt}}l@{}}
+  \textcolor{accentlight}{\faPhone*}     & (+48) 732 xxx xxx          \\[4pt]
+  \textcolor{accentlight}{\faEnvelope}   & xxx@xxx.com \\[4pt]
+  \textcolor{accentlight}{\faLinkedin}   & linkedin.com/in/serq0/     \\[4pt]
+  \textcolor{white!80}{\faGithub}        & github.com/janczura        \\[4pt]
+  \textcolor{accentlight}{\faGitlab}     & gitlab.com/janczura        \\[4pt]
+  \textcolor{accentlight}{\faGlobe}      & janczura.dev               \\[4pt]
+  \textcolor{accentlight}{\faGlobe}      & serq0.github.io (deprecated)               \\
+\end{tabular}\par}
+
+% ── LANGUAGES ──
+\sideSection{Languages}
+
+{\color{white}\footnotesize
+\begin{tabular}{@{}c@{\hspace{6pt}}l@{}}
+  \textcolor{accent!55!white}{\faComments} & Polish \textcolor{white!55}{(Native)}  \\[4pt]
+  \textcolor{accent!55!white}{\faComments} & English \textcolor{white!55}{(B2)}     \\[4pt]
+ % \textcolor{accent!55!white}{\faComments} & Chinese \textcolor{white!55}{(HSK1)}     \\
+\end{tabular}\par}
+
+% ── OTHER ──
+\sideSection{Other}
+
+{\color{white}\footnotesize
+\begin{tabular}{@{}c@{\hspace{6pt}}l@{}}
+  \faCar & Driving licence B \\
+\end{tabular}\par}
+
+\end{minipage}
+
+%% ═══════════════════════════════════════════════════════════════════════════
+\switchcolumn
+%% RIGHT COLUMN  (22pt left, 10pt right padding via minipage)
+%% ═══════════════════════════════════════════════════════════════════════════
+\hspace*{22pt}\begin{minipage}[t]{\dimexpr\linewidth-32pt\relax}
+
+\vspace*{10pt}
+
+% ── EXPERIENCE ──────────────────────────────────────────────────────────────
+\mainSection{Experience}
+
+\cvEntry{03.2020\\[1pt]\textit{Present}}{Backend Developer}%
+  {Hummerce \normalfont\scriptsize(formerly Best.net)}{}%
+{Developing a large-scale e-commerce platform powering multiple
+online shops across different markets. Designing scalable solutions,
+optimising performance, and integrating with external systems
+--- ERP/CRM platforms, payment providers, and marketing tools.
+PostgreSQL, security testing, code review.}
+
+\cvEntry{10.2019\\[1pt]03.2020}{Tester}{Hummerce}{}%
+{Manual and automated testing of new features, test reporting,
+documentation, bug analysis, automated notifications for
+bug detection.}
+
+\cvEntry{07.2018}{Game Tester \& Designer}{FabrykaGier}{}%
+{Game testing, design, documentation and QA; created a game
+trailer. One-month internship in a three-person team.}
+
+% ── TECHNICAL SKILLS ───────────────────────────────────────────────────────
+\mainSection{Technical Skills}
+
+\vspace*{1pt}
+{\footnotesize\color{subtlegray}\textbf{Back-end}\par}\vspace*{2pt}
+{\raggedright\noindent
+\stag{Java} \stag{Spring Framework} \stag{Hibernate / JPA}
+\stag{PostgreSQL} \stag{RESTful APIs} \stag{Maven} \stag{Gradle}\par}
+\vspace*{3pt}
+
+{\footnotesize\color{subtlegray}\textbf{DevOps \& Tools}\par}\vspace*{2pt}
+{\raggedright\noindent
+\stag{Docker} \stag{Jenkins} \stag{Git} \stag{Gerrit}
+\stag{IntelliJ IDEA} \stag{Redmine}\par}
+\vspace*{3pt}
+
+{\footnotesize\color{subtlegray}\textbf{Front-end \& Other}\par}\vspace*{2pt}
+{\raggedright\noindent
+\stag{JavaScript} \stag{HTML} \stag{CSS}
+\stag{Python} \stag{Rust}\par}
+\vspace*{3pt}
+
+{\footnotesize\color{subtlegray}\textbf{Testing \& Security}\par}\vspace*{2pt}
+{\raggedright\noindent
+\stag{JUnit} \stag{Mockito} \stag{Selenium}
+\stag{Postman} \stag{Burp Suite}\par}
+
+% ── EDUCATION ──────────────────────────────────────────────────────────────
+\mainSection{Education}
+
+\cvEntry{2020\\2021}{M.Sc.\ Computer Science}%
+  {Adam Mickiewicz University, Poznań}{}{}
+
+\cvEntry{2013\\2019}{B.Sc.\ Computer Science}%
+  {Adam Mickiewicz University, Poznań}{}{}
+
+% ── PROJECTS ───────────────────────────────────────────────────────────────
+\mainSection{Projects}
+
+\cvEntry{2026}{Arc Raiders --- Talent Calculator}{}{JavaScript, HTML/CSS}%
+{Interactive web tool for planning character talent builds.
+\textcolor{accent}{\scriptsize janczura.dev/arcraiders/talents/}}
+
+\cvEntry{2026}{Arc Raiders --- Blueprint Exchange}{}{JavaScript, HTML/CSS}%
+{Web-based marketplace tool for in-game blueprint trading.
+\textcolor{accent}{\scriptsize janczura.dev/arcraiders/market/}}
+
+\cvEntry{2023}{World of Warcraft Fishing Bot}{}{Java, OpenCV}%
+{Image recognition, automated mouse control with randomised
+movements, buff management and auto-harvesting.}
+
+\cvEntry{2018}{Venatio}{}{Game project}%
+{3-person indie game project (designer, artist, programmer). Responsible for game design and quality assurance testing. Product demo available on YouTube.
+\textcolor{accent}{\scriptsize youtube.com/watch?v=kkQkUmEpfO0}}
+
+
+\end{minipage}
+
+\end{paracol}
+
+\end{document}
