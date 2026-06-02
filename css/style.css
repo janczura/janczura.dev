@@ -113,8 +113,9 @@ body {
     transform: translateX(-50%);
     width: 60%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--red), var(--gold), var(--cyan), transparent);
+    background: linear-gradient(90deg, transparent, var(--red), var(--gold), transparent);
 }
+
 
 .site-nav a {
     color: #8a8780;
@@ -294,14 +295,107 @@ body {
     height: 160px;
     margin: 0 auto 32px;
     position: relative;
+}
+
+/* Outer thin dashed ring */
+.ring-outer {
+    position: absolute;
+    inset: -14px;
     border-radius: 50%;
-    padding: 4px;
-    background: conic-gradient(var(--red), var(--gold), var(--cyan), var(--magenta), var(--red));
-    animation: frameRotate 6s linear infinite;
+    border: 1px solid rgba(255, 45, 85, 0.25);
+    animation: frameRotate 20s linear infinite;
+}
+
+.ring-outer::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--red), 0 0 16px rgba(255, 45, 85, 0.5);
+}
+
+/* Middle segmented ring */
+.ring-inner {
+    position: absolute;
+    inset: -9px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    border-top-color: var(--gold);
+    border-right-color: rgba(255, 215, 0, 0.3);
+    animation: frameRotateReverse 12s linear infinite;
+}
+
+.ring-inner::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 215, 0, 0.15);
+}
+
+/* Inner accent ring */
+.ring-dash {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 69, 0, 0.3);
+    animation: frameRotate 8s linear infinite;
+}
+
+.ring-dash::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--gold), 0 0 12px rgba(255, 215, 0, 0.4);
 }
 
 @keyframes frameRotate {
-    to { filter: hue-rotate(360deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes frameRotateReverse {
+    to { transform: rotate(-360deg); }
+}
+
+/* Orbiting Chinese characters */
+.orbit-char {
+    position: absolute;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+    color: var(--gold);
+    opacity: 0.5;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+.orbit-tl { top: -18px; left: -14px; }
+.orbit-tr { top: -18px; right: -14px; }
+.orbit-bl { bottom: -18px; left: -14px; }
+.orbit-br { bottom: -18px; right: -14px; }
+
+/* Glow halo behind everything */
+.photo-frame::before {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 45, 85, 0.1) 30%, transparent 70%);
+    animation: photoGlow 4s ease-in-out infinite;
+}
+
+@keyframes photoGlow {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.08); }
 }
 
 .photo-frame img {
@@ -311,22 +405,8 @@ body {
     object-fit: cover;
     position: relative;
     z-index: 1;
-    background: var(--dark-bg);
+    border: 2px solid rgba(10, 10, 18, 0.9);
 }
-
-.frame-corner {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    border-color: var(--cyan);
-    border-style: solid;
-    border-width: 0;
-}
-
-.frame-corner.tl { top: -8px; left: -8px; border-top-width: 2px; border-left-width: 2px; }
-.frame-corner.tr { top: -8px; right: -8px; border-top-width: 2px; border-right-width: 2px; }
-.frame-corner.bl { bottom: -8px; left: -8px; border-bottom-width: 2px; border-left-width: 2px; }
-.frame-corner.br { bottom: -8px; right: -8px; border-bottom-width: 2px; border-right-width: 2px; }
 
 h1.glitch {
     font-family: 'Orbitron', sans-serif;
@@ -494,7 +574,7 @@ h1.glitch::after {
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--cyan), var(--magenta), transparent);
+    background: linear-gradient(90deg, transparent, var(--gold), var(--red), transparent);
 }
 
 .card h2 {
@@ -556,7 +636,7 @@ h1.glitch::after {
     top: 0;
     bottom: 0;
     width: 1px;
-    background: linear-gradient(180deg, var(--red), var(--gold), var(--cyan));
+    background: linear-gradient(180deg, var(--red), var(--gold), #ff4500);
 }
 
 .timeline-item {
@@ -781,7 +861,7 @@ footer {
     width: 60%;
     margin: 0 auto 32px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--red), var(--gold), var(--cyan), transparent);
+    background: linear-gradient(90deg, transparent, var(--red), var(--gold), transparent);
 }
 
 footer p {
