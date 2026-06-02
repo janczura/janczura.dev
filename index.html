@@ -1,17 +1,14 @@
 <!DOCTYPE html>
-<html lang="pl" xmlns="http://www.w3.org/1999/html">
+<html lang="pl">
 <head>
     <link rel="icon" type="image/jpg" href="img/icon.jpg">
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KG2N67JZP0"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-
         gtag('config', 'G-KG2N67JZP0');
     </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sergiusz Jańczura — Java Developer z Poznania. Specjalista backend z doświadczeniem w Spring, PostgreSQL, Docker i dużych systemach e-commerce.">
@@ -24,673 +21,199 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Edu+AU+VIC+WA+NT+Guides:wght@400..700&family=Sriracha&display=swap"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<canvas id="background-canvas"></canvas>
-<div id="calligraphy-stage"></div>
+    <canvas id="fireworks-canvas"></canvas>
+    <div id="scanlines"></div>
+    <div id="floating-chars"></div>
 
-<div class="lantern lantern-left">
-    <div class="lantern-string"></div>
-    <div class="lantern-cap"></div>
-    <div class="lantern-body" data-char="福"></div>
-    <div class="lantern-cap"></div>
-    <div class="lantern-fringe"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="lantern-tassel"></div>
-</div>
-<div class="lantern lantern-right">
-    <div class="lantern-string"></div>
-    <div class="lantern-cap"></div>
-    <div class="lantern-body" data-char="龍"></div>
-    <div class="lantern-cap"></div>
-    <div class="lantern-fringe"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="lantern-tassel"></div>
-</div>
-<nav class="site-nav">
-    <div class="nav-inner">
-        <a href="#about">#about</a>
-        <a href="#experience">#experience</a>
-        <a href="#projects">#projects</a>
-        <a href="#skills">#skills</a>
-        <a href="#education">#education</a>
+    <nav class="site-nav">
+        <div class="nav-glow"></div>
+        <a href="#about" data-section="about"><span class="nav-char">关</span> about</a>
+        <a href="#experience" data-section="experience"><span class="nav-char">经</span> experience</a>
+        <a href="#projects" data-section="projects"><span class="nav-char">项</span> projects</a>
+        <a href="#skills" data-section="skills"><span class="nav-char">技</span> skills</a>
+        <a href="#education" data-section="education"><span class="nav-char">教</span> education</a>
+    </nav>
+
+    <div class="container">
+        <section class="header">
+            <div class="header-bg"></div>
+            <div class="dragon-left"></div>
+            <div class="dragon-right"></div>
+            <div class="lantern lantern-l">
+                <span class="lantern-char">福</span>
+                <span class="lantern-glow"></span>
+            </div>
+            <div class="lantern lantern-r">
+                <span class="lantern-char">龙</span>
+                <span class="lantern-glow"></span>
+            </div>
+            <div class="header-content">
+                <div class="photo-frame">
+                    <div class="frame-corner tl"></div>
+                    <div class="frame-corner tr"></div>
+                    <div class="frame-corner bl"></div>
+                    <div class="frame-corner br"></div>
+                    <img src="img/foto.jpg" alt="Sergiusz Jańczura"/>
+                </div>
+                <h1 class="glitch" data-text="Sergiusz Jańczura">Sergiusz Jańczura</h1>
+                <p class="subtitle">Java Developer <span class="neon-dot"></span> Poznań</p>
+                <div class="header-links">
+                    <a class="link-btn github" href="https://github.com/janczura" target="_blank" rel="noopener noreferrer"><span class="btn-icon">⬡</span> GitHub</a>
+                    <a class="link-btn gitlab" href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer"><span class="btn-icon">⬡</span> GitLab</a>
+                    <a class="link-btn cv" href="cv/cv.pdf" download><span class="btn-icon">⬡</span> Download CV</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="card-section about">
+            <div class="card">
+                <div class="card-border"></div>
+                <h2><span class="section-char">关</span> About me</h2>
+                <p>I am a Java Developer with many years of experience in building and maintaining complex backend applications. I currently work at Hummerce (formerly Best.net), where I am responsible for developing a large-scale e-commerce platform powering multiple online shops across different markets. My work involves designing scalable solutions, optimizing performance, and integrating with external systems — including ERP/CRM platforms, payment providers, and marketing tools.</p>
+                <p>In my free time, I enjoy playing computer games, swimming, and keeping up with the latest tech trends. I'm passionate about creating stable, well-optimized systems that meet the needs of rapidly growing businesses. I also like to explore lower-level programming — currently learning Rust.</p>
+            </div>
+        </section>
+
+        <section id="experience" class="card-section experience">
+            <div class="card">
+                <div class="card-border"></div>
+                <h2><span class="section-char">经</span> Experience</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-role">Java Developer</span>
+                            <a href="https://hummerce.com/" class="timeline-company">@ Hummerce</a>
+                            <span class="timeline-date">03.2020 — Current</span>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-role">Tester</span>
+                            <a href="https://hummerce.com/" class="timeline-company">@ Hummerce</a>
+                            <span class="timeline-date">10.2019 — 03.2020</span>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-role">Game Tester/Designer</span>
+                            <a href="http://www.game-factory.eu/" class="timeline-company">@ FabrykaGier</a>
+                            <span class="timeline-date">07.2018</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects" class="card-section projects">
+            <div class="card">
+                <div class="card-border"></div>
+                <h2><span class="section-char">项</span> Some projects</h2>
+                <div class="project-grid">
+                    <a href="#" class="project-card" data-glow="cyan">
+                        <span class="project-icon">⚔</span>
+                        <span class="project-name">WoW Fishing Bot</span>
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=kkQkUmEpfO0" target="_blank" class="project-card" data-glow="red">
+                        <span class="project-icon">⬡</span>
+                        <span class="project-name">Venatio</span>
+                    </a>
+                    <a href="https://janczura.dev/arcraiders/talents/" target="_blank" class="project-card" data-glow="gold">
+                        <span class="project-icon">◆</span>
+                        <span class="project-name">Arc Raiders — Talent Calculator</span>
+                    </a>
+                    <a href="https://janczura.dev/arcraiders/market/" target="_blank" class="project-card" data-glow="magenta">
+                        <span class="project-icon">◇</span>
+                        <span class="project-name">Arc Raiders — Blueprint Exchange</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="skills" class="card-section skills">
+            <div class="card">
+                <div class="card-border"></div>
+                <h2><span class="section-char">技</span> Skills</h2>
+                <div class="skill-groups">
+                    <div class="skill-group">
+                        <h3 class="group-label" data-color="#ff2d55">Backend & Core</h3>
+                        <div class="tags">
+                            <span class="tag">Java</span>
+                            <span class="tag">Spring Framework</span>
+                            <span class="tag">Hibernate / JPA</span>
+                            <span class="tag">PostgreSQL</span>
+                            <span class="tag">Maven / Gradle</span>
+                            <span class="tag">RESTful APIs</span>
+                        </div>
+                    </div>
+                    <div class="skill-group">
+                        <h3 class="group-label" data-color="#00f0ff">DevOps & Tools</h3>
+                        <div class="tags">
+                            <span class="tag">Git</span>
+                            <span class="tag">Docker</span>
+                            <span class="tag">Jenkins</span>
+                            <span class="tag">Gerrit</span>
+                            <span class="tag">Burp Suite</span>
+                            <span class="tag">Postman</span>
+                        </div>
+                    </div>
+                    <div class="skill-group">
+                        <h3 class="group-label" data-color="#ffd700">Other Languages</h3>
+                        <div class="tags">
+                            <span class="tag">JavaScript</span>
+                            <span class="tag">HTML / CSS</span>
+                            <span class="tag">Python</span>
+                            <span class="tag">Rust</span>
+                            <span class="tag">CheatEngine</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="languages-row">
+                    <span class="lang-badge"><span class="lang-dot"></span> Polish (native)</span>
+                    <span class="lang-badge"><span class="lang-dot"></span> English (B2)</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="education" class="card-section education">
+            <div class="card">
+                <div class="card-border"></div>
+                <h2><span class="section-char">教</span> Education</h2>
+                <div class="edu-grid">
+                    <div class="edu-card">
+                        <span class="edu-degree">Master of Computer Science</span>
+                        <span class="edu-school">Adam Mickiewicz University</span>
+                        <span class="edu-year">2020 — 2021</span>
+                    </div>
+                    <div class="edu-card">
+                        <span class="edu-degree">Bachelor of Computer Science</span>
+                        <span class="edu-school">Adam Mickiewicz University</span>
+                        <span class="edu-year">2013 — 2019</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-line"></div>
+            <p>
+                E-mail: <span id="email-display"></span> <button id="reveal-email-btn">Show</button>
+                &nbsp;·&nbsp;
+                LinkedIn: <a href="https://www.linkedin.com/in/serq0/">Sergiusz Jańczura</a>
+                &nbsp;·&nbsp;
+                GitHub: <a href="https://github.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
+                &nbsp;·&nbsp;
+                GitLab: <a href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
+            </p>
+            <p>&copy; <span id="current-year"></span> Sergiusz Jańczura. All rights reserved.</p>
+        </footer>
     </div>
-</nav>
 
-<div class="container">
-    <section class="section header">
-        <div class="section-content">
-            <div class="firework firework-right"></div>
-            <div class="firework firework-left"></div>
-            <div class="photo">
-                <img src="img/foto.jpg" alt="Sergiusz Jańczura"/>
-            </div>
-            <h1>Sergiusz Jańczura</h1>
-            <p>Java Developer | Poznań</p>
-            <div class="header-links">
-                <a class="header-link-btn github" href="https://github.com/janczura" target="_blank" rel="noopener noreferrer">↗ GitHub</a>
-                <a class="header-link-btn gitlab" href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer">↗ GitLab</a>
-                <a class="header-link-btn cv" href="cv/cv.pdf" download> ↓ Download CV</a>
-            </div>
-        </div>
-    </section>
-
-    <section id="about" class="section about">
-        <div class="section-content">
-            <h2>About me</h2>
-            <p>I am a Java Developer with many years of experience in building and maintaining complex backend
-                applications. I currently work at Hummerce (formerly Best.net), where I am responsible for developing
-                a large-scale e-commerce platform powering multiple online shops across different markets. My work
-                involves designing scalable solutions, optimizing performance, and integrating with external systems —
-                including ERP/CRM platforms, payment providers, and marketing tools.</p>
-            <p>In my free time, I enjoy playing computer games, swimming, and keeping up with the latest tech trends.
-                I’m passionate about creating stable, well-optimized systems that meet the needs of rapidly growing
-                businesses. I also like to explore lower-level programming — currently learning Rust.</p>
-        </div>
-    </section>
-
-    <section id="experience" class="section experience">
-        <div class="section-content">
-            <h2>Experience</h2>
-            <p>Java Developer @ <a href="https://hummerce.com/">Hummerce</a> (03.2020 - Current)</p>
-            <p>Tester @ <a href="https://hummerce.com/">Hummerce</a> (10.2019 - 03.2020)</p>
-            <p>Game Tester/Designer @ <a href="http://www.game-factory.eu/">FabrykaGier</a> (07.2018)</p>
-        </div>
-    </section>
-
-    <section id="projects" class="section projects">
-        <div class="section-content">
-            <h2>Some projects</h2>
-            <p>WoW Fishing Bot</p>
-            <p><a href="https://www.youtube.com/watch?v=kkQkUmEpfO0">Venatio</a></p>
-            <p><a href="https://janczura.dev/arcraiders/talents/">Arc Raiders - talent calculator</a></p>
-            <p><a href="https://janczura.dev/arcraiders/market/">Arc Raiders - blueprint exchange</a></p>
-        </div>
-    </section>
-
-    <section id="skills" class="section skills">
-        <div class="section-content">
-            <h2>Skills</h2>
-            <ul class="skills-list">
-                <li>Java</li>
-                <li>Spring Framework</li>
-                <li>Hibernate / JPA</li>
-                <li>PostgreSQL</li>
-                <li>Maven / Gradle</li>
-                <li>RESTful APIs</li>
-                <li>Git</li>
-                <li>Docker</li>
-                <li>Jenkins</li>
-                <li>Gerrit</li>
-                <li>Burp Suite</li>
-                <li>Postman</li>
-            </ul>
-            <ul class="skills-list">
-                <li>JavaScript</li>
-                <li>HTML / CSS</li>
-                <li>Python</li>
-                <li>Rust</li>
-                <li>CheatEngine</li>
-            </ul>
-            <ul class="skills-list">
-                <li>Polish (native)</li>
-                <li>English (B2)</li>
-            </ul>
-        </div>
-    </section>
-
-    <section id="education" class="section education">
-        <div class="section-content">
-            <h2>Education</h2>
-            <p><u>Master of Computer Science</u> 2020 - 2021 (Adam Mickiewicz University)</p>
-            <p><u>Bachelor of Computer Science</u> 2013 - 2019 (Adam Mickiewicz University)</p>
-        </div>
-    </section>
-
-    <footer>
-        <p>
-            E-mail: <span id="email-display"></span> <button id="reveal-email-btn">Show</button>
-            &nbsp;·&nbsp;
-            LinkedIn: <a href="https://www.linkedin.com/in/serq0/">Sergiusz Jańczura</a>
-            &nbsp;·&nbsp;
-            GitHub: <a href="https://github.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
-            &nbsp;·&nbsp;
-            GitLab: <a href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
-        </p>
-        <p>&copy; <span id="current-year"></span> Sergiusz Jańczura. All rights reserved.</p>
-    </footer>
-</div>
-
-<script>
-    document.getElementById("current-year").textContent = new Date().getFullYear();
-
-    document.getElementById('reveal-email-btn').addEventListener('click', function () {
-            // Encoded: base64( caesar+7( email ) ) with ZZ noise every 10 chars
-            var encoded = 'htMbF3w1jtZZMgGEQuhECgZZlrIdjt90i2ZZ5aFDszStUcZZiX==';
-
-            // Step 1 — .replace(): strip noise characters
-            var cleaned = encoded.replace(/ZZ/g, '');
-
-            // Step 2 — reverse Caesar cipher (shift −7)
-            var decaesared = cleaned.replace(/[a-zA-Z]/g, function (c) {
-                var base = c <= 'Z' ? 65 : 97;
-                return String.fromCharCode(((c.charCodeAt(0) - base - 7 + 26) % 26) + base);
-            });
-
-            // Step 3 — base64 decode
-            var email = atob(decaesared);
-
-            document.getElementById('email-display').textContent = email;
-            this.style.display = 'none';
-        });
-</script>
-
-<script>
-    (function () {
-        var fwRight = document.querySelector('.firework-right');
-        var fwLeft  = document.querySelector('.firework-left');
-
-        function randomPos(el, side) {
-            var edgePx = Math.random() * 140 + 20;   /* 20–160 px from the chosen edge */
-            var topPct = Math.random() * 65  + 10;   /* 10–75 % from top */
-            el.style.left  = '';
-            el.style.right = '';
-            el.style[side] = edgePx + 'px';
-            el.style.top   = topPct + '%';
-        }
-
-        randomPos(fwRight, 'right');
-        randomPos(fwLeft,  'left');
-
-        fwRight.addEventListener('animationiteration', function () { randomPos(fwRight, 'right'); });
-        fwLeft.addEventListener ('animationiteration', function () { randomPos(fwLeft,  'left');  });
-    })();
-</script>
-
-
-<script>
-    const canvas = document.getElementById('background-canvas');
-    const ctx = canvas.getContext('2d');
-
-    function resize() {
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    resize();
-
-    // ── Dragon class ───────────────────────────────────────────────────────
-    class Dragon {
-        constructor(opts) {
-            this.n       = opts.segments    || 90;
-            this.spacing = opts.spacing     || 13;
-            this.speed   = opts.speed       || 0.0022;
-            this.t       = opts.tOffset     || 0;
-            this.sm      = opts.scale       || 1;      // size multiplier
-            this.rx      = opts.rx          || 0.38;   // x amplitude (fraction of viewport)
-            this.ry      = opts.ry          || 0.30;
-            this.freqY   = opts.freqY       || 1.7;    // Lissajous Y frequency
-            this.phaseY  = opts.phaseY      || 0.8;
-            this.segs    = [];
-            this._init();
-        }
-
-        _init() {
-            const p = this._target();
-            this.segs = Array.from({ length: this.n }, () => ({ x: p.x, y: p.y }));
-        }
-
-        _target() {
-            const cx = canvas.width  / 2;
-            const cy = canvas.height / 2;
-            return {
-                x: cx + canvas.width  * this.rx * Math.sin(this.t),
-                y: cy + canvas.height * this.ry * Math.sin(this.t * this.freqY + this.phaseY)
-            };
-        }
-
-        update() {
-            this.t += this.speed;
-            const p = this._target();
-            this.segs[0].x = p.x;
-            this.segs[0].y = p.y;
-
-            // Chain: each segment follows the one ahead of it
-            for (let i = 1; i < this.n; i++) {
-                const a = this.segs[i - 1], b = this.segs[i];
-                const dx = a.x - b.x, dy = a.y - b.y;
-                const d  = Math.sqrt(dx * dx + dy * dy);
-                if (d > this.spacing) {
-                    const r = (d - this.spacing) / d;
-                    b.x += dx * r;
-                    b.y += dy * r;
-                }
-            }
-        }
-
-        draw() {
-            const { n, sm, segs } = this;
-
-            // ── Body (tail → neck, drawn back-to-front so head is on top) ──
-            for (let i = n - 1; i >= 1; i--) {
-                const tn    = i / n;                          // 0 = head end, 1 = tail
-                const seg   = segs[i];
-                const prev  = segs[i - 1];
-                const r     = Math.max(0.5, sm * 17 * (1 - tn * 0.78));
-                const alpha = 0.9 * (1 - tn * 0.65);
-
-                // Colour gradient: orange-red near head → deep crimson at tail
-                const red   = Math.floor(215 + 30 * (1 - tn));
-                const green = Math.floor(10  + 60 * (1 - tn));
-
-                ctx.globalAlpha = 1;
-                ctx.beginPath();
-                ctx.arc(seg.x, seg.y, r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${red},${green},10,${alpha})`;
-                if (i < n * 0.3) {
-                    ctx.shadowColor = 'rgba(255,80,10,0.35)';
-                    ctx.shadowBlur  = 10 * sm;
-                }
-                ctx.fill();
-                ctx.closePath();
-                ctx.shadowBlur = 0;
-
-                // ── Dorsal spines (every 6 segments, upper side) ──
-                if (i % 6 === 0 && i < n - 8 && r > 4) {
-                    const ang  = Math.atan2(seg.y - prev.y, seg.x - prev.x);
-                    const perp = ang - Math.PI / 2;
-                    const sl   = r * 1.5;
-                    ctx.beginPath();
-                    ctx.moveTo(seg.x, seg.y);
-                    ctx.lineTo(seg.x + Math.cos(perp) * sl,
-                               seg.y + Math.sin(perp) * sl);
-                    ctx.strokeStyle = `rgba(240,160,20,${alpha * 0.7})`;
-                    ctx.lineWidth   = sm * 1.6;
-                    ctx.stroke();
-                }
-
-                // ── Claws at 4 leg positions ──
-                const legIdx = [Math.floor(n*0.15), Math.floor(n*0.30),
-                                Math.floor(n*0.45), Math.floor(n*0.60)];
-                if (legIdx.includes(i) && r > 6) {
-                    const ang = Math.atan2(seg.y - prev.y, seg.x - prev.x);
-                    for (const side of [-1, 1]) {
-                        const legAng = ang + side * Math.PI * 0.5;
-                        const lx = seg.x + Math.cos(legAng) * r * 2.4;
-                        const ly = seg.y + Math.sin(legAng) * r * 2.4;
-                        // Leg
-                        ctx.beginPath();
-                        ctx.moveTo(seg.x, seg.y);
-                        ctx.lineTo(lx, ly);
-                        ctx.strokeStyle = `rgba(210,70,10,${alpha * 0.75})`;
-                        ctx.lineWidth   = sm * 2;
-                        ctx.stroke();
-                        // Three claws
-                        for (const c of [-0.5, 0, 0.5]) {
-                            const ca = legAng + side * 0.6 + c;
-                            ctx.beginPath();
-                            ctx.moveTo(lx, ly);
-                            ctx.lineTo(lx + Math.cos(ca) * r * 1.3,
-                                       ly + Math.sin(ca) * r * 1.3);
-                            ctx.strokeStyle = `rgba(240,160,30,${alpha * 0.8})`;
-                            ctx.lineWidth   = sm * 1.3;
-                            ctx.stroke();
-                        }
-                    }
-                }
-            }
-
-            // ── Head ──────────────────────────────────────────────────────
-            const head    = segs[0];
-            const refSeg  = segs[Math.min(5, n - 1)];
-            const headAng = Math.atan2(head.y - refSeg.y, head.x - refSeg.x);
-
-            // Head circle with glow
-            ctx.beginPath();
-            ctx.arc(head.x, head.y, sm * 22, 0, Math.PI * 2);
-            ctx.fillStyle  = `rgba(230,65,15,0.97)`;
-            ctx.shadowColor = 'rgba(255,110,0,0.9)';
-            ctx.shadowBlur  = sm * 30;
-            ctx.fill();
-            ctx.closePath();
-            ctx.shadowBlur = 0;
-
-            // Glowing eye
-            const eyeX = head.x + Math.cos(headAng + 0.85) * sm * 10;
-            const eyeY = head.y + Math.sin(headAng + 0.85) * sm * 10;
-            ctx.beginPath();
-            ctx.arc(eyeX, eyeY, sm * 4.5, 0, Math.PI * 2);
-            ctx.fillStyle   = 'rgba(255,230,0,1)';
-            ctx.shadowColor = 'rgba(255,230,0,0.9)';
-            ctx.shadowBlur  = sm * 12;
-            ctx.fill();
-            ctx.closePath();
-            ctx.shadowBlur = 0;
-
-            // Horn (antler-like)
-            const hornBase = {
-                x: head.x + Math.cos(headAng + 0.4) * sm * 8,
-                y: head.y + Math.sin(headAng + 0.4) * sm * 8
-            };
-            ctx.beginPath();
-            ctx.moveTo(hornBase.x, hornBase.y);
-            ctx.lineTo(hornBase.x + Math.cos(headAng + 0.12) * sm * 28,
-                       hornBase.y + Math.sin(headAng + 0.12) * sm * 28);
-            ctx.strokeStyle = 'rgba(240,190,30,0.9)';
-            ctx.lineWidth   = sm * 2.8;
-            ctx.stroke();
-
-            // Whiskers (龙须 — bezier curves)
-            const wx = head.x + Math.cos(headAng) * sm * 18;
-            const wy = head.y + Math.sin(headAng) * sm * 18;
-            for (const side of [-1, 1]) {
-                const wa = headAng + side * 0.85;
-                const cx1 = wx + Math.cos(wa)           * sm * 20;
-                const cy1 = wy + Math.sin(wa)           * sm * 20;
-                const cx2 = wx + Math.cos(wa + side*0.5) * sm * 36;
-                const cy2 = wy + Math.sin(wa + side*0.5) * sm * 36;
-                const ex  = wx + Math.cos(wa + side*0.3) * sm * 48;
-                const ey  = wy + Math.sin(wa + side*0.3) * sm * 48;
-                ctx.beginPath();
-                ctx.moveTo(wx, wy);
-                ctx.bezierCurveTo(cx1, cy1, cx2, cy2, ex, ey);
-                ctx.strokeStyle = 'rgba(240,190,30,0.88)';
-                ctx.lineWidth   = sm * 1.8;
-                ctx.stroke();
-            }
-        }
-    }
-
-    // ── BambooStalk class ──────────────────────────────────────────────────
-    class BambooStalk {
-        constructor(xFrac, opts = {}) {
-            this.xFrac   = xFrac;
-            this.segH    = (opts.segH || 62) + Math.random() * 22;
-            this.segs    = (opts.segs || 9)  + Math.floor(Math.random() * 4);
-            this.w       = (opts.w    || 8)  + Math.random() * 3;
-            this.sway    = Math.random() * Math.PI * 2;
-            this.swaySpd = 0.0032 + Math.random() * 0.003;
-            this.swayAmp = 2.2 + Math.random() * 2.8;
-            this.leaves  = [];
-            for (let i = 1; i < this.segs; i++) {
-                if (Math.random() < 0.65) {
-                    this.leaves.push({
-                        seg:   i,
-                        side:  Math.random() < 0.5 ? 1 : -1,
-                        angle: Math.PI / 5 + Math.random() * Math.PI / 9,
-                        n:     2 + Math.floor(Math.random() * 2),
-                    });
-                }
-            }
-        }
-        get x() { return this.xFrac * canvas.width; }
-        draw() {
-            this.sway += this.swaySpd;
-            ctx.save();
-            ctx.translate(this.x, canvas.height);
-            for (let s = 0; s < this.segs; s++) {
-                const taper = 1 - (s / this.segs) * 0.38;
-                const sw    = this.w * taper;
-                const botY  = -s * this.segH;
-                const topY  = -(s + 1) * this.segH;
-                const drift = Math.sin(this.sway + s * 0.45) * this.swayAmp * (s / this.segs);
-                /* segment body */
-                const g = ctx.createLinearGradient(drift - sw / 2, 0, drift + sw / 2, 0);
-                g.addColorStop(0,   'rgba(28,62,14,0.88)');
-                g.addColorStop(0.4, 'rgba(62,118,28,0.84)');
-                g.addColorStop(1,   'rgba(22,50,10,0.88)');
-                ctx.fillStyle = g;
-                ctx.fillRect(drift - sw / 2, topY, sw, this.segH);
-                /* node */
-                ctx.fillStyle = 'rgba(15,38,7,0.95)';
-                ctx.fillRect(drift - sw / 2 - 2, botY - 3, sw + 4, 4);
-            }
-            /* leaves */
-            for (const lf of this.leaves) {
-                const s     = lf.seg;
-                const nodeY = -s * this.segH - 3;
-                const drift = Math.sin(this.sway + s * 0.45) * this.swayAmp * (s / this.segs);
-                const lsway = Math.sin(this.sway * 1.4 + s * 0.9) * 0.1;
-                ctx.save();
-                ctx.translate(drift + lf.side * (this.w * 0.5), nodeY);
-                ctx.rotate(lf.side * (lf.angle + lsway));
-                for (let li = 0; li < lf.n; li++) {
-                    ctx.save();
-                    ctx.rotate(li * lf.side * 0.28 - 0.14);
-                    ctx.beginPath();
-                    ctx.ellipse(20, 0, 24, 4, 0, 0, Math.PI * 2);
-                    ctx.fillStyle   = 'rgba(46,104,20,0.72)';
-                    ctx.shadowColor = 'rgba(20,60,8,0.4)';
-                    ctx.shadowBlur  = 5;
-                    ctx.fill();
-                    ctx.restore();
-                }
-                ctx.restore();
-                ctx.shadowBlur = 0;
-            }
-            ctx.restore();
-        }
-    }
-
-    // ── Petal class — falling plum blossoms ────────────────────────────────
-    class Petal {
-        constructor(initial) {
-            this._init(initial);
-        }
-        _init(initial) {
-            this.x    = Math.random() * canvas.width;
-            this.y    = initial ? Math.random() * canvas.height : -14;
-            this.vx   = (Math.random() - 0.5) * 0.7;
-            this.vy   = 0.55 + Math.random() * 0.85;
-            this.rot  = Math.random() * Math.PI * 2;
-            this.vrot = (Math.random() - 0.5) * 0.025;
-            this.sz   = 3.5 + Math.random() * 3.5;
-            this.sway = Math.random() * Math.PI * 2;
-            this.swaySpd = 0.018 + Math.random() * 0.018;
-            this.alpha   = 0.55 + Math.random() * 0.35;
-            const palettes = [
-                [255,150,175], [255,110,145], [255,195,210],
-                [235,65,85],   [255,215,225], [220,80,110],
-            ];
-            this.col = palettes[Math.floor(Math.random() * palettes.length)];
-        }
-        update() {
-            this.sway += this.swaySpd;
-            this.x   += this.vx + Math.sin(this.sway) * 0.55;
-            this.y   += this.vy;
-            this.rot += this.vrot;
-            if (this.y > canvas.height + 20) this._init(false);
-        }
-        draw() {
-            const [r, g, b] = this.col;
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.rot);
-            ctx.globalAlpha = this.alpha;
-            for (let i = 0; i < 5; i++) {
-                ctx.save();
-                ctx.rotate((i * Math.PI * 2) / 5);
-                ctx.beginPath();
-                ctx.ellipse(0, -this.sz * 0.72, this.sz * 0.38, this.sz * 0.72, 0, 0, Math.PI * 2);
-                ctx.fillStyle   = `rgba(${r},${g},${b},0.88)`;
-                ctx.shadowColor = `rgba(${r},${g},${b},0.4)`;
-                ctx.shadowBlur  = 5;
-                ctx.fill();
-                ctx.restore();
-            }
-            ctx.beginPath();
-            ctx.arc(0, 0, this.sz * 0.28, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,240,190,0.9)';
-            ctx.fill();
-            ctx.restore();
-            ctx.shadowBlur  = 0;
-            ctx.globalAlpha = 1;
-        }
-    }
-
-    // ── 40 falling plum-blossom petals ─────────────────────────────────────
-    const petals = Array.from({ length: 40 }, () => new Petal(true));
-
-    // ── Two dragons with different Lissajous paths ─────────────────────────
-    const d1 = new Dragon({
-        segments: 90, spacing: 13, speed: 0.0021, tOffset: 0,
-        scale: 1,   rx: 0.37, ry: 0.29, freqY: 1.7,  phaseY: 0.8
-    });
-    const d2 = new Dragon({
-        segments: 60, spacing: 10, speed: 0.0031, tOffset: Math.PI * 1.3,
-        scale: 0.58, rx: 0.27, ry: 0.21, freqY: 2.4,  phaseY: 2.2
-    });
-
-    // ── Bamboo groves — left side (low x fractions) · right side (high x) ─
-    const bamboos = [
-        new BambooStalk(0.030, { segs: 11, segH: 62, w:  9 }),
-        new BambooStalk(0.062, { segs:  9, segH: 68, w:  7 }),
-        new BambooStalk(0.098, { segs: 12, segH: 57, w: 10 }),
-        new BambooStalk(0.136, { segs:  8, segH: 73, w:  7 }),
-        new BambooStalk(0.864, { segs:  9, segH: 65, w:  8 }),
-        new BambooStalk(0.902, { segs: 12, segH: 59, w: 10 }),
-        new BambooStalk(0.938, { segs:  8, segH: 70, w:  7 }),
-        new BambooStalk(0.970, { segs: 10, segH: 63, w:  9 }),
-    ];
-
-    window.addEventListener('resize', function() {
-        resize();
-        d1._init();
-        d2._init();
-    });
-
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1;
-        bamboos.forEach(function (b) { b.draw(); });
-        for (const p of petals) { p.update(); p.draw(); }
-        d1.update(); d1.draw();
-        d2.update(); d2.draw();
-        requestAnimationFrame(animate);
-    }
-
-    animate();
-</script>
-
-<!-- hanzi-writer — stroke-by-stroke Chinese calligraphy animation -->
-<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3/dist/hanzi-writer.min.js"></script>
-<script>
-(function () {
-    /* ── configurable character list ──────────────────────────────────────── */
-    var CHARS = [
-        '天','月','年','是','爱','钱','人','水','火','山','木','日','大',
-        '小','中','上','下','好','学','生','家','国','心'
-    ];
-
-    /* ── tuning knobs ─────────────────────────────────────────────────────── */
-    var SIZE           = 160;   /* px  — rendered size of each character      */
-    var PAUSE_MS       = 1000;  /* ms  — pause after fully drawn              */
-    var ERASE_STEP_MS  = 160;   /* ms  — delay between erasing each stroke    */
-    var SPAWN_EVERY_MS = 4500;  /* ms  — base interval between new characters */
-
-    var COLORS = [
-        'rgba(250, 250, 250, 0.80)',  /* white */
-        'rgba(250, 250, 250, 0.80)',  /* white */
-        'rgba(250, 250, 250, 0.80)',  /* white */
-        /*'rgba(220, 20, 60, 0.80)',*/  /* scarlet */
-        /*'rgba(240,180, 41, 0.75)',*/  /* gold    */
-        /*'rgba(175,  8,  8, 0.78)',*/  /* crimson */
-    ];
-
-    var stage = document.getElementById('calligraphy-stage');
-    if (!stage) return;
-
-    function waitForLib(cb) {
-        if (typeof HanziWriter !== 'undefined') { cb(); return; }
-        var t = 0;
-        var iv = setInterval(function () {
-            if (typeof HanziWriter !== 'undefined') { clearInterval(iv); cb(); return; }
-            if (++t > 40) { clearInterval(iv); console.warn('hanzi-writer failed to load'); }
-        }, 250);
-    }
-
-    /* Returns visible stroke <path> elements — excludes paths inside <clipPath> */
-    function getStrokePaths(wrap) {
-        return Array.from(wrap.querySelectorAll('svg path')).filter(function (p) {
-            var parent = p.parentElement;
-            /* SVG clipPath tagName preserves case */
-            return !parent || parent.tagName !== 'clipPath';
-        });
-    }
-
-    function spawn() {
-        var char  = CHARS[Math.floor(Math.random() * CHARS.length)];
-        var color = COLORS[Math.floor(Math.random() * COLORS.length)];
-        var half  = SIZE / 2;
-        var x     = half + Math.random() * Math.max(0, window.innerWidth  - SIZE);
-        var y     = half + Math.random() * Math.max(0, window.innerHeight - SIZE);
-
-        var wrap = document.createElement('div');
-        wrap.style.cssText =
-            'position:absolute;' +
-            'left:'   + (x - half) + 'px;' +
-            'top:'    + (y - half) + 'px;' +
-            'width:'  + SIZE + 'px;' +
-            'height:' + SIZE + 'px;';
-        stage.appendChild(wrap);
-
-        var writer = HanziWriter.create(wrap, char, {
-            width:                SIZE,
-            height:               SIZE,
-            padding:              14,
-            strokeColor:          color,
-            outlineColor:         'rgba(0,0,0,0)',
-            showCharacter:        false,
-            showOutline:          false,
-            strokeAnimationSpeed: 0.9,
-            delayBetweenStrokes:  200,
-            charDataLoader: function (char, onLoad) {
-                var url = 'https://cdn.jsdelivr.net/npm/hanzi-writer-data@2/' + char + '.json';
-                fetch(url).then(function (r) { return r.json(); }).then(onLoad);
-            },
-        });
-
-        writer.animateCharacter({
-            onComplete: function () {
-                setTimeout(function () {
-                    var paths = getStrokePaths(wrap);
-
-                    if (paths.length === 0) {
-                        /* fallback: fade the whole container if SVG structure unexpected */
-                        wrap.style.transition = 'opacity 1s ease';
-                        wrap.style.opacity    = '0';
-                        setTimeout(function () {
-                            if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
-                        }, 1100);
-                        return;
-                    }
-
-                    /* erase stroke by stroke — first drawn fades first */
-                    paths.forEach(function (p, i) {
-                        setTimeout(function () {
-                            p.style.transition = 'opacity 0.45s ease';
-                            p.style.opacity    = '0';
-                        }, i * ERASE_STEP_MS);
-                    });
-
-                    setTimeout(function () {
-                        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
-                    }, paths.length * ERASE_STEP_MS + 550);
-                }, PAUSE_MS);
-            }
-        });
-    }
-
-    function loop() {
-        spawn();
-        setTimeout(loop, SPAWN_EVERY_MS + Math.random() * 2000);
-    }
-
-    /* staggered start — wait for library, then spawn two immediately */
-    waitForLib(function () {
-        setTimeout(spawn, 300);
-        setTimeout(function () { spawn(); setTimeout(loop, 2800); }, 1400);
-    });
-})();
-</script>
+    <script src="js/main.js"></script>
 </body>
 </html>
