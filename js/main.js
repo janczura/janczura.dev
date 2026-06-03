@@ -29,6 +29,34 @@
     }
     setInterval(createFloatingChar, 2000);
 
+    // === SCREEN SHAKE ON LOAD ===
+    const container = document.querySelector('.container');
+    let shakeStart = performance.now();
+    const shakeDuration = 500;
+
+    function shake(now) {
+        const elapsed = now - shakeStart;
+        if (elapsed < shakeDuration) {
+            const progress = elapsed / shakeDuration;
+            const intensity = (1 - progress) * 4;
+            const dx = (Math.random() - 0.5) * intensity * 2;
+            const dy = (Math.random() - 0.5) * intensity * 2;
+            document.body.style.transform = `translate(${dx}px, ${dy}px)`;
+            requestAnimationFrame(shake);
+        } else {
+            document.body.style.transform = '';
+        }
+    }
+    setTimeout(() => requestAnimationFrame(shake), 300);
+
+    // === STAGGERED HEADER REVEAL ===
+    const introItems = document.querySelectorAll('.intro-item');
+    introItems.forEach((item, i) => {
+        setTimeout(() => {
+            item.classList.add('revealed');
+        }, 800 + i * 250);
+    });
+
 
     // === FIREWORKS CANVAS ===
     const canvas = document.getElementById('fireworks-canvas');
@@ -45,29 +73,46 @@
     const colors = ['#ff2d55', '#ffd700', '#00f0ff', '#ff00aa', '#ff6b35', '#ffffff'];
 
     class Particle {
-        constructor(x, y, color) {
+        constructor(x, y, color, opts = {}) {
             this.x = x;
             this.y = y;
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 4 + 1;
+            const speed = (opts.speed || Math.random() * 4 + 1);
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
-            this.alpha = 1;
-            this.decay = Math.random() * 0.015 + 0.008;
+            this.alpha = opts.alpha || 1;
+            this.decay = opts.decay || Math.random() * 0.015 + 0.008;
             this.color = color;
-            this.size = Math.random() * 2.5 + 0.5;
+            this.size = opts.size || Math.random() * 2.5 + 0.5;
+            this.trail = opts.trail || false;
+            this.history = [];
         }
 
         update() {
+            if (this.trail) {
+                this.history.push({ x: this.x, y: this.y, alpha: this.alpha * 0.5 });
+                if (this.history.length > 6) this.history.shift();
+            }
             this.x += this.vx;
             this.y += this.vy;
-            this.vy += 0.03;
+            this.vy += opts_gravity || 0.03;
             this.vx *= 0.99;
             this.alpha -= this.decay;
         }
 
         draw(ctx) {
             ctx.save();
+            if (this.trail && this.history.length > 1) {
+                for (let i = 0; i < this.history.length; i++) {
+                    const h = this.history[i];
+                    const t = i / this.history.length;
+                    ctx.globalAlpha = Math.max(h.alpha * t, 0);
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(h.x, h.y, this.size * t * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
             ctx.globalAlpha = Math.max(this.alpha, 0);
             ctx.fillStyle = this.color;
             ctx.shadowColor = this.color;
@@ -79,6 +124,7 @@
         }
     }
 
+    let opts_gravity = 0.03;
     let particles = [];
 
     function launchFirework(x, y) {
@@ -89,10 +135,25 @@
         }
     }
 
-    // Initial burst on load
-    setTimeout(() => launchFirework(W * 0.3, H * 0.25), 400);
-    setTimeout(() => launchFirework(W * 0.7, H * 0.2), 800);
-    setTimeout(() => launchFirework(W * 0.5, H * 0.15), 1200);
+    function launchMegaFirework(x, y) {
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        for (let i = 0; i < 120; i++) {
+            particles.push(new Particle(x, y, color, {
+                speed: Math.random() * 7 + 2,
+                size: Math.random() * 3 + 1,
+                decay: Math.random() * 0.01 + 0.005,
+                trail: true
+            }));
+        }
+    }
+
+    // Initial mega burst on load — cinematic opening
+    setTimeout(() => launchMegaFirework(W * 0.25, H * 0.3), 600);
+    setTimeout(() => launchMegaFirework(W * 0.75, H * 0.25), 900);
+    setTimeout(() => launchMegaFirework(W * 0.5, H * 0.15), 1100);
+    setTimeout(() => launchMegaFirework(W * 0.35, H * 0.45), 1400);
+    setTimeout(() => launchMegaFirework(W * 0.65, H * 0.4), 1600);
+    setTimeout(() => { launchFirework(W * 0.2, H * 0.3); launchFirework(W * 0.8, H * 0.35); }, 1900);
 
     // Click to launch fireworks
     document.addEventListener('click', (e) => {
