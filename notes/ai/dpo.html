@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DPO — Direct Preference Optimization</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> DPO
+    </nav>
+
+    <h1>DPO — Direct Preference Optimization</h1>
+    <p style="color:#666; margin-bottom:2rem;">Nowoczesna alternatywa dla RLHF — bez reward modelu i PPO.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest DPO?</h2>
+    <p>
+      DPO to metoda dopasowania preferencji, która <strong>pomija potrzebę reward modelu i PPO</strong>. Zamiast dwóch
+      faz (trening reward modelem + RL) dostajesz jedną fazę — bezpośrednią optymalizację modelu na parach odpowiedzi
+      "wygrana vs przegrana".
+    </p>
+    <p>
+      Kluczowy wniosek z artykułu DPO: można pokazać, że problem dopasowania preferencji ma rozwiązanie w
+      zamkniętej formie — wystarczy zmodyfikować funkcję straty SFT i dodać do niej regularyzację KL względem modelu bazowego.
+    </p>
+
+    <!-- Jak to działa -->
+    <h2>Jak to działa?</h2>
+    <p>
+      DPO trenuje na parach (wygrana odpowiedź, przegrana odpowiedź) dla każdego promptu. Funkcja straty porównuje
+      prawdopodobieństwa wygenerowania obu odpowiedzi przez model i nakazuje, by wygrana miała większe prawdopodobieństwo — z regularyzacją KL względem modelu bazowego.
+    </p>
+
+<pre><span class="cmt"># W skrócie: L_DPO = -log σ(β · log(p_winned/p_ref) - β · log(p_loser/p_ref))</span>
+<span class="cmt"># β — temperatura (kontrola odchylenia od modelu bazowego)</span></pre>
+
+    <!-- Przykład kodu -->
+    <h2>Przykład — DPO z TRL</h2>
+    <p>Potrzebujesz tylko datasetu w formacie "wygrana vs przegrana" i SFT model:</p>
+
+<pre><span class="kw">from</span> trl <span class="kw">import</span> DPOTrainer
+<span class="kw">from</span> transformers <span class="kw">import</span> TrainingArguments
+
+trainer = DPOTrainer(
+    model=model,               <span class="cmt"># model po SFT (lub wstępnie wytrenowany)</span>
+    ref_model=None,            <span class="cmt"># model referencyjny — automatycznie z modelu</span>
+    train_dataset=dataset,     <span class="cmt"># format: {"prompt": ..., "chosen": ..., "rejected": ...}</span>
+    tokenizer=tokenizer,
+    args=TrainingArguments(
+        output_dir=<span class="str">"./dpo-output"</span>,
+        per_device_train_batch_size=<span class="num">4</span>,
+        num_train_epochs=<span class="num">3</span>,
+        learning_rate=<span class="num">5e-6</span>,    <span class="cmt"># DPO potrzebuje małego lr</span>
+        fp16=<span class="kw">True</span>,
+    ),
+    beta=<span class="num">0.1</span>,                   <span class="cmt"># temperatura — kontroluje odchylenie od modelu bazowego</span>
+)</pre>
+
+    <h3>Format danych do DPO</h3>
+<pre><span class="str">{</span>  <span class="str">"prompt"</span>: <span class="str">"Jak napisać funkcję sortującą?"</span>,
+  <span class="str">"chosen"</span>: <span class="str">"# Użycie wbudowanej metody\nlista.sort()\n# lub\ndef sortuj(tablica):\n    return sorted(tablica)"</span>,
+  <span class="str">"rejected"</span>: <span class="str"># Kod z błędem lub słabą praktyką (np. implementacja bubble sort, brak komentarzy)</span>
+<span class="str">}</span></pre>
+
+    <!-- Porównanie RLHF vs DPO -->
+    <h2>DPO vs RLHF</h2>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:2rem;">
+      <tr style="border-bottom:1px solid #333"><th style="padding:8px;text-align:left">Aspekt</th><th style="padding:8px;text-align:left">RLHF (PPO)</th><th style="padding:8px;text-align:left">DPO</th></tr>
+      <tr style="border-bottom:1px solid #2a2a2a"><td style="padding:6px">Ilość modeli</td><td style="padding:6px">3 (SFT + RM + PPO)</td><td style="padding:6px">1 (SFT → DPO)</td></tr>
+      <tr style="border-bottom:1px solid #2a2a2a"><td style="padding:6px">Złożoność</td><td style="padding:6px">Wysoka — stabilność PPO</td><td style="padding:6px">Niska — jeden pipeline</td></tr>
+      <tr style="border-bottom:1px solid #2a2a2a"><td style="padding:6px">Koszt danych</td><td style="padding:6px">Oceny par (ludzie)</td><td style="padding:6px">Oceny par (ludzie — to samo!)</td></tr>
+      <tr style="border-bottom:1px solid #2a2a2a"><td style="padding:6px">Jakość</td><td style="padding:6px">Dobra, ale niestabilna</td><td style="padding:6px">Często lepsza i stabilniejsza</td></tr>
+    </table>
+
+    <!-- Scenariusz -->
+    <h2>Kiedy DPO?</h2>
+    <ul>
+      <li>Dobierasz styl odpowiedzi firmy — to samo co RLHF, ale prościej wdrożyć</li>
+      <li>Nie masz zasobów na trening reward modelem i PPO (pamięć GPU)</li>
+      <li>Chcesz zbudować pipeline od SFT do alignmentu bez zbędnych komponentów</li>
+    </ul>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        DPO to prostsza i często lepsza alternatywa dla RLHF. Zamiast trzech modeli i niestabilnego PPO, dostajesz
+        jedną fazę optymalizacji na parach odpowiedzi. Wymaga tego samego zbioru danych co RLHF (oceny ludzkie par
+        odpowiedzi), ale daje stabilniejsze i szybsze rezultaty.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Jeden model zamiast trzech — prostszy pipeline</li>
+          <li>Brak PPO = brak niestabilności treningu</li>
+          <li>Szybsze wdrożenie i mniej GPU hours</li>
+          <li>Często lepsza jakość niż RLHF przy tych samych danych</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Dane: nadal potrzebujesz ocen ludzkich (to samo co w RLHF)</li>
+          <li>Wrażliwość na hiperparametr β — źle dobrany = słabe wyniki</li>
+          <li>Mniej elastyczny niż PPO przy niestandardowych reward functionach</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

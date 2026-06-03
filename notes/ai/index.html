@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI / ML — Notatki</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span> AI / ML
+    </nav>
+
+    <h1>AI / ML</h1>
+    <p style="color:#666; margin-bottom:2rem;">Techniki przyuczania, optymalizacji i rekomendacji modeli AI.</p>
+
+    <!-- Fine-tuning & Adaptation -->
+    <h2>Fine-Tuning &amp; Adaptacja</h2>
+    <div class="toc-grid">
+      <a href="sft.html" class="toc-card">
+        <h3>SFT — Supervised Fine-Tuning</h3>
+        <p>Dookrąglenie gotowego modelu na własnych danych z etykietami. Podstawa do adaptacji LLM pod konkretny styl lub domenę.</p>
+      </a>
+
+      <a href="lora.html" class="toc-card">
+        <h3>LoRA — Low-Rank Adaptation</h3>
+        <p>Efektywna metoda fine-tuningu, która mrozi model bazowy i uczy tylko małe adaptery. Oszczędność pamięci i czasu.</p>
+      </a>
+
+      <a href="rhf.html" class="toc-card">
+        <h3>RLHF — Reinforcement Learning from Human Feedback</h3>
+        <p>Dopasowanie modelu do preferencji ludzkich przez trening reward modelem i PPO. Technika, która sprawiła, że ChatGPT był tak dobry.</p>
+      </a>
+
+      <a href="dpo.html" class="toc-card">
+        <h3>DPO — Direct Preference Optimization</h3>
+        <p>Nowoczesna alternatywa dla RLHF — bez reward modelem i PPO. Jedna faza optymalizacji na parach odpowiedzi "wygrana vs przegrana".</p>
+      </a>
+    </div>
+
+    <!-- Architectures -->
+    <h2>Architektury</h2>
+    <div class="toc-grid">
+      <a href="transformer.html" class="toc-card">
+        <h3>Transformer &amp; Self-Attention</h3>
+        <p>Architektura, która zmieniła AI — "Attention Is All You Need" (2017) do LLM. Mechanizm attention pozwala każdemu tokenowi widzieć każdy inny.</p>
+      </a>
+
+      <a href="moe.html" class="toc-card">
+        <h3>MoE — Mixture of Experts</h3>
+        <p>Efektywne skalowanie modeli przez specjalizację expertów. Mixtral 8x7B: model z ~45B parametrami przy kosztach inferencji ~13B.</p>
+      </a>
+
+      <a href="quantization.html" class="toc-card">
+        <h3>Quantization (GPTQ, AWQ)</h3>
+        <p>Kompresja modeli z FP16 na int4 — 7B model waży ~3.5 GB zamiast ~14 GB bez utraty jakości.</p>
+      </a>
+    </div>
+
+    <!-- RAG & Search -->
+    <h2>RAG i Wyszukiwanie</h2>
+    <div class="toc-grid">
+      <a href="vector-dbs.html" class="toc-card">
+        <h3>Vector Databases &amp; Semantic Search</h3>
+        <p>Szuka po znaczeniu, nie słowach kluczowych. Embeddings + Pinecone/ChromaDB/pgvector = podstawa nowoczesnych RAG.</p>
+      </a>
+
+      <a href="collaborative-filtering.html" class="toc-card">
+        <h3>Collaborative Filtering</h3>
+        <p>Serce systemów rekomendacyjnych — "ludzie którzy kupili X, kupili też Y". Macierz użytkownik×produkt.</p>
+      </a>
+    </div>
+
+    <!-- Prompting & Evaluation -->
+    <h2>Prompting i Ewaluacja</h2>
+    <div class="toc-grid">
+      <a href="prompting.html" class="toc-card">
+        <h3>Prompt Engineering</h3>
+        <p>Few-shot, Chain of Thought (CoT), Tree of Thoughts (ToT) i ReAct — techniki poprawiające jakość odpowiedzi o 30–50%.</p>
+      </a>
+
+      <a href="evaluation.html" class="toc-card">
+        <h3>Evaluation Metrics</h3>
+        <p>Perplexity, BLEU/ROUGE, benchmarki (MMLU) i ocena ludzka — jak mierzyć czy model jest dobry.</p>
+      </a>
+    </div>
+
+  </div>
+</body>
+</html>

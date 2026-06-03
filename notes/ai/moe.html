@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoE — Mixture of Experts</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> MoE
+    </nav>
+
+    <h1>MoE — Mixture of Experts</h1>
+    <p style="color:#666; margin-bottom:2rem;">Efektywne skalowanie modeli przez specjalizację expertów, a nie tylko parametry.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest MoE?</h2>
+    <p>
+      Mixture of Experts to architektura, w której każda warstwa transformera to nie jeden model, lecz zestaw
+      <strong>specjalistów (expertów)</strong>. Na każdym kroku <strong>router</strong> wybiera tylko kilku ekspertów do przetwarzania danego tokenu.
+    </p>
+    <p>
+      Kluczowa idea: model ma miliony expertów, ale dla jednego tokena używa ich tylko kilku. To pozwala mieć dużo większy model przy tym samym koszcie inferencji.
+    </p>
+
+<pre><span class="cmt"># Zamiast:</span>
+<span class="cmt"># FFN(x) = W2 · ReLU(W1 · x)</span>
+
+<span class="cmt"># MoE:</span>
+<span class="cmt"># FFN_MoE(x) = Σ_i (g(x)_i · Expert_i(x))</span>
+<span class="cmt"># gdzie g(x) to router — wybiera top-k ekspertów dla każdego tokenu</span></pre>
+
+    <!-- Jak działa -->
+    <h2>Jak to działa?</h2>
+    <ol>
+      <li><strong>Router (gating network)</strong> — mała sieć neuronowa, która decyduje które experty wybrać dla danego tokenu</li>
+      <li><strong>Top-K selection</strong> — wybieramy zwykle K=1 lub K=2 ekspertów z N dostępnych</li>
+      <li><strong>Symetryczna dystrybucja obciążenia</strong> — balanced dispatch, żeby żadien ekspert nie był przeciążony</li>
+    </ol>
+
+<pre><span class="kw">class</span> MoELayer(nn.Module):
+    <span class="kw">def</span> __init__(self, num_experts=<span class="num">8</span>, top_k=<span class="num">2</span>, d_model=<span class="num">768</span>):
+        super().__init__()
+        self.router = nn.Linear(d_model, num_experts)  <span class="cmt"># gating</span>
+        self.experts = nn.ModuleList([nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.GELU(),
+            nn.Linear(d_model, d_model)
+        ) <span class="kw">for</span> _ <span class="kw">in</span> range(num_experts)])
+        self.top_k = top_k
+
+    <span class="kw">def</span> forward(self, x):  <span class="cmt"># (batch_size, seq_len, d_model)</span>
+        gates = torch.softmax(self.router(x), dim=-<span class="num">1</span>)  <span class="cmt"># wywagi dla ekspertów</span>
+        top_k_gates, top_k_indices = torch.topk(gates, self.top_k, dim=-<span class="num">1</span>)
+
+        output = torch.zeros_like(x)
+        batch_size, seq_len, _ = x.shape
+
+        <span class="kw">for</span> i <span class="kw">in</span> range(self.top_k):  <span class="cmt"># dla każdego z top-k ekspertów</span>
+            mask = (top_k_indices == i)  <span class="cmt"># które tokeny trafiają do eksperta</span>
+            expert_input = x[mask]  <span class="cmt"># tylko te tokeny</span>
+            if expert_input.numel() > <span class="num">0</span>:
+                expert_output = self.experts[i](expert_input)
+                weight = top_k_gates[mask, i].unsqueeze(-<span class="num">1</span>)
+                output[mask] += weight * expert_output
+
+        <span class="kw">return</span> output</pre>
+
+    <!-- Dlaczego warto -->
+    <h2>Dlaczego MoE?</h2>
+    <ul>
+      <li><strong>Model 10x większy przy tym samym koszcie inferencji</strong> — GShard (Google) pokazał, że można skalować do setek miliardów parametrów przy jednym tokonie GPU compute</li>
+      <li><strong>Specjalizacja eksperty</strong> — każdy ekspert może się "nauczyć" innego rodzaju tokena czy zadania</li>
+      <li><strong>Efektywność przy długich kontekstach</strong> — większy model nie oznacza wolniejszej inferencji (jeśli K jest małe)</li>
+    </ul>
+
+    <!-- Przykłady -->
+    <h2>Przykłady modeli MoE</h2>
+    <ul>
+      <li><strong>Mixtral 8x7B</strong> — 8 expertów na warstwę, tylko 2 aktywne przy inferencji (~45B params total, ~13B aktywnych)</li>
+      <li><strong>GShard / Switch Transformer</strong> — wczesne architektur MoE z Google/DeepMind</li>
+    </ul>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        MoE to kluczowa technika do budowania bardzo dużych modeli bez wybuchowego wzrostu kosztów inferencji. Model ma
+        setki miliardów parametrów, ale dla każdego tokona obliczają się tylko kilkanaście miliardów — reszta ekspertów jest
+        "wyłączona". Mixtral 8x7B to najlepszy przykład: model o pojemności ~45B parametrów przy kosztach inferencji ~13B.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Duży model przy niskim koszcie inferencji</li>
+          <li>Szybka konwersacja (mniej tokenów do przetwarzania)</li>
+          <li>Naturalna specjalizacja — eksperty uczą się różnych rzeczy</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Duża złożoność implementacyjna (dispatch, balanced routing)</li>
+          <li>Ryzyko "expert collapse" — niektórzy eksperci nigdy się nie uczą</li>
+          <li>Precyzja może być niższa niż pełny dense model o podobnym rozmiarze</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

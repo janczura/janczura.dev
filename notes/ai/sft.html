@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SFT — Supervised Fine-Tuning</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> SFT
+    </nav>
+
+    <h1>SFT — Supervised Fine-Tuning</h1>
+    <p style="color:#666; margin-bottom:2rem;">Dookrąglenie modelu nadzorowane na własnych danych.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest SFT?</h2>
+    <p>
+      Supervised Fine-Tuning to proces adaptacji gotowego, wstępnie wytrenowanego modelu (np. Llama, Mistral, CodeLlama)
+      na własnym zbiorze danych z etykietami. Model już zna język lub kod — SFT uczy go <strong>konkretnego stylu, formatu
+      lub domeny</strong>.
+    </p>
+    <p>
+      Dane są przygotowane jako pary <code>(prompt → odpowiedź)</code>. W przypadku kodu: kontekst pliku + komentarz
+      → poprawny fragment kodu w stylu projektu. Model uczy się kontynuować tekst zgodnie z wzorcem.
+    </p>
+
+    <!-- Jak to działa -->
+    <h2>Jak to działa?</h2>
+    <ol>
+      <li><strong>Model bazowy</strong> — pobierasz gotowe LLM (np. CodeLlama-7b, Mistral-7b)</li>
+      <li><strong>Dataset</strong> — przygotowujesz pary JSONL: <code>{"text": "&lt;prompt&gt;\n&lt;response&gt;"}</code></li>
+      <li><strong>Trening</strong> — model uczy się przewidywać odpowiedź po prompcie, całe wagі są aktualizowane</li>
+      <li><strong>Ewaluacja</strong> — sprawdzasz na zbiorze testowym czy model generuje poprawne odpowiedzi</li>
+    </ol>
+
+    <!-- Przykład kodu -->
+    <h2>Przykład — SFT z HuggingFace TRL</h2>
+    <p>Poniżej pełny przykład fine-tuningu modelu CodeLlama na własnym kodzie:</p>
+
+<pre><span class="kw">from</span> trl <span class="kw">import</span> SFTTrainer
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForCausalLM, AutoTokenizer
+<span class="kw">from</span> datasets <span class="kw">import</span> load_dataset
+
+model_name = <span class="str">"codellama/CodeLlama-7b-hf"</span>
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype=<span class="fn">torch.float16</span>,
+    device_map=<span class="str">"auto"</span>
+)
+
+<span class="cmt"># Dataset w formacie JSONL: {"text": "prompt\nresponse"}</span>
+dataset = load_dataset(<span class="str">"json"</span>, data_files=<span class="str">"./code_examples.jsonl"</span>)[<span class="str">"train"</span>]
+
+trainer = SFTTrainer(
+    model=model,
+    tokenizer=tokenizer,
+    train_dataset=dataset,
+    dataset_text_field=<span class="str">"text"</span>,
+    max_seq_length=<span class="num">2048</span>,
+    args=<span class="fn">TrainingArguments</span>(
+        output_dir=<span class="str">"./sft-output"</span>,
+        num_train_epochs=<span class="num">3</span>,
+        per_device_train_batch_size=<span class="num">2</span>,
+        gradient_accumulation_steps=<span class="num">8</span>,
+        learning_rate=<span class="num">2e-5</span>,
+        fp16=<span class="kw">True</span>,
+        logging_steps=<span class="num">10</span>,
+    ),
+)
+
+trainer.train()</pre>
+
+    <h3>Przygotowanie danych — code_examples.jsonl</h3>
+<pre><span class="str">{</span>  <span class="str">"text"</span>: <span class="str">"&lt;&lt;SYS&gt;&gt;\nPisz kod w stylu naszego projektu.\n&lt;&lt;/SYS&gt;&gt;\n\nQ: Stwórz endpoint GET /users\nA:\n<span class="op">@app</span>.route(<span class="str">'/users'</span>, methods=[<span class="str">'GET'</span>])\ndef get_users():\n    <span class="kw">return</span> jsonify(User.query.all())"</span><span class="str">}</span></pre>
+
+    <!-- Przykład — adaptacja stylu kodu -->
+    <h2>Scenariusz: styl kodu repozytorium</h2>
+    <p>
+      Aby przyuczyć model do pisania w stylu Waszego projektu, parsujesz repo i generujesz pary treningowe:
+    </p>
+
+<pre><span class="kw">import</span> os
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+repo_path = Path(<span class="str">"./my-project"</span>)
+examples = []
+
+<span class="kw">for</span> py_file <span class="kw">in</span> repo_path.glob(<span class="str">"**/*.py"</span>):
+    content = py_file.read_text()
+    lines = content.split(<span class="str">"\n"</span>)
+
+    <span class="cmt"># Bierzemy kontekst (pierwsze 20 linii) → reszta jako odpowiedź</span>
+    context = <span class="str">"\n"</span>.join(lines[:<span class="num">20</span>])
+    response = <span class="str">"\n"</span>.join(lines[<span class="num">20</span>:])
+
+    examples.append({
+        <span class="str">"text"</span>: <span class="str">f"&lt;&lt;SYS&gt;&gt;\nPisz kod w stylu projektu.\n&lt;&lt;/SYS&gt;&gt;\n\n{context}\n{response}"</span>
+    })
+
+<span class="cmt"># Zapisz do JSONL</span>
+<span class="kw">with</span> open(<span class="str">"code_examples.jsonl"</span>, <span class="str">"w"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> ex <span class="kw">in</span> examples:
+        f.write(json.dumps(ex) + <span class="str">"\n"</span>)</pre>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        SFT to najprostsza i najbardziej bezpośrednia metoda adaptacji modelu. Działa na parze prompt→odpowiedź,
+        aktualizując wszystkie wagі modelu. Idealne gdy masz solidny zbiór danych i chcesz żeby model
+        "mówił" w konkretnym stylu lub specjalizował się w danej domenie.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Proste w implementacji — jeden pipeline, gotowe biblioteki (TRL)</li>
+          <li>Działa na każdym modelu bazowym</li>
+          <li>Efektywność rośnie z jakością danych</li>
+          <li>Pełna kontrola nad zachowaniem modelu</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Wymaga dużo pamięci VRAM (cały model w RAM GPU)</li>
+          <li>Długi czas treningu przy dużych modelach</li>
+          <li>Ryzyko catastrophic forgetting — model może zapomnieć ogólną wiedzę</li>
+          <li>Każda nowa adaptacja wymaga pełnego re-treningu</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantization (GPTQ, AWQ)</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> Quantization
+    </nav>
+
+    <h1>Quantization (GPTQ, AWQ)</h1>
+    <p style="color:#666; margin-bottom:2rem;">Kompresja modeli — z FP16 do int4 bez utraty jakości.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest Quantization?</h2>
+    <p>
+      Quantization to technika zamiany wag modelu z precyzji float32 (lub float16) na niższą — np. int8 lub int4.
+      Zmniejsza to rozmiar modelu i przyspiesza inferencję przy minimalnej utracie jakości.
+    </p>
+
+<pre><span class="cmt"># Przykład:</span>
+<span class="cmt"># FP16:     7B params × 2 bajty = ~14 GB VRAM</span>
+<span class="cmt"># INT8:     7B params × 1 bajt  = ~7 GB VRAM</span>
+<span class="cmt"># INT4:     7B params × 0.5 bajta = ~3.5 GB VRAM</span></pre>
+
+    <!-- GPTQ -->
+    <h2>GPTQ — Quantization w czasie inference</h2>
+    <p>
+      GPTQ (Grover et al., 2022) to post-training quantization, która kwantyzuje wagі model po treningu.
+      Używa kwantylizacji per-token z optymalizacją na pojedynczym zbiorze walidacyjnym — daje bardzo dobre rezultaty.
+    </p>
+
+<pre><span class="kw">import</span> auto_gptq
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoTokenizer, GPTQForCausalLM
+
+model = GPTQForCausalLM.from_pretrained(
+    model_name,
+    quantization_config=auto_gptq.AutoQuantizationConfig(wbits=<span class="num">4</span>, group_size=<span class="num">128</span>),
+)</pre>
+
+    <!-- AWQ -->
+    <h2>AWQ — Activation-Aware Quantization</h2>
+    <p>
+      AWQ (Zuo et al., 2023) to nowsza metoda — bierze pod uwagę rozkład aktywacji (nie tylko wag).
+      Wykrywa "outliers" w aktywacjach i kwantyzuje tylko bezpieczne części. W praktyce: lepsza jakość przy int4 niż GPTQ.
+    </p>
+
+<pre><span class="kw">from</span> awq <span class="kw">import</span> AutoAWQForCausalLM, AWQConfig
+
+model = AutoAWQForCausalLM.from_pretrained(model_name)
+quant_config = AWQConfig(bits=<span class="num">4</span>, group_size=<span class="num">128</span>)
+model.quantize(tokenizer=tokenizer, quant_config=quant_config)
+model.save_quantized(<span class="str">"./qwen-7b-int4"</span>)  <span class="cmt"># ~3.5 GB zamiast ~14 GB (FP16)</span></pre>
+
+    <!-- Porównanie -->
+    <h2>GPTQ vs AWQ</h2>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:2rem;">
+      <tr style="border-bottom:1px solid #333"><th style="padding:8px;text-align:left">Aspekt</th><th style="padding:8px;text-align:left">GPTQ</th><th style="padding:8px;text-align:left">AWQ</th></tr>
+      <tr style="border-bottom:1px solid #2a2a2a"><td style="padding:6px">Jakość int4</td><td style="padding:6px">Dobra (z calibration)</td><td style="padding:6px">Lepsza w praktyce</td></tr>
+      <tr style="border-bottom:1px solid #2a2a2a"><td style="padding:6px">Szybkość kwantyzacji</td><td style="padding:6px">Powolny (minuty/hodzin)</td><td style="padding:6px">Szybszy</td></tr>
+      <tr style="border-bottom:1px solid #2a2a2a"><td style="padding:6px">Wydajność inferencji</td><td style="padding:6px">GPTQ-optimized kernels</td><td style="padding:6px">AWQ-optimized (llama.cpp)</td></tr>
+      <tr style="border-bottom:1px solid #2a2a2a"><td style="padding:6px">Ekosystem</td><td style="padding:6px">#llm_int8, vLLM GPTQ</td><td style="padding:6px">#AWQ, llama.cpp</td></tr>
+    </table>
+
+    <!-- Scenariusz -->
+    <h2>Kiedy kwantyzować?</h2>
+    <ul>
+      <li><strong>Wdrożenie na GPU z małą pamięcią</strong> — 7B model w FP16 = 14GB VRAM, w int4 = ~3.5 GB</li>
+      <li><strong>Inferencja lokalna (MacBook, laptop)</strong> — GGUF format z llama.cpp (AWQ-friendly)</li>
+      <li><strong>Serwerowa wydajność</strong> — quantized models obsługują więcej żądań na GPU</li>
+    </ul>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Quantization to najtańszy sposób na "wciśnięcie" dużego modelu na małe GPU. AWQ w int4 daje najlepsze rezultaty —
+        model 7B waży ~3.5 GB i działa płynnie na jednym GPU RTX 3080/4060. GPTQ jest starszy, ale wciąż solidny.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Mniejszy rozmiar — 4× przy int4 vs FP16 bez fine-tuningu</li>
+          <li>Szybsza inferencja (mniej transferów pamięci)</li>
+          <li>AWQ/GPTQ = post-training — nie trzeba re-trainować modelu</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Jakość spada (zwłaszcza przy int4) — ale AWQ minimalizuje ten spadek</li>
+          <li>Nie można łatwo "odkwantyzować" — model jest trwale skompresowany</li>
+          <li>Kwantyzacja po fine-tuningu (SFT/LoRA) = ryzyko pogorszenia jakości adaptera</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

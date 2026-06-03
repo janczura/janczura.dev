@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Filtering</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> Collaborative Filtering
+    </nav>
+
+    <h1>Collaborative Filtering</h1>
+    <p style="color:#666; margin-bottom:2rem;">Serce systemów rekomendacyjnych — "ludzie którzy kupili X, kupili też Y".</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest Collaborative Filtering?</h2>
+    <p>
+      Collaborative Filtering (CF) to metoda rekomendacji oparta na zachowaniu użytkowników. Nie analizuje
+      cech produktów — tylko to, <strong>jacy użytkownicy co kupowali</strong>. Jeśli użytkownik A i B kupowali
+      podobne rzeczy, a A kupił produkt X którego B jeszcze nie ma — system zasugeruje B produkt X.
+    </p>
+
+    <!-- Rodzaje -->
+    <h2>Dwa podejścia</h2>
+
+    <h3>1. Memory-based (Item-to-Item / User-to-User)</h3>
+    <p>
+      Oblicza podobieństwo między produktami lub użytkownikami na podstawie macierzy interakcji.
+      Najprostsze i najszybsze do wdrożenia.
+    </p>
+
+<pre><span class="kw">import</span> numpy as np
+<span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> cosine_similarity
+
+<span class="cmt"># Macierz użytkownicy × produkty (1 = kupił, 0 = nie)</span>
+user_item_matrix = np.array([
+    [<span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>],   <span class="cmt"># user 0: kupił produkty A, B, D</span>
+    [<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>],   <span class="cmt"># user 1: kupił A, C, D</span>
+    [<span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>],   <span class="cmt"># user 2: kupił B, C, E</span>
+    [<span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>],   <span class="cmt"># user 3: kupił A, B</span>
+])
+
+<span class="cmt"># Podobieństwo między produktami (transpozycja)</span>
+item_similarity = cosine_similarity(user_item_matrix.T)
+
+<span class="cmt"># Rekomendacja dla usera 3 — co podobne do tego co już ma?</span>
+user_basket = np.array([[<span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>]])  <span class="cmt"># ma A i B</span>
+scores = item_similarity.T @ user_basket.T
+scores[<span class="num">0</span], [<span class="num">0</span>, <span class="num">1</span>]] = <span class="num">-1</span>  <span class="cmt"># ukryj to co już ma</span>
+
+<span class="cmt"># Najlepsze rekomendacje:</span>
+product_names = [<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>, <span class="str">"D"</span>, <span class="str">"E"</span>]
+top_items = np.argsort(scores[<span class="num">0</span>])[::<span class="num">-1</span>]
+<span class="kw">for</span> idx <span class="kw">in</span> top_items[:<span class="num">3</span>]:
+    print(f<span class="str">"  → {product_names[idx]} (score: {scores[0, idx]:.3f})"</span>)</pre>
+
+    <h3>2. Model-based (Matrix Factorization)</h3>
+    <p>
+      Rozkłada macierz użytkownicy×produkty na dwie macierze o niższym wymiarze — ukryte cechy
+      ("latent factors"). Algorytmy: SVD, ALS, Neural CF.
+    </p>
+
+<pre><span class="kw">from</span> surprise <span class="kw">import</span> Dataset, SVD, accuracy
+<span class="kw">from</span> surprise.model_selection <span class="kw">import</span> cross_validate
+
+<span class="cmt"># Surprise — biblioteka do recommender systems</span>
+data = Dataset.load_from_df(
+    ratings_df[<span class="str">['user_id', 'product_id', 'rating'</span>]],  <span class="cmt"># rating: 1-5 lub binary buy/no-buy</span>
+    reader=<span class="fn">Reader</span>(rating_scale=(<span class="num">0</span>, <span class="num">1</span>))
+)
+
+trainset = data.build_full_trainset()
+
+<span class="cmt"># SVD — Singular Value Decomposition</span>
+algo = SVD(n_factors=<span class="num">50</span>, n_epochs=<span class="num">20</span>, lr_all=<span class="num">0.005</span>)
+algo.fit(trainset)
+
+<span class="cmt"># Predykcja: czy user 42 kupi produkt 17?</span>
+prediction = algo.predict(<span class="num">42</span>, <span class="num">17</span>)
+print(f<span class="str">"Estymowana ocena: {prediction.est:.3f}"</span>)
+
+<span class="cmt"># Top-N rekomendacji dla użytkownika</span>
+user_id = <span class="num">42</span>
+all_items = trainset.all_items()
+predictions = [(item, algo.predict(user_id, item).est) <span class="kw">for</span> item <span class="kw">in</span> all_items]
+top_n = sorted(predictions, key=<span class="kw">lambda</span> x: x[<span class="num">1</span>], reverse=<span class="kw">True</span>)[:<span class="num">10</span>]
+
+<span class="kw">for</span> item_id, score <span class="kw">in</span> top_n:
+    print(f<span class="str">"  → Produkt {item_id}: {score:.3f}"</span>)</pre>
+
+    <!-- Scenariusz: sklep internetowy -->
+    <h2>Scenariusz: rekomendacje w koszyku</h2>
+    <p>
+      Dla sklepu internetowego, item-to-item CF jest najprostszym i najczęściej wystarczającym rozwiązaniem.
+      Logika: użytkownik ma w koszyku produkty [X, Y] → znajdź produkty najbardziej powiązane z X i Y.
+    </p>
+
+<pre><span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+<span class="kw">import</span> json
+
+<span class="cmt"># Budowa macierzy współwystępowania z logów zamówień</span>
+<span class="cmt"># orders = [{"items": ["A", "B", "D"]}, {"items": ["A", "C"]}, ...]</span>
+
+co_occurrence = defaultdict(<span class="kw">lambda</span>: defaultdict(int))
+item_count = defaultdict(int)
+
+<span class="kw">for</span> order <span class="kw">in</span> orders:
+    items = order[<span class="str">"items"</span>]
+    <span class="kw">for</span> item <span class="kw">in</span> items:
+        item_count[item] += <span class="num">1</span>
+    <span class="kw">for</span> i <span class="kw">in</span> items:
+        <span class="kw">for</span> j <span class="kw">in</span> items:
+            <span class="kw">if</span> i != j:
+                co_occurrence[i][j] += <span class="num">1</span>
+
+<span class="cmt"># Normalizacja — Jaccard lub lift</span>
+def recommend(cart_items, top_n=<span class="num">5</span>):
+    scores = defaultdict(float)
+    <span class="kw">for</span> item <span class="kw">in</span> cart_items:
+        <span class="kw">for</span> related, count <span class="kw">in</span> co_occurrence[item].items():
+            <span class="kw">if</span> related <span class="kw">not in</span> cart_items:
+                <span class="cmt"># Lift = P(A,B) / (P(A) * P(B)) — korelacja niezależna od popularności</span>
+                lift = count / (item_count[item] * item_count[related] / len(orders))
+                scores[related] += lift
+
+    <span class="kw">return</span> sorted(scores.items(), key=<span class="kw">lambda</span> x: x[<span class="num">1</span>], reverse=<span class="kw">True</span>)[:top_n]
+
+<span class="cmt"># Użytkownik ma w koszyku laptop i myszkę:</span>
+print(recommend([<span class="str">"laptop"</span>, <span class="str">"myszka"</span>]))
+<span class="cmt"># → [('podkładka pod myszkę', 4.2), ('hub USB-C', 3.8), ...]</span></pre>
+
+    <!-- Ewaluacja -->
+    <h2>Jak mierzyć jakość rekomendacji?</h2>
+    <ul>
+      <li><strong>Precision@K</strong> — ile z K zarekomendowanych produktów jest trafnych</li>
+      <li><strong>Recall@K</strong> — jaki odsetek trafnych produktów znalazł się w top-K</li>
+      <li><strong>NDCG@K</strong> — jak dobrze uporządkowane są rekomendacje (ważna pozycja)</li>
+      <li><strong>Coverage</strong> — jaki odsetek katalogu jest rekomendowany</li>
+    </ul>
+
+<pre><span class="kw">from</span> sklearn.metrics <span class="kw">import</span> precision_score, recall_score
+
+<span class="cmt"># Test na zbiorze historycznym</span>
+<span class="cmt"># Dla każdego użytkownika: ukryj ostatnią zakupioną rzecz, sprawdź czy jest w top-K rekomendacji</span>
+
+<span class="kw">def</span> <span class="fn">precision_at_k</span>(relevant, recommended, k):
+    rec_top_k = set(recommended[:k])
+    hits = len(rec_top_k &amp; set(relevant))
+    <span class="kw">return</span> hits / k
+
+<span class="cmt"># Przykład: user kupił [A, B, C], system rekomendował [B, X, A, Y]</span>
+print(precision_at_k([<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>], [<span class="str">"B"</span>, <span class="str">"X"</span>, <span class="str">"A"</span>, <span class="str">"Y"</span>], k=<span class="num">3</span>))
+<span class="cmt"># → 0.67 (2 z 3 trafnych)</span></pre>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Collaborative Filtering to najprostsza i najczęściej wystarczająca metoda rekomendacji.
+        Item-to-item CF (memory-based) jest idealny na start — szybki, prosty, nie wymaga treningu modelu.
+        Matrix Factorization daje lepsze rezultacje przy dużych zbiorach danych. W e-commerce
+        często łączy się CF z content-based filtering dla hybrydowego podejścia.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Nie wymaga cech produktów — tylko dane transakcyjne</li>
+          <li>Item-to-item jest błyskawiczny w inferencji (&lt;1ms)</li>
+          <li>Prosty do implementacji i utrzymania</li>
+          <li>Działa od razu po zebraniu pierwszych danych</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Cold start — nowe produkty nie mają historii, więc nie są rekomendowane</li>
+          <li>Sparse matrix problem — przy dużym katalogu i mało transakcjach macierz jest pusta</li>
+          <li>Nie rozumie "dlaczego" — tylko statystyczne powiązania</li>
+          <li>Popular bias — popularne produkty są nadrekomendowane</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoRA — Low-Rank Adaptation</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> LoRA
+    </nav>
+
+    <h1>LoRA — Low-Rank Adaptation</h1>
+    <p style="color:#666; margin-bottom:2rem;">Efektywny fine-tuning bez modyfikowania wag modelu bazowego.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest LoRA?</h2>
+    <p>
+      LoRA to technika, która zamiast aktualizować wszystkie wagі dużego modelu, dodaje małe
+      <strong>adaptery niskiego rzędu</strong> (low-rank matrices) równolegle do istniejących warstw.
+      Model bazowy pozostaje zamrożony — uczysz tylko te adaptery.
+    </p>
+    <p>
+      Matematycznie: zamiast uczyć macierz wag <code>W</code> o wymiarze <code>d × k</code>,
+      rozkładasz aktualizację na dwie małe macierze <code>A</code> (<code>d × r</code>) i <code>B</code>
+      (<code>r × k</code>), gdzie <code>r ≪ min(d, k)</code>. Typowo <code>r = 8, 16, 32</code>.
+    </p>
+
+<pre><span class="cmt"># Zamiast:</span>
+<span class="cmt"># h = W · x          → uczenie całego W (miliony parametrów)</span>
+
+<span class="cmt"># LoRA:</span>
+<span class="cmt"># h = W · x + (A · B) · x   → W zamrożone, uczysz tylko A i B</span></pre>
+
+    <!-- Dlaczego to działa -->
+    <h2>Dlaczego to działa?</h2>
+    <p>
+      Badania pokazują, że podczas fine-tuningu macierz aktualizacji wag ma niski "intrinsic rank" —
+      czyli większość informacji zmieści się w małej liczbie wymiarów. LoRA to wykorzystuje:
+      zamiast uczyć 7 miliardów parametrów, uczysz kilka milionów adapterów.
+    </p>
+
+    <!-- Przykład kodu -->
+    <h2>Przykład — LoRA z PEFT + TRL</h2>
+    <p>Kluczowa różnica względem SFT: dodajesz <code>LoraConfig</code> i <code>get_peft_model()</code>:</p>
+
+<pre><span class="kw">from</span> peft <span class="kw">import</span> LoraConfig, get_peft_model, TaskType
+<span class="kw">from</span> trl <span class="kw">import</span> SFTTrainer
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForCausalLM, AutoTokenizer
+
+model_name = <span class="str">"codellama/CodeLlama-7b-hf"</span>
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype=<span class="fn">torch.float16</span>,
+    device_map=<span class="str">"auto"</span>
+)
+
+<span class="cmt"># Konfiguracja LoRA</span>
+lora_config = LoraConfig(
+    r=<span class="num">16</span>,                          <span class="cmt"># rang adaptera</span>
+    lora_alpha=<span class="num">32</span>,                 <span class="cmt"># skala mnożenia</span>
+    target_modules=[<span class="str">"q_proj"</span>, <span class="str">"v_proj"</span>],  <span class="cmt"># warstwy do adaptacji</span>
+    lora_dropout=<span class="num">0.05</span>,
+    bias=<span class="str">"none"</span>,
+    task_type=TaskType.CAUSAL_LM,
+)
+
+<span class="cmt"># Ovoj model w PEFT — teraz tylko adaptery są trenowane</span>
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+<span class="cmt"># → trainable params: 0.17 % (4.2M vs 7B)</span>
+
+dataset = load_dataset(<span class="str">"json"</span>, data_files=<span class="str">"./code_examples.jsonl"</span>)[<span class="str">"train"</span>]
+
+trainer = SFTTrainer(
+    model=model,
+    tokenizer=tokenizer,
+    train_dataset=dataset,
+    dataset_text_field=<span class="str">"text"</span>,
+    max_seq_length=<span class="num">2048</span>,
+    args=<span class="fn">TrainingArguments</span>(
+        output_dir=<span class="str">"./lora-output"</span>,
+        num_train_epochs=<span class="num">3</span>,
+        per_device_train_batch_size=<span class="num">4</span>,
+        learning_rate=<span class="num">2e-4</span>,
+        fp16=<span class="kw">True</span>,
+    ),
+)
+
+trainer.train()
+
+<span class="cmt"># Zapisz tylko adaptery (kilka MB, nie GB)</span>
+model.save_pretrained(<span class="str">"./lora-adapter"</span>)</pre>
+
+    <h3>Inferencja z adapterem LoRA</h3>
+<pre><span class="kw">from</span> peft <span class="kw">import</span> PeftModel
+
+base_model = AutoModelForCausalLM.from_pretrained(
+    <span class="str">"codellama/CodeLlama-7b-hf"</span>,
+    torch_dtype=<span class="fn">torch.float16</span>,
+)
+
+<span class="cmt"># Wczytaj adapter na wierzch modelu bazowego</span>
+model = PeftModel.from_pretrained(base_model, <span class="str">"./lora-adapter"</span>)
+model.eval()
+
+inputs = tokenizer(<span class="str">"Stwórz funkcję sortującą:"</span>, return_tensors=<span class="str">"pt"</span>)
+output = model.generate(**inputs, max_new_tokens=<span class="num">256</span>)
+print(tokenizer.decode(output[<span class="num">0</span>]))</pre>
+
+    <!-- Scenariusz: styl kodu -->
+    <h2>Scenariusz: styl kodu repozytorium</h2>
+    <p>
+      LoRA jest <strong>najlepszym wyborem</strong> do tego zadania. Dlaczego:
+    </p>
+    <ul>
+      <li>Trening na jednym GPU (nawet 8GB VRAM z quantizacją)</li>
+      <li>Szybki — godziny zamiast dni</li>
+      <li>Adapter waży kilka MB — łatwy do wymiany i testowania</li>
+      <li>Możesz mieć osobny adapter na każdy projekt / styl kodu</li>
+    </ul>
+
+    <!-- Hyperparametry -->
+    <h2>Kluczowe hyperparametry LoRA</h2>
+    <ul>
+      <li><code>r</code> (rang) — 8, 16, 32. Większe = więcej wyrazistości, ale wolniej i więcej pamięci</li>
+      <li><code>lora_alpha</code> — skala; typowo <code>2 × r</code>. Nie wpływa na liczbę parametrów</li>
+      <li><code>target_modules</code> — które warstwy adaptować. <code>q_proj, v_proj</code> to standard; można dodać <code>k_proj, o_proj, gate_proj, up_proj, down_proj</code></li>
+      <li><code>lora_dropout</code> — regularizacja, typowo 0.05–0.1</li>
+    </ul>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        LoRA to de facto standard fine-tuningu dużych modeli. Mrozi model bazowy, uczy tylko małe adaptery
+        niskiego rzędu — oszczędność pamięci do 100× i czasu treningu do 10× względem pełnego SFT.
+        Adaptery są lekkie (kilka MB), łatwe do wymiany i można je stosować na dowolnym modelu bazowym.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Oszczędność pamięci — trening na jednym GPU 8GB+</li>
+          <li>Szybki trening (godziny vs dni)</li>
+          <li>Adaptery waży kilka MB, nie GB</li>
+          <li>Brak catastrophic forgetting — model bazowy jest nienaruszony</li>
+          <li>Możliwość wielu adapterów na jeden model</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Dodatkowy overhead inferencji (nawet mały)</li>
+          <li>Jakość może być nieco gorsza niż pełny SFT przy bardzo specyficznych zadaniach</li>
+          <li>Trzeba dobrać target_modules pod architekturę modelu</li>
+          <li>Adapter jest związany z modelem bazowym — nie przenosisz go na inny model</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

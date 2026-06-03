@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transformer & Self-Attention</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> Transformer & Attention
+    </nav>
+
+    <h1>Transformer & Self-Attention</h1>
+    <p style="color:#666; margin-bottom:2rem;">Architektura, która zmieniła AI — od "Attention Is All You Need" (2017) do LLM.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest Transformer?</h2>
+    <p>
+      Transformer to architektura neuronowa zaproponowana w artykule <em>"Attention Is All You Need"</em> (Vaswani et al., 2017).
+      Zastąpił RNN/LSTM i umożliwił szkolenie modeli na bardzo długich sekwencjach dzięki <strong>mechanizmowi self-attention</strong>.
+    </p>
+
+<pre><span class="cmt"># Self-Attention w jednym zdaniu:</span>
+<span class="cmt"># Dla każdego tokena obliczamy, jak ważny jest każdy inny token w sekwencji.</span></pre>
+
+    <!-- Mechanizm Attention -->
+    <h2>Jak działa Self-Attention?</h2>
+    <p>
+      Każdy token w sekwencji generuje trzy wektory: <code>Query</code>, <code>Key</code> i <code>Value</code>.
+      Query jednego tokenu porównuje się z Key każdego innego tokonu (iloczyn macierzy) — wynik to "waga uwagi".
+      Wagi mnożą Value, a wyniki sumują.
+    </p>
+
+<pre><span class="cmt"># Self-Attention: Attention(Q, K, V) = softmax(Q @ K^T / sqrt(d_k)) @ V</span></pre>
+
+    <p>Kluczowe właściwości:</p>
+    <ul>
+      <li><strong>Skalowanie 1/dk</strong> — dzielenie przez pierwiastek wymiaru zapobiega saturacji softmax (gradienty nie znikają)</li>
+      <li><strong>Multi-Head Attention</strong> — kilka równoległych attention "nagłówków" pozwala modelowi skupić się na różnych aspektach relacji</li>
+      <li><strong>Positional Encoding</strong> — Transformer nie ma pojęcia o kolejności tokenów, więc dodaje informacje o pozycji sinusoidalnie (lub uczy je)</li>
+    </ul>
+
+    <!-- Encoder vs Decoder -->
+    <h2>Encoder vs Decoder-only</h2>
+    <p>Transformer miał dwie części — encoder i decoder. Współczesne LLM używają tylko <strong>decoder-only</strong>:</p>
+    <ul>
+      <li><strong>Encoder (BERT)</strong> — widzi cały kontekst naraz → klasyfikacja, NER, ekstrakcja encji</li>
+      <li><strong>Decoder-only (GPT-style)</strong> — generuje token po tokenie z lewą maską → LLM, kod, czaty</li>
+    </ul>
+
+    <!-- Przykład implementacji -->
+    <h2>Implementacja Self-Attention w PyTorch</h2>
+
+<pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+class MultiHeadAttention(nn.Module):
+    <span class="kw">def</span> __init__(self, d_model=<span class="num">512</span>, num_heads=<span class="num">8</span>):
+        super().__init__()
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.head_dim = d_model // num_heads
+
+        <span class="cmt"># Linear projections dla Q, K, V i outputu</span>
+        self.q_proj = nn.Linear(d_model, d_model)
+        self.k_proj = nn.Linear(d_model, d_model)
+        self.v_proj = nn.Linear(d_model, d_model)
+        self.out_proj = nn.Linear(d_model, d_model)
+
+    <span class="kw">def</span> forward(self, x):  <span class="cmt"># x: (batch_size, seq_len, d_model)</span>
+        B, L, D = x.shape
+
+        <span class="cmt"># Projekcje do Q, K, V</span>
+        q = self.q_proj(x).view(B, L, self.num_heads, self.head_dim)
+        k = self.k_proj(x).view(B, L, self.num_heads, self.head_dim)
+        v = self.v_proj(x).view(B, L, self.num_heads, self.head_dim)
+
+        <span class="cmt"># Transpose dla attention: (batch, heads, seq_len, head_dim)</span>
+        q, k, v = q.transpose(<span class="num">1</span>,<span class="num">2</span>), k.transpose(<span class="num">1</span>,<span class="num">2</span>), v.transpose(<span class="num">1</span>,<span class="num">2</span>)
+
+        <span class="cmt"># Scaled dot-product attention</span>
+        scores = q @ k.transpose(-<span class="num">2</span>, -<span class="num">1</span>) / (self.head_dim ** <span class="num">0.5</span>)  <span class="cmt"># (B, H, L, L)</span>
+        attn_weights = torch.softmax(scores, dim=-<span class="num">1</span>)
+
+        output = attn_weights @ v  <span class="cmt"># (B, H, L, head_dim)</span>
+        output = output.transpose(<span class="num">1</span>,<span class="num">2</span>).reshape(B, L, D)  <span class="cmt"># z powrotem do original shape</span>
+
+        <span class="kw">return</span> self.out_proj(output)</pre>
+
+    <!-- Scenariusz -->
+    <h2>Kiedy Transformer?</h2>
+    <ul>
+      <li><strong>NLP</strong> — tłumaczenie, generowanie tekstu, klasyfikacja, ekstrahcja encji</li>
+      <li><strong>CSS</strong> — kod, opisy, dokumentacja (LLM: GPT, Llama, Mistral, Qwen)</li>
+      <li><strong>Wizja komputerowa</strong> — ViT (Vision Transformer) do klasyfikacji obrazów</li>
+      <li><strong>Multimodalne</strong> — multimodalne modele jak CLIP, LLaVA łączą tekst i obrazy</li>
+    </ul>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Transformer to architekturna, która zdominowała AI po 2017. Self-attention pozwala każdemu tokenowi "widzieć" każdy inny
+        bezpośrednio — bez ograniczeń RNN do sekwencji liniowych. Decoder-only transformers (GPT-style) są standardem dla LLM.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Długi kontekst — model "widzi" wszystkie tokeny naraz</li>
+          <li>Równoległość treningowa — brak sekwencyjności RNN = szybszy trening na GPU</li>
+          <li>Kompozycyjność — można łączyć z innymi architekturami (CNN, RNN, MoE)</li>
+          <li>Skalowalność — modele rosną od milionów do bilionów parametrów</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>O(n²) złożoność attention (problem przy długich kontekstach)</li>
+          <li>Duże zapotrzebowanie na pamięć (mikrobatch size musi być mały)</li>
+          <li>Słaba interpretowalność — trudno zrozumieć co decyduje o output</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

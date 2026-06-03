@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vector Databases & Semantic Search</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> Vector DB & Semantic Search
+    </nav>
+
+    <h1>Vector Databases &amp; Semantic Search</h1>
+    <p style="color:#666; margin-bottom:2rem;">Szukanie po znaczeniu, nie po słowach kluczowych.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym wektory i semantyczny search?</h2>
+    <p>
+      Tradycyjne wyszukiwanie (BM25, ElasticSearch) szuka <em>słów kluczowych</em>. Semantic search szuka po
+      <strong>znaczeniu</strong>: pytanie "jak napisać sortowanie w Pythonie" znajdzie dokument o kodzie
+      `sorted()` nawet bez słów "sort", "Python".
+    </p>
+
+<pre><span class="cmt"># Workflow:</span>
+<span class="cmt"># 1. Podziel dokumenty na chunki (np. po ~500 tokenów)</span>
+<span class="cmt"># 2. Zamień każdy chunk na embedding (vector) przez model</span>
+<span class="cmt"># 3. Zapisz wektory w bazie danych</span>
+<span class="cmt"># 4. Przy zapytaniu: wygeneruj embedding zapytania i znajdź najbliższe</span></pre>
+
+    <!-- Embeddingi -->
+    <h2>Embeddings — jak to działa?</h2>
+    <p>
+      Model embeddingowy (np. text-embedding-3-small, sentence-transformers) zamienia tekst w wektor liczbowy ~1500 wymiarów.
+      Teksty o podobnym znaczeniu mają podobne wektory — bliskie kąta kosinusowego lub odległości euklidesowej.
+    </p>
+
+<pre><span class="kw">import</span> openai, numpy <span class="kw">as</span> np
+
+client = openai.OpenAI()
+
+<span class="cmt"># Generowanie embeddingu</span>
+response = client.embeddings.create(
+    model=<span class="str">"text-embedding-3-small"</span>,
+    input=<span class="str">"Jak napisać sortowanie w Pythonie?"</span>
+)
+query_embedding = response.data[<span class="num">0</span>.embedding]
+
+<span class="cmt"># Wyszukiwanie (znajdź wektory najbliższe)</span>
+cosine_similarities = [
+    np.dot(query, doc_vec) / (<span class="fn">np.linalg.norm</span>(query) * <span class="fn">np.linalg.norm</span>(doc_vec))
+    <span class="kw">for</span> doc_vec <span class="kw">in</span> document_vectors
+]
+top_results = np.argsort(cosine_similarities)[::-<span class="num">1</span>][:<span class="num">5</span>]  <span class="cmt"># top-5 wyników</span></pre>
+
+    <!-- Vector Databases -->
+    <h2>Bazy wektorowe</h2>
+    <ul>
+      <li><strong>Pinecone</strong> — managed, skalowalna, płatna (za dużo danych)</li>
+      <li><strong>ChromaDB</strong> — open source, local-first, idealna do prototypów i małych projektów</li>
+      <li><strong>Milvus / Qdrant</strong> — open source, produkcyjna skalowalność</li>
+      <li><strong>pgvector (PostgreSQL)</strong> — rozszerzenie PG do wektorów. Najprostsze wdrożenie jeśli masz już bazę.</li>
+    </ul>
+
+<pre><span class="cmt"># ChromaDB — minimalny przykład</span>
+<span class="kw">import</span> chromadb, openai
+chroma_client = chromadb.Client()
+collection = chroma_client.create_collection(<span class="str">"my-docs"</span>)
+
+docs = [<span class="str">"Pierwsza dokumentacja..."</span>, <span class="str">"Druga sekcja..."</span>]
+embeddings = [openai.embeddings.create(input=d).data[<span class="num">0</span>.embedding] <span class="kw">for</span> d <span class="kw">in</span> docs]
+
+collection.add(documents=docs, embeddings=embeddings)
+results = collection.query(query_texts=[<span class="str">"Jak napisać sortowanie?"</span>], n_results=<span class="num">3</span>)</pre>
+
+    <!-- Hybrid Search -->
+    <h2>Hybrid Search (BM25 + Vector)</h2>
+    <p>
+      Najlepsze rezultaty daje połączenie obu metod: BM25 dla precyzyjnych nazw/funkcji, vector search dla kontekstu.
+    </p>
+
+<pre><span class="cmt"># Przykład z RAG — hybrid search</span>
+<span class="kw">def</span> hybrid_search(query, top_k=<span class="num">10</span>):
+    <span class="cmt"># Vector similarity</span>
+    vector_results = vector_db.query(query_embeddings, top_k=top_k)
+
+    <span class="cmt"># BM25 keyword search (ElasticSearch/Lucene)</span>
+    keyword_results = es.search({<span class="str">"query"</span>: {<span class="str">"multi_match"</span>: {<span class="str">"query"</span>: query, <span class="str">"fields"</span>: [<span class="str">"title"</span>, <span class="str">"content"</span>]}}})
+
+    <span class="cmt"># Reciprocal Rank Fusion — połącz wyniki</span>
+    combined = rrf(vector_results, keyword_results)  <span class="cmt"># RRF = Reciprocal Rank Fusion</span>
+    <span class="kw">return</span> combined[:top_k]</pre>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Vector search to podstawa nowoczesnych systemów RAG. Embeddingi zamieniają tekst w wektory, które można porównywać.
+        Hybrid search (BM25 + vector) daje najlepsze rezultaty. ChromaDB i pgvector są najprostszymi punktami startu.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Szuka po znaczeniu, nie słowach — znajduje odpowiedzi na pytania bez dokładnie tych słów</li>
+          <li>Połączenie z RAG daje "wiedzę" modelowi spoza jego treningu</li>
+          <li>ChromaDB/pgvector — zero konfiguracji, działa lokalnie</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Jakość zależy od jakości chunkingu i embeddingów</li>
+          <li>Bazy wektorowe są mniej precyzyjne niż SQL dla konkretnej informacji</li>
+          <li>Koszt embeddingów API rośnie z liczbą dokumentów</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

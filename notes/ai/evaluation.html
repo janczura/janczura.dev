@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Evaluation Metrics</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> Evaluation Metrics
+    </nav>
+
+    <h1>Model Evaluation Metrics</h1>
+    <p style="color:#666; margin-bottom:2rem;">Jak mierzyć, czy model jest dobry.</p>
+
+    <!-- Czym są metryki -->
+    <h2>Metryki dla modeli generatywnych</h2>
+    <p>
+      Dla LLM nie ma jednej "najlepszej" metryki — różne metryki mierzą różne aspekty. Oto najważniejsze:
+    </p>
+
+    <!-- Perplexity -->
+    <h3>Perplexity (Perypleksja)</h3>
+    <p>
+      Mierzi jak bardzo model jest "zaskoczony" tekstem. Niska perplexity = model dobrze zna ten język i styl.
+      Obliczana na zbiorze walidacyjnym:
+    </p>
+
+<pre><span class="cmt"># Perplexity = exp(-(1/N) · Σ log p(w_i | w_0 ... w_{i-1}))</span></pre>
+
+    <ul>
+      <li>Poniżej 20 — model "zna" język</li>
+      <li>Niższa perplexity na tym samym zbiorze = lepszy model (ale nie zawsze)</li>
+    </ul>
+
+    <!-- BLEU / ROUGE -->
+    <h3>BLEU i ROUGE</h3>
+    <p>Metryki oparte o n-gramy — porównują odpowiedź modelu z etykietą referencyjną:</p>
+    <ul>
+      <li><strong>BLEU</strong> (2004) — tłumaczenia maszynowe, tekst techniczny</li>
+      <li><strong>ROUGE</strong> (2004) — sumaryzacja tekstu, LLMs</li>
+    </ul>
+
+<pre><span class="str"># Przykład BLEU: odpowiedź = "kot je rybę", referencja = "kot zjadł ryby"</span>
+<span class="cmt"># 1-gram overlap: kot(1/1), je/zjadł(0/1), rybę/ryby(0/1) → BLEU = 33%</span></pre>
+
+    <!-- Benchmark -->
+    <h3>Benchmarki</h3>
+    <p>Poważne benchmarki używają dużych zbiorów i ręcznych ocen:</p>
+    <ul>
+      <li><strong>MMLU</strong> — 57 przedmiotów, od prawa do fizyki (knowledge)</li>
+      <li><strong>HellaSwag / ARC</strong> — rozumowanie logiczne</li>
+      <li><strong>SWE-bench</strong> — rozwiązywanie problemów w repozytoriach GitHub</li>
+    </ul>
+
+    <!-- Human Evaluation -->
+    <h3>Ocena ludzka (Human Eval)</h3>
+    <p>
+      Ostatecznie najlepsza metryka to ocena człowieka. Wymaga zestawu pytań i ocen "A vs B" — dokładnie to, czego używa RLHF/DPO.
+      Można zrobić samemu lub przez platformy zewnętrzne (Scale AI, Appen).
+    </p>
+
+<pre><span class="kw">def</span> human_eval(samples):
+    <span class="cmt"># samples = [{"prompt": ..., "model_a": ..., "model_b": ...}]</span>
+    scores = []
+    <span class="kw">for</span> sample <span class="kw">in</span> samples:
+        winner = ask_human(
+            prompt=sample[<span class="str">"prompt"</span>],
+            answers=[sample[<span class="str">"model_a"</span>], sample[<span class="str">"model_b"</span>]],
+        )
+        scores.append(winner)  <span class="cmt"># "a", "b", lub "tie"</span>
+
+    <span class="kw">return</span> {<span class="str">"win_rate_a"</span>: sum(s==<span class="str">"a"</span>) / len(scores)}</pre>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Nie ma jednej metryki — używaj kilku. BLEU/ROUGE dla generatywnego tekstu, perplexity do monitorowania jakości języka,
+        benchmarki (MMLU) i ocena ludzka do porównań modeli. Ostatecznie: najlepsza metryka to "czy użytkownik jest zadowolony".
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Kluczowe wnioski</h3>
+        <ul>
+          <li>Benchmarki są lepsze niż metryki n-gramowe (BLEU często kłamie)</li>
+          <li>Ocena ludzka jest jedyną miarodajną dla finalnego produktu</li>
+          <li>Perplexity dobrze koreluje z jakością na tym samym domenie</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Ograniczenia</h3>
+        <ul>
+          <li>Benchmarki szybko się "wyczerpują" — modele uczą się na datasetach testowych</li>
+          <li>Ocena ludzka jest droga i trudna do skalowania</li>
+          <li>Metryki automatyczne nie zawsze korelują z jakością postrzeganą przez ludzi</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

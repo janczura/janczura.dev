@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Engineering</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> Prompt Engineering
+    </nav>
+
+    <h1>Prompt Engineering & Prompting Techniques</h1>
+    <p style="color:#666; margin-bottom:2rem;">Jak mówić z modelem, by dostawać lepsze odpowiedzi.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest Prompt Engineering?</h2>
+    <p>
+      To sztuka formułowania promptów tak, by model wygenerował najlepszą możliwą odpowiedź. Dobre prompty mogą zmienić
+      jakość odpowiedzi od "słabej" do "wyśmienitej" — i to bez fine-tuningu modelu.
+    </p>
+
+    <!-- Zero-shot -->
+    <h2>Prompting: Few-Shot vs Zero-Shot</h2>
+
+<pre><span class="cmt"># Zero-shot (bez przykładów)</span>
+<span class="str">"Klasyfikuj sentiment: 'Ten produkt jest straszny' →"</span>
+
+<span class="cmt"># Few-shot (z 3-5 przykładami)</span>
+<span class="str">"Tekst: 'Uwielbiam ten film!' → Sentiment: Pozytywny
+Tekst: 'Niestety, produkt zepsuty przy pierwszym użyciu' → Sentiment: Negatywny
+Tekst: 'Ten produkt jest straszny' →"</span></pre>
+
+    <!-- Chain of Thought -->
+    <h2>Chain of Thought (CoT)</h2>
+    <p>
+      "Pomyśl krok po kroku" — nakłaniasz model do pokazania rozumowania przed odpowiedzią. Dramatycznie poprawia wyniki
+      w zadaniach logicznych i matematycznych:
+    </p>
+
+<pre><span class="str">Q: W szafie mam 5 czerwonych skarpet, 4 niebieskie i 3 zielone. Ile muszę wylosować na ciemno,
+   żeby mieć pewność, że mam parę?</span>
+<span class="cmt"># CoT — model pokaże rozumowanie:</span>
+<span class="str">A: Najgorszy scenariusz — wyciągam po jednej z każdego koloru (3 skarpetki, brak pary).
+   Następna musi się powtórzyć. Odpowiedź: 4.</span></pre>
+
+    <!-- Tree of Thoughts -->
+    <h2>Tree of Thoughts (ToT)</h2>
+    <p>
+      Rozszerzenie CoT — model generuje kilka możliwych rozwiązań, ocenia je, rozszerza te najlepsze i tak dalej.
+      Przydatne przy złożonych problemach decyzyjnych:
+    </p>
+
+<pre><span class="str"># ToT w pseudokodzie:</span>
+<span class="kw">for</span> each path <span class="kw">in</span> generate_paths(model, prompt, depth=<span class="num">3</span>):
+    score = evaluate(path)  <span class="cmt"># model sam ocenia swoją odpowiedź</span>
+    if score < min_threshold:
+        prune(path)       <span class="cmt"># odrzucamy słabe ścieżki</span>
+<span class="kw">return</span> best_path_by_score()</pre>
+
+    <!-- ReAct -->
+    <h2>ReAct — Reasoning + Acting</h2>
+    <p>
+      Model naprzemiennie myśli (Reason) i wykonuje akcje (Action): wyciąga narzędzia, szuka informacji. Kluczowe do RAG:
+    </p>
+
+<pre><span class="str"># ReAct format:</span>
+<span class="str">Thought 1: Muszę znaleźć aktualny kurs USD/PLN.</span>
+<span class="str">Action: search("USD PLN exchange rate today")</span>
+<span class="str">Observation: [wynik wyszukiwania]</span>
+<span class="str">Thought 2: Mam dane — mogę obliczyć przeliczenie.</span>
+<span class="str">Answer: $100 = ~385 PLN (kurs z dnia dzisiejszego).</span></pre>
+
+    <!-- Best Practices -->
+    <h2>Najlepsze praktyki</h2>
+    <ul>
+      <li><strong>Precyzja > długość</strong> — krótkie, konkretne prompty działają lepiej niż długie opisy</li>
+      <li><strong>Dawaj kontekst i role</strong> — "Jesteś senior developerem w Pythonie" daje lepsze odpowiedzi niż brak roli</li>
+      <li><strong>Pokazuj format wyjścia</strong> — "Odpowiedz jako JSON z polami: ..."</li>
+      <li><strong>Few-shot > zero-shot</strong> — nawet 3 przykłady znacznie poprawiają wyniki</li>
+      <li><strong>Zapobiegaj halucynacjom</strong> — "Jeśli nie wiesz, powiedz to" pomaga (ale nie zawsze)</li>
+    </ul>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Prompt Engineering to jedna z najtańszych i najskuteczniejszych technik poprawy jakości odpowiedzi modelu.
+        Few-shot, Chain of Thought, ToT i ReAct — te techniki działają na każdym dużym LLM i mogą dać różnice rzędu 30–50%
+        w jakości outputu.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Darmowe — nie wymaga modyfikacji modelu ani fine-tuningu</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Prompty są trudne do uogólnienia — działa na jednym modelu, niekoniecznie na innym</li>
+          <li>Często wymaga eksperymentowania (A/B testów promptów)</li>
+          <li>Koszt tokenów rośnie z długością promptu (szczególnie few-shot i CoT)</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>

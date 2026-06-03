@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RLHF — Reinforcement Learning from Human Feedback</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">AI / ML</a>
+      <span>›</span> RLHF
+    </nav>
+
+    <h1>RLHF — Reinforcement Learning from Human Feedback</h1>
+    <p style="color:#666; margin-bottom:2rem;">Dopasowanie modelu do preferencji ludzkich za pomocą uczenia przez wzmacnianie.</p>
+
+    <!-- Czym jest -->
+    <h2>Czym jest RLHF?</h2>
+    <p>
+      RLHF to trzeci krok w tworzeniu nowoczesnych modeli czatowych — po pre-trainingu i SFT. Polega na
+      <strong>trenowaniu modelu, by generował odpowiedzi preferowane przez ludzi</strong>, a nie tylko poprawne
+      pod względem gramatycznym czy faktycznym.
+    </p>
+    <p>
+      Proces ma trzy etapy: najpierw zbierasz ludzkie oceny par odpowiedzi, potem trenujesz model nagradzający
+      (reward model), a na końcu używasz go do optymalizacji modelu językowego przez algorytm PPO — tak jak w
+      klasycznym uczeniu przez wzmacnianie.
+    </p>
+
+    <!-- Etapy RLHF -->
+    <h2>Etapy RLHF</h2>
+    <ol>
+      <li><strong>Zbieranie danych porównawczych</strong> — ludzie oceniają dwie odpowiedzi modelu i wskazują lepszą</li>
+      <li><strong>Trening Reward Modelu</strong> — model uczy się przewidywać ludzkie preferencje (klasyfikacja: odpowiedź A vs B)</li>
+      <li><strong>Optymalizacja PPO</strong> — model językowy jest dopracowywany przez RL z reward modelem jako nagrodą</li>
+    </ol>
+
+    <!-- Reward Model -->
+    <h2>Reward Model (RM)</h2>
+    <p>
+      Reward Model to osobny model, który dostaje na wejście prompt + odpowiedź i wypala liczbę — "jak bardzo to się
+      podoba ludziom". Trenowany jest na zbiorze par odpowiedzi z ocenami ludzkimi.
+    </p>
+
+<pre><span class="kw">import</span> torch <span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForSequenceClassification, AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained(<span class="str">"OpenAssistant/reward-model-deberta-v3-base"</span>)
+model = AutoModelForSequenceClassification.from_pretrained(
+    <span class="str">"OpenAssistant/reward-model-deberta-v3-base"</span>
+)
+
+<span class="cmt"># Reward Model ocenia parę prompt+response</span>
+def compute_reward(prompt, response):
+    inputs = tokenizer(<span class="str">f"[INST] {prompt} [/INST] {response}"</span>, return_tensors=<span class="str">"pt"</span>)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    <span class="kw">return</span> outputs.logits[<span class="num">0</span>]  <span class="cmt"># jedna liczba — "reward"</span></pre>
+
+    <!-- PPO -->
+    <h2>PPO — Proximal Policy Optimization</h2>
+    <p>
+      PPO to algorytm uczenia przez wzmacnianie, który aktualizuje wagі modelu bazowego tak, by maksymalizował reward.
+      Kluczowa różnica względem klasycznego RL: ograniczenie kroku aktualizacji (klipping), żeby model nie odszedł za
+      daleko od oryginalnego rozkładu tekstów.
+    </p>
+
+<pre><span class="kw">from</span> trl <span class="kw">import</span> PPOTrainer, PPOConfig, AutoModelForCausalLMWithValueHead
+<span class="kw">from</span> peft <span class="kw">import</span> get_peft_model, LoraConfig, TaskType
+
+config = PPOConfig(
+    model_name=<span class="str">"codellama/CodeLlama-7b-hf"</span>,
+    learning_rate=<span class="num">1.41e-5</span>,
+)
+
+model_ref = AutoModelForCausalLMWithValueHead.from_pretrained(model_name)  <span class="cmt"># model referencyjny (KL divergence)</span>
+reward_model = AutoModelForSequenceClassification.from_pretrained(reward_model_path)
+
+ppo_trainer = PPOTrainer(
+    config=config,
+    model=model,
+    ref_model=model_ref,
+    tokenizer=tokenizer,
+    dataset=train_dataset,  <span class="cmt"># prompty bez odpowiedzi</span>
+)
+
+<span class="kw">for</span> epoch, batch <span class="kw">in</span> enumerate(dataloader):
+    query_tensors = tokenizer(batch[<span class="str">"prompt"</span>], return_tensors=<span class="str">"pt"</span>)
+    response_tensors = ppo_trainer.generate(query_tensors)  <span class="cmt"># generuje odpowiedzi</span>
+
+    rewards = reward_model(response_tensors).logits  <span class="cmt"># ocenia przez RM</span>
+    stats = ppo_trainer.step(query_tensors, response_tensors, rewards)  <span class="cmt"># PPO update</span></pre>
+
+    <!-- Scenariusz -->
+    <h2>Scenariusz: dopasowanie modelu do stylu firmy</h2>
+    <p>
+      RLHF pozwala wykrystalizować styl komunikacji, który trudno zdefiniować w SFT — np. "być uprzejmym ale nie nadgorliwym",
+      "nie używać emotikonek na oficjalnych odpowiedziach", "wyjaśniać kod krok po kroku". Wystarczy zbiór 1000–5000 ocen ludzkich.
+    </p>
+
+    <!-- Podsumowanie -->
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        RLHF to technika, która sprawiła, że ChatGPT był tak dobry — model uczy się nie tylko poprawnego formatu (SFT),
+        ale też <em>wyrażać się w sposób preferowany przez ludzi</em>. Działa na trzech etapach: zbiór ocen, reward model, PPO.
+      </p>
+    </div>
+
+    <!-- Plusy / minusy -->
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Plusy</h3>
+        <ul>
+          <li>Daje najlepsze rezultaty w jakości odpowiedzi (główna zaleta)</li>
+          <li>Pozwala wyrazić subtelne preferencje (styl, ton, bezpieczeństwo)</li>
+          <li>Skaluje się z jakością danych ludzkich</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Minusy</h3>
+        <ul>
+          <li>Kosztowne — wymaga 1000–5000+ ocen ludzkich + trzech modeli (SFT, RM, PPO)</li>
+          <li>Długi i niestabilny trening PPO (często się "wysypa")</li>
+          <li>Ryzyko "reward hacking" — model uczy się oszukiwać reward modelem, nie być naprawdę lepszym</li>
+          <li>Zmniejsza kreatywność i różnorodność odpowiedzi</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="index.html">← Wróć do AI / ML</a>
+    </p>
+  </div>
+</body>
+</html>
