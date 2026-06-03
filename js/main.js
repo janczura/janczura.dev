@@ -233,9 +233,12 @@
         });
 
         navLinks.forEach(link => {
-            link.style.color = '#8a8780';
             if (link.dataset.section === current) {
+                link.classList.add('active');
                 link.style.color = '#fff';
+            } else {
+                link.classList.remove('active');
+                link.style.color = '#8a8780';
             }
         });
     }, { passive: true });
@@ -247,5 +250,128 @@
             launchFirework();
         }
     }, 5000);
+
+
+    // === CUSTOM CURSOR ===
+    const cursor = document.getElementById('custom-cursor');
+    const trail = document.getElementById('cursor-trail');
+    let mouseX = -100, mouseY = -100;
+    let trailX = -100, trailY = -100;
+
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        cursor.style.transform = `translate(${mouseX - 4}px, ${mouseY - 4}px)`;
+    });
+
+    function animateTrail() {
+        trailX += (mouseX - trailX) * 0.15;
+        trailY += (mouseY - trailY) * 0.15;
+        trail.style.transform = `translate(${trailX - 10}px, ${trailY - 10}px)`;
+        requestAnimationFrame(animateTrail);
+    }
+    animateTrail();
+
+    const interactiveEls = 'a, button, .project-card, .tag, .timeline-item, .edu-card';
+    document.addEventListener('mouseover', (e) => {
+        if (e.target.closest(interactiveEls)) {
+            cursor.classList.add('hovering');
+            trail.classList.add('hovering');
+        }
+    });
+    document.addEventListener('mouseout', (e) => {
+        if (e.target.closest(interactiveEls)) {
+            cursor.classList.remove('hovering');
+            trail.classList.remove('hovering');
+        }
+    });
+
+
+    // === TYPING EFFECT ===
+    const typingTexts = document.querySelectorAll('.typing-text[data-typing]');
+    const typingCursor = document.querySelector('.typing-cursor');
+
+    function typeElement(el, callback) {
+        const text = el.getAttribute('data-typing');
+        el.textContent = '';
+        el.style.visibility = 'visible';
+        let i = 0;
+
+        function type() {
+            if (i < text.length) {
+                el.textContent += text.charAt(i);
+                i++;
+                setTimeout(type, 60 + Math.random() * 40);
+            } else {
+                if (callback) callback();
+            }
+        }
+        type();
+    }
+
+    typingTexts.forEach((el, idx) => {
+        setTimeout(() => {
+            const isLast = idx === typingTexts.length - 1;
+            typeElement(el, () => {
+                if (isLast && typingCursor) {
+                    typingCursor.classList.add('done');
+                }
+            });
+        }, 1300 + idx * 900);
+    });
+
+
+    // === ESCAPE THEME TOGGLE ===
+    const toggleBtn = document.getElementById('theme-toggle');
+
+    if (toggleBtn) {
+        let escapeCount = 0;
+        const messages = [
+            '☀ LIGHT MODE',
+            '☀ NOPE',
+            '☀ CATCH ME',
+        ];
+
+        function escapeBtn() {
+            escapeCount++;
+
+            if (escapeCount >= 3) {
+                toggleBtn.style.transition = 'opacity 1.5s ease';
+                toggleBtn.style.opacity = '0';
+                setTimeout(() => toggleBtn.remove(), 1600);
+                return;
+            }
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const btnW = toggleBtn.offsetWidth;
+            const btnH = toggleBtn.offsetHeight;
+
+            let newX, newY;
+            let attempts = 0;
+
+            do {
+                newX = Math.random() * (vw - btnW - 40) + 20;
+                newY = Math.random() * (vh - btnH - 40) + 20;
+                attempts++;
+            } while (
+                attempts < 50 &&
+                Math.abs(newX - mouseX) < 150 &&
+                Math.abs(newY - mouseY) < 150
+            );
+
+            toggleBtn.style.left = newX + 'px';
+            toggleBtn.style.top = newY + 'px';
+            toggleBtn.style.right = 'auto';
+
+            toggleBtn.textContent = messages[escapeCount];
+        }
+
+        toggleBtn.addEventListener('mouseenter', escapeBtn);
+        toggleBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            escapeBtn();
+        });
+    }
 
 })();
