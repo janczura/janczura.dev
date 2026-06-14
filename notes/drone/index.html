@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPV Drone — Jak zbudować własnego drona</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span> FPV Drone
+    </nav>
+
+    <h1>FPV Drone — Jak zbudować własnego drona</h1>
+    <p style="color:#666; margin-bottom:2rem;">Kompletny przewodnik po budowie drona FPV od zera.</p>
+
+    <!-- Czym jest FPV -->
+    <h2>Czym jest FPV?</h2>
+    <p><strong>F</strong>irst <strong>P</strong>erson <strong>V</strong>iew — latasz, patrząc przez kamerę zamontowaną na dronie. Dron lata bardzo szybko (100–200+ km/h), a Ty widzisz wszystko jak z kokpitu samolotu.</p>
+    <p>Różnie się to od zwykłego lataja FPV — tu nie patrzymy na ekran, tylko na gogle lub monitor podłączony do odbiornika wideo. Opóźnienie jest minimalne (20–50ms), co pozwala wykonywać akrobacje.</p>
+
+    <!-- Części wymagane -->
+    <h2>Części wymagane</h2>
+    <p>Każdy dron FPV potrzebuje tych podstawowych elementów — kupisz je w sklepach RC (np. GetFPV, SkyRC, Banggood) lub na AliExpress:</p>
+
+    <ol>
+      <li><strong>Rama (Frame)</strong> — szkielet drona. Najpopularniejszy rozmiar to 5" (średnica śmigieł). Popularne modele: T-motor F5, Geprc Mark4, SpeedyBee X220.</li>
+
+      <li><strong>FC + ESC Stack</strong> — Flight Controller + Electronic Speed Controller. To układ nerwowy drona. Zalecany: Betaflight F7 lub F4 z 4-in-1 ESC 35A–55A (np. SpeedyBee F405 V3 stack).</li>
+
+      <li><strong>Silniki</strong> — zestaw 4 sztuki, np. T-motor F60 Pro 2407KV1900 lub iFlight GNet X2207 2400KV. Im wyższy KV, tym szybszy dron, ale mniej czasu lotu.</li>
+
+      <li><strong>VTX (Video Transmitter)</strong> — nadaje obraz do gogli. Dwa główne systemy:
+        <ul style="margin-top:4px;">
+          <li><strong>Analog 5.8GHz</strong> — tani, niskie opóźnienie (20–30ms), ale niska jakość obrazu. Przykłady: RunCam Split EVO, TBS Unify Pro.</li>
+          <li><strong>DJI O3 Air Unit / Walksnail</strong> — cyfrowe HD, wyższe opóźnienie (~70ms), lepszy obraz.</li>
+        </ul>
+      </li>
+
+      <li><strong>Kamera</strong> — jeśli VTX nie ma wbudowanej. Np. RunCam Phoenix II (analog) lub DJI O3/O4 Air (cyfrowa).</li>
+
+      <li><strong>Odbiornik (RX)</strong> — odbiera sygnał od pilota. Obecnie najlepszy stosunek ceny do jakości: ELRS 2.4GHz, zasięg do 5km+, cena ~70–150 zł.</li>
+
+      <li><strong>Radio (Pilot)</strong> — Radiomaster Pocket/Bolt z ELRS (tani start), lub Radiomaster Boxer/Zorro (wygodniejszy). Zawsze z wbudowanym nadajnikiem!</li>
+
+      <li><strong>Gogle / Monitor</strong> — DJI Goggles 3, Walksnail Hat, albo gogle analogowe (Skyzone CoaPro DragonHawk M2).</li>
+
+      <li><strong>Bateria LiPo</strong> — 4S 1300–1500mAh do drona 5". Np. Tattu R-Line 4S 1500mAh 75C. Kup min. 2 sztuki.</li>
+    </ol>
+
+    <div class="summary-box">
+      <h3>Koszt części (orientacyjny)</h3>
+      <ul style="list-style:none; margin:0;">
+        <li>Rama: ~150–250 zł</li>
+        <li>FC+ESC Stack: ~400–800 zł</li>
+        <li>Silniki ×4: ~300–600 zł</li>
+        <li>VTX + kamera: ~150–600 zł</li>
+        <li>RX ELRS: ~70–150 zł</li>
+        <li>Pilot: ~300–800 zł</li>
+        <li>Gogle: ~400–2000 zł (zależnie od systemu)</li>
+        <li>Bateria ×2: ~200–400 zł</li>
+      </ul>
+    </div>
+
+    <!-- Części opcjonalne -->
+    <h2>Części opcjonalne</h2>
+    <p>Niezbędne od początku, ale warto rozważyć:</p>
+
+    <ol>
+      <li><strong>Blackbox (Flash memory)</strong> — zapisuje dane lotu na karcie SD, przydatne do debugowania w Betaflight.</li>
+      <li><strong>LED (np. Antigravity Light Bar)</strong> — wizualne wskazanie orientacji drona w locie. Niezbędne przy dalszych przelotach.</li>
+      <li><strong>Dodatkowa antena RX</strong> — druga antena ELRS na dronie, poprawia łączność w trudnych warunkach (budynki, las).</li>
+      <li><strong>BEC / OSD</strong> — jeśli stack FC nie ma wbudowanego BEC-a, potrzebujesz osobnego modułu do zasilania kamery i transmitancji danych na obrazie.</li>
+      <li><strong>Mound pod gogle</strong> — wygodne ustawienie gogli na stole podczas konfiguracji. Często sprzedawany oddzielnie w sklepach RC.</li>
+    </ol>
+
+    <!-- Narzędzia -->
+    <h2>Narzędzia potrzebne do budowy</h2>
+    <p>Poza częściami, potrzebujesz też narzędzi:</p>
+
+    <div class="pros-cons">
+      <div class="pros">
+        <h3>Podstawowe</h3>
+        <ul>
+          <li>Lutownica (80–100W, np. Quick T12)</li>
+          <li>Ołówek lutowniczy / ssawka do lutowania</li>
+          <li>Imbusiki 2mm i 2.5mm</li>
+        </ul>
+      </div>
+      <div class="cons">
+        <h3>Dodatkowe</h3>
+        <ul>
+          <li>Wkrętak (mały Phillips)</li>
+          <li>Multimetr</li>
+          <li>Taśma izolacyjna + taśma samouszczelniająca</li>
+          <li>Kable do ładowania LiPo (iPod/USB-C)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Montaż krok po kroku -->
+    <h2>Montaż — krok po kroku</h2>
+
+    <ol>
+      <li><strong>Krok 1: Zamontuj silniki na ramie.</strong> Użyj śrub M2×6mm i nakrętek z podkładkami. Nie dokręcaj zbyt mocno — silnik musi być równo i bez luzów. Upewnij się że kierunek obrotu jest poprawny (zazwyczaj zewnętrzne silniki kręcą się przeciwnie niż wewnętrzne).</li>
+
+      <li><strong>Krok 2: Zamontuj FC+ESC na ramie.</strong> Użyj podkładek dystansowych. Upewnij się że kabel USB jest dostępny z przodu drona — będzie Ci potrzebny do konfiguracji Betaflight.</li>
+
+      <li><strong>Krok 3: Lutuj silniki do ESC.</strong> Kable silników (czerwony czarny) lutujesz do odpowiednich pól na ESC. Kolejność faz nie ma znaczenia — jeśli silnik kręci się źle, zamień dowolne dwa kable lokalnie w Betaflight lub fizycznie na ESC.</li>
+
+      <li><strong>Krok 4: Podłącz VTX i kamerę.</strong> Lutuj sygnał wideo z kamery do VTX (pin VIDEO). Podłącz zasilanie od VTX do BEC-a na ESC. Antenę podłącz PRZED włączeniem zasilania — inaczej możesz uszkodzić VTX!</li>
+
+      <li><strong>Krok 5: Podłącz odbiornik ELRS (RX).</strong> Połącz RX z FC przez UART (TX → RX, RX → TX). Upewnij się że ELRS jest zsynchronizowany z radiem (bind) przed montażem na dronie.</li>
+
+      <li><strong>Krok 6: Podłącz baterię i skonfiguruj Betaflight.</strong>
+        <ul style="margin-top:4px;">
+          <li>Połącz drona z laptopem przez USB</li>
+          <li>Otwórz Betaflight Configurator (webowy lub desktop)</li>
+          <li>Ustaw typ drona (X — quadcopter)</li>
+          <li>Kalibruj akcelerometr</li>
+          <li>Potwierdź kierunek obrotu silników</li>
+        </ul>
+      </li>
+
+      <li><strong>Krok 7: Testy i pierwszy lot.</strong> Zdejmij śmigła! Podłącz baterię bez śmigał i sprawdź każdy kanał w Radio. Potem załóż śmigła i leć — ale tylko po upewnieniu się że wszystko działa poprawnie.</li>
+    </ol>
+
+    <p style="color:#dc2626; font-size:15px;"><strong>⚠ Ważne:</strong> Nie uruchamiaj drona bez śmigał po raz pierwszy. Zawsze testuj na stole — włącz radio, podłącz baterię i sprawdź każdy kanał przed wylotem.</p>
+
+    <hr>
+    <p style="text-align:center; color:#888;">
+      <a href="../index.html">← Wróć do Notatek</a>
+    </p>
+  </div>
+</body>
+</html>
