@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Statystyki gracza W3Champions — MMR, sezony, matchupy, bilans z przeciwnikami. Dane pobierane na żądanie z publicznego API W3Champions.">
+    <title>W3Champions Stats</title>
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-inner">
+        <div class="topbar-row">
+            <a class="home-link" href="https://janczura.dev">← janczura.dev</a>
+            <button id="lang-toggle" class="btn small" type="button" data-i18n="app.lang.btn" data-i18n-title="app.lang.title">EN</button>
+        </div>
+        <h1>W3Champions <span class="accent">Stats</span></h1>
+        <p class="tagline" data-i18n="app.tagline"></p>
+    </div>
+</header>
+
+<main class="app">
+
+    <!-- ============ WYSZUKIWARKA ============ -->
+    <section class="search-box">
+        <form id="search-form" autocomplete="off">
+            <input id="search-input" type="text" spellcheck="false"
+                   data-i18n-ph="app.search.ph" data-i18n-aria="app.search.aria">
+            <button id="search-btn" class="btn primary" type="submit" data-i18n="app.search.btn"></button>
+        </form>
+        <div id="search-status" class="status" role="status" aria-live="polite"></div>
+        <ul id="search-results" class="candidates" hidden></ul>
+    </section>
+
+    <!-- ============ PROFIL ============ -->
+    <section id="profile" class="panel" hidden>
+        <div class="identity">
+            <div class="identity-main">
+                <h2 id="p-name">—</h2>
+                <div class="identity-meta">
+                    <span id="p-tag" class="mono-chip"></span>
+                    <a id="p-link" class="ext-link" target="_blank" rel="noopener" data-i18n="profile.link"></a>
+                </div>
+            </div>
+            <div class="tiles" id="p-tiles"></div>
+        </div>
+
+        <h3 class="sub"><span data-i18n="profile.races.head"></span> <small data-i18n="profile.races.sub"></small></h3>
+        <div class="split">
+            <div id="p-race-chart" class="chart-holder"></div>
+            <div id="p-race-table" class="table-holder"></div>
+        </div>
+    </section>
+
+    <!-- ============ FILTRY ============ -->
+    <section id="filters" class="filters" hidden>
+        <label><span data-i18n="filters.season"></span>
+            <select id="f-season"></select>
+        </label>
+        <label><span data-i18n="filters.server"></span>
+            <select id="f-gateway">
+                <option value="20" data-i18n="gw.20"></option>
+                <option value="10" data-i18n="gw.10"></option>
+            </select>
+        </label>
+        <p class="filters-hint" data-i18n="filters.hint"></p>
+    </section>
+
+    <!-- ============ SEKCJE ŁADOWANE NA ŻĄDANIE ============ -->
+    <section class="panel section" id="sec-season" hidden>
+        <header class="section-head">
+            <h2 data-i18n="sec.season.title"></h2>
+            <button class="btn" data-load="season" data-i18n="btn.load"></button>
+        </header>
+        <p class="section-desc" data-i18n="sec.season.desc"></p>
+        <div class="section-status status" data-status="season"></div>
+        <div class="section-body" data-body="season"></div>
+    </section>
+
+    <section class="panel section" id="sec-mmr" hidden>
+        <header class="section-head">
+            <h2 data-i18n="sec.mmr.title"></h2>
+            <button class="btn" data-load="mmr" data-i18n="btn.load"></button>
+        </header>
+        <p class="section-desc" data-i18n="sec.mmr.desc"></p>
+        <div class="section-status status" data-status="mmr"></div>
+        <div class="section-body" data-body="mmr"></div>
+    </section>
+
+    <section class="panel section" id="sec-matchup" hidden>
+        <header class="section-head">
+            <h2 data-i18n="sec.matchup.title"></h2>
+            <button class="btn" data-load="matchup" data-i18n="btn.load"></button>
+        </header>
+        <p class="section-desc" data-i18n="sec.matchup.desc"></p>
+        <div class="section-status status" data-status="matchup"></div>
+        <div class="section-body" data-body="matchup"></div>
+    </section>
+
+    <section class="panel section" id="sec-matches" hidden>
+        <header class="section-head">
+            <h2 data-i18n="sec.matches.title"></h2>
+            <button class="btn" data-load="matches"></button>
+        </header>
+        <p class="section-desc" data-i18n="sec.matches.desc"></p>
+        <div class="section-status status" data-status="matches"></div>
+        <div class="section-body" data-body="matches"></div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p data-i18n-html="footer.source"></p>
+    <p class="cookie-note" data-i18n="footer.cookies"></p>
+</footer>
+
+<div id="tooltip" class="tooltip" hidden></div>
+
+<script src="i18n.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
