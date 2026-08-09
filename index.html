@@ -2,13 +2,25 @@
 <html lang="pl">
 <head>
     <link rel="icon" type="image/jpg" href="img/icon.jpg">
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KG2N67JZP0"></script>
     <script>
+        // Consent Mode — analytics stays denied until the user accepts in the cookie banner
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
+        gtag('consent', 'default', {
+            'ad_storage': 'denied',
+            'ad_user_data': 'denied',
+            'ad_personalization': 'denied',
+            'analytics_storage': 'denied'
+        });
+        try {
+            if (localStorage.getItem('cookie-consent') === 'granted') {
+                gtag('consent', 'update', { 'analytics_storage': 'granted' });
+            }
+        } catch (e) { /* storage blocked — stay denied */ }
         gtag('js', new Date());
         gtag('config', 'G-KG2N67JZP0');
     </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KG2N67JZP0"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sergiusz Jańczura — Java Developer z Poznania. Specjalista backend z doświadczeniem w Spring, PostgreSQL, Docker i dużych systemach e-commerce.">
@@ -21,57 +33,44 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- CV palette: warm dark + crimson, zero blue -->
 </head>
 <body>
     <div id="intro-flash"></div>
     <div id="energy-ring"></div>
-    <canvas id="fireworks-canvas"></canvas>
-    <div id="scanlines"></div>
-    <div id="floating-chars"></div>
+    <div id="code-glitch"></div>
+    <div id="particle-grid"></div>
     <div id="custom-cursor"></div>
     <div id="cursor-trail"></div>
 
     <nav class="site-nav">
-        <div class="nav-glow"></div>
-        <a href="#about" data-section="about"><span class="nav-char">关</span> about</a>
-        <a href="#experience" data-section="experience"><span class="nav-char">经</span> experience</a>
-        <a href="#projects" data-section="projects"><span class="nav-char">项</span> projects</a>
-        <a href="#skills" data-section="skills"><span class="nav-char">技</span> skills</a>
-        <a href="#education" data-section="education"><span class="nav-char">教</span> education</a>
+        <a href="#about" data-section="about">about</a>
+        <a href="#experience" data-section="experience">experience</a>
+        <a href="#projects" data-section="projects">projects</a>
+        <a href="#skills" data-section="skills">skills</a>
+        <a href="#education" data-section="education">education</a>
     </nav>
-    <button id="theme-toggle">☀ LIGHT MODE</button>
+    <button id="theme-toggle">_ LIGHT MODE</button>
 
     <div class="container">
         <section class="header">
             <div class="header-bg"></div>
-            <div class="dragon-left"></div>
-            <div class="dragon-right"></div>
-            <div class="lantern lantern-l">
-                <span class="lantern-char">福</span>
-                <span class="lantern-glow"></span>
-            </div>
-            <div class="lantern lantern-r">
-                <span class="lantern-char">龙</span>
-                <span class="lantern-glow"></span>
-            </div>
             <div class="header-content">
                 <div class="photo-frame intro-item">
-                    <div class="ring ring-outer"></div>
-                    <div class="ring ring-inner"></div>
-                    <div class="ring ring-dash"></div>
-                    <span class="orbit-char orbit-tl">龙</span>
-                    <span class="orbit-char orbit-tr">火</span>
-                    <span class="orbit-char orbit-bl">道</span>
-                    <span class="orbit-char orbit-br">武</span>
+                    <div class="armor-spin"></div>
+                    <div class="armor-pulse"></div>
+                    <div class="frame-border-outer"></div>
+                    <div class="frame-border-inner"></div>
+                    <div class="frame-border-accent"></div>
                     <img src="img/foto.jpg" alt="Sergiusz Jańczura"/>
                 </div>
                 <h1 class="glitch intro-item" data-text="Sergiusz Jańczura">Sergiusz Jańczura</h1>
-                <p class="subtitle intro-item"><span class="typing-wrapper"><span class="typing-text" data-typing="Java Developer">Java Developer</span></span> <span class="neon-dot"></span> <span class="typing-wrapper"><span class="typing-text" data-typing="Poznań">Poznań</span></span><span class="typing-cursor"></span></p>
+                <p class="subtitle intro-item"><span class="typing-wrapper"><span class="typing-text" data-typing="Java Developer">Java Developer</span></span> <span class="neon-dot"></span> <span class="typing-wrapper"><span class="typing-text" data-typing="Poland">Poland</span></span><span class="typing-cursor"></span></p>
                 <div class="header-links intro-item">
-                    <a class="link-btn github" href="https://github.com/janczura" target="_blank" rel="noopener noreferrer"><span class="btn-icon">⬡</span> GitHub</a>
-                    <a class="link-btn gitlab" href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer"><span class="btn-icon">⬡</span> GitLab</a>
-                    <a class="link-btn cv" href="cv/cv.pdf" download><span class="btn-icon">⬡</span> Download CV</a>
+                    <a class="link-btn github" href="https://github.com/janczura" target="_blank" rel="noopener noreferrer"><span class="btn-icon">>_</span> GitHub</a>
+                    <a class="link-btn gitlab" href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer"><span class="btn-icon">>_</span> GitLab</a>
+                    <a class="link-btn cv" href="cv/cv.pdf" download><span class="btn-icon">>_</span> Download CV</a>
                 </div>
             </div>
         </section>
@@ -79,7 +78,7 @@
         <section id="about" class="card-section about">
             <div class="card">
                 <div class="card-border"></div>
-                <h2><span class="section-char">关</span> About me</h2>
+                <h2>About me</h2>
                 <p>I am a Java Developer with many years of experience in building and maintaining complex backend applications. I currently work at Hummerce (formerly Best.net), where I am responsible for developing a large-scale e-commerce platform powering multiple online shops across different markets. My work involves designing scalable solutions, optimizing performance, and integrating with external systems — including ERP/CRM platforms, payment providers, and marketing tools.</p>
                 <p>In my free time, I enjoy playing computer games, swimming, and keeping up with the latest tech trends. I'm passionate about creating stable, well-optimized systems that meet the needs of rapidly growing businesses. I also like to explore lower-level programming — currently learning Rust.</p>
             </div>
@@ -88,7 +87,7 @@
         <section id="experience" class="card-section experience">
             <div class="card">
                 <div class="card-border"></div>
-                <h2><span class="section-char">经</span> Experience</h2>
+                <h2>Experience</h2>
                 <div class="timeline">
                     <div class="timeline-item">
                         <div class="timeline-dot"></div>
@@ -121,7 +120,7 @@
         <section id="projects" class="card-section projects">
             <div class="card">
                 <div class="card-border"></div>
-                <h2><span class="section-char">项</span> Some projects</h2>
+                <h2>Some projects</h2>
                 <div class="project-grid">
                     <a href="#" class="project-card" data-glow="cyan">
                         <span class="project-icon">⚔</span>
@@ -139,7 +138,7 @@
                         <span class="project-icon">◇</span>
                         <span class="project-name">Arc Raiders — Blueprint Exchange</span>
                     </a>
-                    <a href="https://gitlab.com/janczura/remote-server-controller" target="_blank" class="project-card" data-glow="cyan">
+                    <a href="https://gitlab.com/janczura/remote-server-controller" target="_blank" class="project-card" data-glow="cyanF">
                         <span class="project-icon">◇</span>
                         <span class="project-name">Remote server controller</span>
                     </a>
@@ -150,7 +149,7 @@
         <section id="skills" class="card-section skills">
             <div class="card">
                 <div class="card-border"></div>
-                <h2><span class="section-char">技</span> Skills</h2>
+                <h2>Skills</h2>
                 <div class="skill-groups">
                     <div class="skill-group">
                         <h3 class="group-label" data-color="#ff2d55">Backend & Core</h3>
@@ -195,7 +194,7 @@
         <section id="education" class="card-section education">
             <div class="card">
                 <div class="card-border"></div>
-                <h2><span class="section-char">教</span> Education</h2>
+                <h2>Education</h2>
                 <div class="edu-grid">
                     <div class="edu-card">
                         <span class="edu-degree">Master of Computer Science</span>
@@ -224,6 +223,20 @@
             </p>
             <p>&copy; <span id="current-year"></span> Sergiusz Jańczura. All rights reserved.</p>
         </footer>
+    </div>
+
+    <div id="cookie-banner" role="dialog" aria-label="Cookie notice" aria-live="polite" hidden>
+        <div class="cookie-inner">
+            <p class="cookie-text">
+                <span class="cookie-prompt">&gt;_</span>
+                This site uses cookies for anonymous traffic statistics (Google Analytics).
+                No ads, no profiling. Analytics stays off until you accept.
+            </p>
+            <div class="cookie-actions">
+                <button type="button" id="cookie-decline" class="cookie-btn decline">_ DECLINE</button>
+                <button type="button" id="cookie-accept" class="cookie-btn accept">_ ACCEPT</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/main.js"></script>

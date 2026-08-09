@@ -1,36 +1,66 @@
 // ============================================
-// CYBERPUNK DRAGON PORTFOLIO — MAIN JS
+// MODERN IDE TERMINAL PORTFOLIO — MAIN JS
 // ============================================
 
 (function () {
     'use strict';
 
-    // === FLOATING CHINESE CHARACTERS ===
-    const chars = ['龙', '火', '福', '道', '武', '风', '雷', '电', '光', '影', '剑', '魂', '天', '地', '水', '山', '海', '月', '星', '云', '梦', '力', '气', '神'];
+    // === PARTICLE GRID BACKGROUND (replaces floating chars + scanlines) ===
+    const gridContainer = document.getElementById('particle-grid');
 
-    function createFloatingChar() {
-        const el = document.createElement('span');
-        el.className = 'float-char';
-        el.textContent = chars[Math.floor(Math.random() * chars.length)];
-        el.style.left = Math.random() * 100 + '%';
-        el.style.fontSize = (Math.random() * 40 + 20) + 'px';
-        const duration = Math.random() * 20 + 15;
-        el.style.animationDuration = duration + 's';
-        el.style.animationDelay = Math.random() * 5 + 's';
-        document.getElementById('floating-chars').appendChild(el);
+    if (!gridContainer) {
+        console.warn('particle-grid element not found, skipping particle grid');
+    } else {
+        const cols = 18;
+        const rows = Math.floor(window.innerHeight / 40);
 
-        setTimeout(() => {
-            el.remove();
-        }, (duration + 6) * 1000);
+        // Horizontal lines
+        for (let i = 0; i <= rows; i++) {
+            const line = document.createElement('div');
+            line.className = 'particle-line';
+            line.style.top = (i * 40) + 'px';
+            line.style.left = '0';
+            line.style.width = '100%';
+            line.style.height = '1px';
+            const delay = Math.random() * 8;
+            line.style.animationDelay = (-delay) + 's';
+            gridContainer.appendChild(line);
+        }
+
+        // Vertical lines
+        for (let i = 0; i <= cols; i++) {
+            const xPos = (i / cols) * 100;
+            const line = document.createElement('div');
+            line.className = 'particle-line';
+            line.style.left = xPos + '%';
+            line.style.top = '0';
+            line.style.width = '1px';
+            line.style.height = '100%';
+            const delay = Math.random() * 8;
+            line.style.animationDelay = (-delay) + 's';
+            gridContainer.appendChild(line);
+        }
+
+        // Occasional nodes at intersections (sparse)
+        function spawnNode(x, y) {
+            const node = document.createElement('div');
+            node.className = 'particle-node';
+            node.style.left = x + 'px';
+            node.style.top = y + 'px';
+            gridContainer.appendChild(node);
+
+            setTimeout(() => node.remove(), 3000 + Math.random() * 2000);
+        }
+
+        setInterval(() => {
+            if (Math.random() > 0.4) return; // sparse nodes
+            const x = Math.floor(Math.random() * window.innerWidth);
+            const y = Math.floor(Math.random() * window.innerHeight);
+            spawnNode(x, y);
+        }, 800);
     }
-
-    for (let i = 0; i < 18; i++) {
-        setTimeout(createFloatingChar, i * 400);
-    }
-    setInterval(createFloatingChar, 2000);
 
     // === SCREEN SHAKE ON LOAD ===
-    const container = document.querySelector('.container');
     let shakeStart = performance.now();
     const shakeDuration = 500;
 
@@ -38,7 +68,7 @@
         const elapsed = now - shakeStart;
         if (elapsed < shakeDuration) {
             const progress = elapsed / shakeDuration;
-            const intensity = (1 - progress) * 4;
+            const intensity = (1 - progress) * 3;
             const dx = (Math.random() - 0.5) * intensity * 2;
             const dy = (Math.random() - 0.5) * intensity * 2;
             document.body.style.transform = `translate(${dx}px, ${dy}px)`;
@@ -58,118 +88,107 @@
     });
 
 
-    // === FIREWORKS CANVAS ===
-    const canvas = document.getElementById('fireworks-canvas');
-    const ctx = canvas.getContext('2d');
-    let W, H;
+    // === CODE GLITCH REVEAL — terminal-style code wall that dissolves to reveal the page ===
+    const glitchOverlay = document.getElementById('code-glitch');
 
-    function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
+    if (glitchOverlay) {
+        // One big Java stack trace as a single variable — displayed character-by-character
+        const javaStackTrace = [
+            'Exception in thread "main" java.lang.NullPointerException: Cannot invoke',
+            '"dev.janczura.model.Order.getTotalAmount()" because the return value of',
+            '"dev.janczura.dao.OrderRepository.findById(Long)" is null',
+            '',
+            '  at dev.janczura.service.OrderService.processPayment(OrderService.java:127)',
+            '  at java.base/java.util.ArrayList.forEach(ArrayList.java:1543)',
+            '  at dev.janczura.controller.CheckoutController.lambda$processCheckout$0(CheckoutController.java:89)',
+            '',
+            'Caused by: org.springframework.dao.InvalidDataAccessApiUsageException:',
+            'No value specified for parameter 2',
+            '',
+            '  at org.hibernate.sql.ast.spi.SqlSelectionImpl.<init>(SqlSelectionImpl.java:74)',
+            '  at org.hibernate.sql.ast.spi.SqlAstProcessingStateImpl.registerSqlSelection(SqlAstProcessingStateImpl.java:109)',
+            '  at org.hibernate.sql.ast.tree.select.QuerySpec.forEachSelectExpression(QuerySpec.java:253)',
+            '',
+            'Caused by: java.sql.SQLException: ORA-01788:',
+            'CONNECT BY cannot be specified when NO TABLE SAMPLE is used',
+            '',
+            '  at oracle.jdbc.driver.OracleDatabaseErrorRecoveryCallback.parseErrors(OracleDatabaseErrorRecoveryCallback.java:596)',
+            '  at org.hibernate.exception.internal.SQLExceptionTypeDelegate$1.convert(SQLExceptionTypeDelegate.java:82)',
+            '',
+            'org.springframework.transaction.TransactionSystemException:',
+            'Could not commit JDBC transaction; nested exception is',
+            'java.sql.SQLTransientConnectionException: Connection is not available, request timed out',
+            '',
+            '  at com.zaxxer.hikari.pool.HikariTransactionObject.commit(HikariTransactionObject.java:96)',
+            '  at org.springframework.jdbc.datasource.DataSourceTransactionManager.doCommit(DataSourceTransactionManager.java:571)',
+            '',
+            'java.lang.StackOverflowError',
+            '',
+            '  at java.base/java.util.HashMap.hash(HashMap.java:324)',
+            '  at java.base/java.util.LinkedHashMap.get(LinkedHashMap.java:468)',
+            '  at dev.janczura.session.ShoppingCart.getSessionCart(ShoppingCart.java:156)',
+            '',
+            'java.lang.OutOfMemoryError: Java heap space',
+            '',
+            '  at java.base/java.lang.String.substring(String.java:2703)',
+            '  at org.apache.logging.log4j.util.StackLocator.getCallerClass(StackLocator.java:128)',
+            '  at dev.janczura.bootstrap.ApplicationBootstrap.onStartup(ApplicationBootstrap.java:67)',
+        ];
 
-    const colors = ['#ff2d55', '#ffd700', '#00f0ff', '#ff00aa', '#ff6b35', '#ffffff'];
+        // Combine into one big string with newlines for sequential character-by-character display
+        const fullStackTraceText = javaStackTrace.join('\n');
 
-    class Particle {
-        constructor(x, y, color, opts = {}) {
-            this.x = x;
-            this.y = y;
-            const angle = Math.random() * Math.PI * 2;
-            const speed = (opts.speed || Math.random() * 4 + 1);
-            this.vx = Math.cos(angle) * speed;
-            this.vy = Math.sin(angle) * speed;
-            this.alpha = opts.alpha || 1;
-            this.decay = opts.decay || Math.random() * 0.015 + 0.008;
-            this.color = color;
-            this.size = opts.size || Math.random() * 2.5 + 0.5;
-            this.trail = opts.trail || false;
-            this.history = [];
+        console.log('code-glitch: typing stack trace', window.innerWidth, window.innerHeight);
+
+        // Single line in the center of screen — type out the entire stack trace char by char
+        const traceLine = document.createElement('div');
+        traceLine.className = 'code-wall-line';
+        traceLine.style.color = '#ff5f5f';
+        traceLine.style.position = 'absolute';
+        traceLine.style.left = '24px';
+        traceLine.style.top = '8vh';
+        traceLine.style.transform = '';
+        traceLine.style.whiteSpace = 'pre-wrap';
+        traceLine.style.maxWidth = Math.min(window.innerWidth * 0.8, 1000) + 'px';
+        glitchOverlay.appendChild(traceLine);
+
+        // Add a blinking cursor element for typing visibility
+        const cursor = document.createElement('span');
+        cursor.className = 'typing-cursor-inline';
+        traceLine.appendChild(cursor);
+
+// Type out the entire stack trace in fast chunks — 8 chars per tick for maximum speed
+let charIndex = 0;
+const typeInterval = setInterval(() => {
+    if (charIndex < fullStackTraceText.length) {
+        // Insert 8 characters at once before the cursor for blazing-fast typing effect
+        const chunk = Math.min(8, fullStackTraceText.length - charIndex);
+        const fragment = document.createDocumentFragment();
+        for (let c = 0; c < chunk; c++) {
+            const charSpan = document.createElement('span');
+            charSpan.textContent = fullStackTraceText.charAt(charIndex + c);
+            fragment.appendChild(charSpan);
         }
+        traceLine.insertBefore(fragment, cursor);
+        charIndex += chunk;
+            } else {
+                clearInterval(typeInterval);
+                cursor.remove();
+                traceLine.classList.add('revealed');
 
-        update() {
-            if (this.trail) {
-                this.history.push({ x: this.x, y: this.y, alpha: this.alpha * 0.5 });
-                if (this.history.length > 6) this.history.shift();
+                // Wait 1 second after full display, then fade out to reveal the page
+                setTimeout(() => {
+                    glitchOverlay.style.transition = 'opacity 1.5s ease';
+                    glitchOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        if (glitchOverlay.parentNode) {
+                            glitchOverlay.remove();
+                        }
+                    }, 2000);
+                }, 1000);
             }
-            this.x += this.vx;
-            this.y += this.vy;
-            this.vy += opts_gravity || 0.03;
-            this.vx *= 0.99;
-            this.alpha -= this.decay;
-        }
-
-        draw(ctx) {
-            ctx.save();
-            if (this.trail && this.history.length > 1) {
-                for (let i = 0; i < this.history.length; i++) {
-                    const h = this.history[i];
-                    const t = i / this.history.length;
-                    ctx.globalAlpha = Math.max(h.alpha * t, 0);
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.arc(h.x, h.y, this.size * t * 0.6, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            ctx.globalAlpha = Math.max(this.alpha, 0);
-            ctx.fillStyle = this.color;
-            ctx.shadowColor = this.color;
-            ctx.shadowBlur = 6;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
+        }, 0.5); // maksymalna prędkość — 8 znaków na tick co 0.5ms (z chunkami)
     }
-
-    let opts_gravity = 0.03;
-    let particles = [];
-
-    function launchFirework(x, y) {
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const count = Math.floor(Math.random() * 60) + 40;
-        for (let i = 0; i < count; i++) {
-            particles.push(new Particle(x || Math.random() * W, y || Math.random() * H * 0.5, color));
-        }
-    }
-
-    function launchMegaFirework(x, y) {
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        for (let i = 0; i < 120; i++) {
-            particles.push(new Particle(x, y, color, {
-                speed: Math.random() * 7 + 2,
-                size: Math.random() * 3 + 1,
-                decay: Math.random() * 0.01 + 0.005,
-                trail: true
-            }));
-        }
-    }
-
-    // Initial mega burst on load — cinematic opening
-    setTimeout(() => launchMegaFirework(W * 0.25, H * 0.3), 600);
-    setTimeout(() => launchMegaFirework(W * 0.75, H * 0.25), 900);
-    setTimeout(() => launchMegaFirework(W * 0.5, H * 0.15), 1100);
-    setTimeout(() => launchMegaFirework(W * 0.35, H * 0.45), 1400);
-    setTimeout(() => launchMegaFirework(W * 0.65, H * 0.4), 1600);
-    setTimeout(() => { launchFirework(W * 0.2, H * 0.3); launchFirework(W * 0.8, H * 0.35); }, 1900);
-
-    // Click to launch fireworks
-    document.addEventListener('click', (e) => {
-        launchFirework(e.clientX, e.clientY);
-    });
-
-    function animate() {
-        ctx.clearRect(0, 0, W, H);
-        particles = particles.filter(p => p.alpha > 0);
-        for (const p of particles) {
-            p.update();
-            p.draw(ctx);
-        }
-        requestAnimationFrame(animate);
-    }
-    animate();
 
 
     // === SCROLL REVEAL ===
@@ -244,47 +263,41 @@
     }, { passive: true });
 
 
-    // === PERIODIC FIREWORKS ===
-    setInterval(() => {
-        if (Math.random() > 0.6) {
-            launchFirework();
-        }
-    }, 5000);
-
-
-    // === CUSTOM CURSOR ===
-    const cursor = document.getElementById('custom-cursor');
+    // === CUSTOM CURSOR (terminal block cursor) ===
+    const cursorEl = document.getElementById('custom-cursor');
     const trail = document.getElementById('cursor-trail');
     let mouseX = -100, mouseY = -100;
     let trailX = -100, trailY = -100;
 
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        cursor.style.transform = `translate(${mouseX - 4}px, ${mouseY - 4}px)`;
-    });
+    if (cursorEl && trail) {
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorEl.style.transform = `translate(${mouseX - 4}px, ${mouseY - 8}px)`;
+        });
 
-    function animateTrail() {
-        trailX += (mouseX - trailX) * 0.15;
-        trailY += (mouseY - trailY) * 0.15;
-        trail.style.transform = `translate(${trailX - 10}px, ${trailY - 10}px)`;
-        requestAnimationFrame(animateTrail);
+        function animateTrail() {
+            trailX += (mouseX - trailX) * 0.32;
+            trailY += (mouseY - trailY) * 0.32;
+            trail.style.transform = `translate(${trailX - 7}px, ${trailY - 7}px)`;
+            requestAnimationFrame(animateTrail);
+        }
+        animateTrail();
+
+        const interactiveEls = 'a, button, .project-card, .tag, .timeline-item, .edu-card';
+        document.addEventListener('mouseover', (e) => {
+            if (e.target.closest(interactiveEls)) {
+                cursorEl.classList.add('hovering');
+                trail.classList.add('hovering');
+            }
+        });
+        document.addEventListener('mouseout', (e) => {
+            if (e.target.closest(interactiveEls)) {
+                cursorEl.classList.remove('hovering');
+                trail.classList.remove('hovering');
+            }
+        });
     }
-    animateTrail();
-
-    const interactiveEls = 'a, button, .project-card, .tag, .timeline-item, .edu-card';
-    document.addEventListener('mouseover', (e) => {
-        if (e.target.closest(interactiveEls)) {
-            cursor.classList.add('hovering');
-            trail.classList.add('hovering');
-        }
-    });
-    document.addEventListener('mouseout', (e) => {
-        if (e.target.closest(interactiveEls)) {
-            cursor.classList.remove('hovering');
-            trail.classList.remove('hovering');
-        }
-    });
 
 
     // === TYPING EFFECT ===
@@ -321,15 +334,15 @@
     });
 
 
-    // === ESCAPE THEME TOGGLE ===
+    // === THEME TOGGLE (terminal escape button — removes itself after 3 "escapes") */
     const toggleBtn = document.getElementById('theme-toggle');
 
     if (toggleBtn) {
         let escapeCount = 0;
         const messages = [
-            '☀ LIGHT MODE',
-            '☀ NOPE',
-            '☀ CATCH ME',
+            '_ LIGHT MODE',
+            '_ NOPE',
+            '_ CATCH ME IF YOU CAN',
         ];
 
         function escapeBtn() {
@@ -372,6 +385,54 @@
             e.preventDefault();
             escapeBtn();
         });
+    }
+
+
+    // === COOKIE CONSENT BANNER ===
+    const banner = document.getElementById('cookie-banner');
+
+    if (banner) {
+        const CONSENT_KEY = 'cookie-consent';
+
+        function readConsent() {
+            try {
+                return localStorage.getItem(CONSENT_KEY);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function saveConsent(value) {
+            try {
+                localStorage.setItem(CONSENT_KEY, value);
+            } catch (e) {
+                // storage blocked — decision holds for this page view only
+            }
+        }
+
+        function hideBanner() {
+            banner.classList.remove('visible');
+            setTimeout(() => { banner.hidden = true; }, 500);
+        }
+
+        function decide(value) {
+            saveConsent(value);
+            if (value === 'granted' && typeof window.gtag === 'function') {
+                window.gtag('consent', 'update', { 'analytics_storage': 'granted' });
+            }
+            hideBanner();
+        }
+
+        const stored = readConsent();
+
+        if (stored !== 'granted' && stored !== 'denied') {
+            banner.hidden = false;
+            // let the intro animation breathe before sliding in
+            setTimeout(() => banner.classList.add('visible'), 2500);
+        }
+
+        document.getElementById('cookie-accept').addEventListener('click', () => decide('granted'));
+        document.getElementById('cookie-decline').addEventListener('click', () => decide('denied'));
     }
 
 })();
