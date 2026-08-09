@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="Updated README.md" />
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="projects updated">
+      <change beforePath="$PROJECT_DIR$/w3champions/i18n.js" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/i18n.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -317,6 +319,8 @@
     <MESSAGE value="Updated chinese style" />
     <MESSAGE value="Updated README.md" />
     <MESSAGE value="Updated style" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated style" />
+    <MESSAGE value="w3champions" />
+    <MESSAGE value="projects updated" />
+    <option name="LAST_COMMIT_MESSAGE" value="projects updated" />
   </component>
 </project>

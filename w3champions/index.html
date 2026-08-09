@@ -115,8 +115,23 @@
 </main>
 
 <footer class="footer">
-    <p data-i18n-html="footer.source"></p>
-    <p class="cookie-note" data-i18n="footer.cookies"></p>
+    <div class="footer-line"></div>
+    <div class="footer-inner">
+        <p class="footer-author" data-i18n-html="footer.author"></p>
+        <p class="footer-contact">
+            <span data-i18n="footer.email"></span> <span id="email-display"></span>
+            <button type="button" id="reveal-email-btn" data-i18n="footer.showEmail"></button>
+            &nbsp;·&nbsp;
+            LinkedIn: <a href="https://www.linkedin.com/in/serq0/" target="_blank" rel="noopener noreferrer">Sergiusz Jańczura</a>
+            &nbsp;·&nbsp;
+            GitHub: <a href="https://github.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
+            &nbsp;·&nbsp;
+            GitLab: <a href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
+        </p>
+        <p class="footer-note" data-i18n-html="footer.source"></p>
+        <p class="cookie-note" data-i18n="footer.cookies"></p>
+        <p class="footer-copy">&copy; <span id="current-year"></span> Sergiusz Jańczura. <span data-i18n="footer.rights"></span></p>
+    </div>
 </footer>
 
 <div id="tooltip" class="tooltip" hidden></div>

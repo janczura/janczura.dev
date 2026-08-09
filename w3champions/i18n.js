@@ -35,6 +35,10 @@ const I18N = {
 
         'footer.source': 'Dane: publiczne API <a href="https://w3champions.com" target="_blank" rel="noopener">W3Champions</a>. Strona nie jest powiązana z W3Champions ani Blizzard Entertainment.',
         'footer.cookies': 'Ta strona nie używa plików cookie i nie zbiera danych o użytkownikach. Wybrany język zapisujemy w pamięci lokalnej przeglądarki (localStorage) — możesz go usunąć czyszcząc dane strony. Zapytania o statystyki idą bezpośrednio z Twojej przeglądarki do publicznego API W3Champions, kroje pisma pobierane są z Google Fonts.',
+        'footer.author': 'Autor: <a href="https://janczura.dev">Sergiusz Jańczura</a> — Java Developer z Poznania. Więcej projektów: <a href="https://janczura.dev">janczura.dev</a>',
+        'footer.email': 'E-mail:',
+        'footer.showEmail': 'Pokaż',
+        'footer.rights': 'Wszelkie prawa zastrzeżone.',
 
         'search.searching': 'Szukam gracza „{q}”…',
         'search.none': 'Nie znaleziono gracza o takim nicku.',
@@ -177,6 +181,10 @@ const I18N = {
 
         'footer.source': 'Data: public <a href="https://w3champions.com" target="_blank" rel="noopener">W3Champions</a> API. This site is not affiliated with W3Champions or Blizzard Entertainment.',
         'footer.cookies': 'This page sets no cookies and collects no user data. Your language choice is kept in the browser\'s localStorage — clearing site data removes it. Stats requests go straight from your browser to the public W3Champions API, and fonts are loaded from Google Fonts.',
+        'footer.author': 'Built by <a href="https://janczura.dev">Sergiusz Jańczura</a> — Java developer based in Poznań, Poland. More projects: <a href="https://janczura.dev">janczura.dev</a>',
+        'footer.email': 'E-mail:',
+        'footer.showEmail': 'Show',
+        'footer.rights': 'All rights reserved.',
 
         'search.searching': 'Searching for “{q}”…',
         'search.none': 'No player found with that nickname.',

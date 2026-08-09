@@ -1061,6 +1061,14 @@ function renderMatches(st) {
 
 (function init() {
     applyStatic();
+
+    // stopka: rok i adres e-mail składany dopiero po kliknięciu (mniej dla botów)
+    $('#current-year').textContent = new Date().getFullYear();
+    $('#reveal-email-btn').addEventListener('click', (ev) => {
+        $('#email-display').textContent = ['janczurasergiusz', '@protonmail.com'].join('');
+        ev.currentTarget.remove();
+    });
+
     const q = new URLSearchParams(location.search).get('player');
     if (q) {
         $('#search-input').value = q;
