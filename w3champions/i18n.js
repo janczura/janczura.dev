@@ -5,7 +5,7 @@
 const I18N = {
     pl: {
         'app.tagline': 'Wpisz nick lub wklej link do profilu. Dane pobierane są sekcja po sekcji — tylko to, o co poprosisz.',
-        'app.search.ph': 'LDK#21919  ·  LDK  ·  https://w3champions.com/player/LDK%2321919',
+        'app.search.ph': 'Medusa#31315  ·  Medusa  ·  https://w3champions.com/player/Medusa%2331315',
         'app.search.aria': 'Nick, BattleTag lub link do profilu',
         'app.search.btn': 'Szukaj',
         'app.lang.btn': 'EN',
@@ -42,7 +42,7 @@ const I18N = {
         'search.seasons': 'sezony: {list}',
         'search.error': 'Błąd wyszukiwania: {msg}',
         'search.loadingProfile': 'Wczytuję profil {tag}…',
-        'search.profileError': 'Nie udało się wczytać profilu ({msg}). Sprawdź BattleTag, np. LDK#21919.',
+        'search.profileError': 'Nie udało się wczytać profilu ({msg}). Sprawdź BattleTag, np. Medusa#31315.',
         'search.emptyResponse': 'Pusta odpowiedź API',
 
         'tile.games': 'Rozegrane gry',
@@ -147,7 +147,7 @@ const I18N = {
 
     en: {
         'app.tagline': 'Enter a nickname or paste a profile link. Data loads section by section — only what you ask for.',
-        'app.search.ph': 'LDK#21919  ·  LDK  ·  https://w3champions.com/player/LDK%2321919',
+        'app.search.ph': 'Medusa#31315  ·  Medusa  ·  https://w3champions.com/player/Medusa%2331315',
         'app.search.aria': 'Nickname, BattleTag or profile link',
         'app.search.btn': 'Search',
         'app.lang.btn': 'PL',
@@ -184,7 +184,7 @@ const I18N = {
         'search.seasons': 'seasons: {list}',
         'search.error': 'Search error: {msg}',
         'search.loadingProfile': 'Loading profile {tag}…',
-        'search.profileError': 'Could not load the profile ({msg}). Check the BattleTag, e.g. LDK#21919.',
+        'search.profileError': 'Could not load the profile ({msg}). Check the BattleTag, e.g. Medusa#31315.',
         'search.emptyResponse': 'Empty API response',
 
         'tile.games': 'Games played',
