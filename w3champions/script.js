@@ -425,21 +425,28 @@ searchResults.addEventListener('click', (ev) => {
 
 async function loadPlayer(battleTag) {
     setStatus(searchStatus, t('search.loadingProfile', { tag: battleTag }), 'busy');
+    let profile;
     try {
-        const profile = await api(`/players/${encodeURIComponent(battleTag)}`);
+        profile = await api(`/players/${encodeURIComponent(battleTag)}`);
         if (!profile || !profile.battleTag) throw new Error(t('search.emptyResponse'));
+    } catch (err) {
+        // tylko tu BattleTag może być winny — podpowiedź o formacie ma sens
+        setStatus(searchStatus, t('search.profileError', { msg: err.message }), 'error');
+        return;
+    }
 
-        state.tag = profile.battleTag;
-        state.profile = profile;
-        $('#search-input').value = profile.battleTag;
-        history.replaceState(null, '', `?player=${encodeURIComponent(profile.battleTag)}`);
-        setStatus(searchStatus, '');
+    state.tag = profile.battleTag;
+    state.profile = profile;
+    $('#search-input').value = profile.battleTag;
+    history.replaceState(null, '', `?player=${encodeURIComponent(profile.battleTag)}`);
+    setStatus(searchStatus, '');
+    try {
         renderProfile(profile);
         setupFilters(profile);
         resetPeak();
         resetSections();
     } catch (err) {
-        setStatus(searchStatus, t('search.profileError', { msg: err.message }), 'error');
+        setStatus(searchStatus, t('common.error', { msg: err.message }), 'error');
     }
 }
 
@@ -529,6 +536,9 @@ function resetSections() {
 
 /** Rekordy konta nie zależą od filtrów — czyszczone tylko przy zmianie gracza. */
 function resetPeak() {
+    // świeży script.js potrafi trafić na index.html jeszcze z cache (GitHub Pages
+    // trzyma oba po 10 minut) — brak sekcji nie może wywrócić ładowania profilu
+    if (!$('#sec-peak')) return;
     $('#sec-peak').hidden = false;
     $('[data-body="peak"]').innerHTML = '';
     setStatus($('[data-status="peak"]'), '');
