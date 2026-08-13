@@ -23,6 +23,8 @@ const RACE_ORDER = [1, 2, 4, 8, 0];
 const MODE_NAMES = { 1: '1v1', 2: '2v2', 4: '4v4', 5: 'FFA', 6: '2v2 AT', 8: '4v4 AT' };
 
 const PAGE_SIZE = 100;
+const GATEWAYS = [20, 10];
+const FETCH_LIMIT = 6;   // równoległe zapytania przy skanowaniu wszystkich sezonów
 
 /* --------------------------------------------------------------- pomoce -- */
 
@@ -118,9 +120,25 @@ const state = {
     profile: null,
     season: null,
     gateway: 20,
-    loaded: { season: false, mmr: false, matchup: false, matches: false },
+    loaded: { peak: false, season: false, mmr: false, matchup: false, matches: false },
+    peak: { rows: [], seasons: [], refined: false, running: false },
     matches: { offset: 0, count: null, list: [], mode: '', loading: false }
 };
+
+/** Przetwarza listę zadań z ograniczoną równoległością, raportując postęp. */
+async function mapLimit(items, limit, fn, onProgress) {
+    const out = new Array(items.length);
+    let next = 0, done = 0;
+    const worker = async () => {
+        while (next < items.length) {
+            const i = next++;
+            out[i] = await fn(items[i]);
+            onProgress?.(++done, items.length);
+        }
+    };
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+    return out;
+}
 
 /* ============================================================ język PL/EN */
 
@@ -152,6 +170,7 @@ function rerenderLoaded() {
     setStatus(searchStatus, '');
     if (!state.profile) return;
     renderProfile(state.profile);
+    if (state.loaded.peak) renderPeak();          // dane siedzą w state.peak — bez ponownych zapytań
     if (state.loaded.season) loadSeason();
     if (state.loaded.mmr) loadMmr();
     if (state.loaded.matchup) loadMatchup();
@@ -417,6 +436,7 @@ async function loadPlayer(battleTag) {
         setStatus(searchStatus, '');
         renderProfile(profile);
         setupFilters(profile);
+        resetPeak();
         resetSections();
     } catch (err) {
         setStatus(searchStatus, t('search.profileError', { msg: err.message }), 'error');
@@ -507,11 +527,23 @@ function resetSections() {
     state.matches = { offset: 0, count: null, list: [], mode: '', loading: false };
 }
 
+/** Rekordy konta nie zależą od filtrów — czyszczone tylko przy zmianie gracza. */
+function resetPeak() {
+    $('#sec-peak').hidden = false;
+    $('[data-body="peak"]').innerHTML = '';
+    setStatus($('[data-status="peak"]'), '');
+    const btn = $('[data-load="peak"]');
+    btn.disabled = false;
+    delete btn.dataset.exhausted;
+    state.loaded.peak = false;
+    state.peak = { rows: [], seasons: [], refined: false, running: false };
+}
+
 /* przyciski „Wczytaj” */
 document.addEventListener('click', (ev) => {
     const btn = ev.target.closest('[data-load]');
     if (!btn) return;
-    ({ season: loadSeason, mmr: loadMmr, matchup: loadMatchup, matches: loadMatches })[btn.dataset.load]?.();
+    ({ peak: loadPeak, season: loadSeason, mmr: loadMmr, matchup: loadMatchup, matches: loadMatches })[btn.dataset.load]?.();
 });
 
 async function withStatus(key, text, fn) {
@@ -549,7 +581,180 @@ async function fetchSeasonStats() {
 }
 
 /* =========================================================================
-   SEKCJA 1 — statystyki sezonu
+   SEKCJA 1 — rekordy konta (peak MMR w trybie, niezależnie od sezonu)
+
+   API nie ma endpointu „peak”, więc liczymy go sami w dwóch krokach:
+   1. game-mode-stats dla każdego sezonu i obu serwerów — daje MMR z końca
+      sezonu w każdej kombinacji tryb/rasa (kilkanaście zapytań),
+   2. na życzenie mmr-rp-timeline dla każdej z tych kombinacji — dopiero to
+      pokazuje faktyczny szczyt w trakcie sezonu (potrafi być mocno wyższy).
+   ========================================================================= */
+
+async function loadPeak() {
+    if (state.peak.running) return;
+    const seasons = (state.profile?.participatedInSeasons || []).map(s => s.id);
+
+    await withStatus('peak', t('peak.loading', { a: 0, b: seasons.length * GATEWAYS.length }), async (st) => {
+        const body = $('[data-body="peak"]');
+        if (!seasons.length) { setStatus(st, t('peak.noSeasons')); body.innerHTML = ''; return; }
+
+        state.peak.running = true;
+        try {
+            const jobs = seasons.flatMap(season => GATEWAYS.map(gw => ({ season, gw })));
+            const chunks = await mapLimit(jobs, FETCH_LIMIT, async ({ season, gw }) => {
+                try {
+                    const stats = await api(`/players/${encodeURIComponent(state.tag)}/game-mode-stats`,
+                        { gateWay: gw, season });
+                    return (stats || []).filter(s => s.games > 0)
+                        .map(s => ({ ...s, season: s.season ?? season, gateWay: s.gateWay ?? gw }));
+                } catch {
+                    return [];   // pojedynczy sezon bez danych nie może wywrócić całości
+                }
+            }, (a, b) => setStatus(st, t('peak.loading', { a, b }), 'busy'));
+
+            state.peak.seasons = seasons;
+            state.peak.refined = false;
+            state.peak.rows = groupPeaks(chunks.flat());
+        } finally {
+            state.peak.running = false;
+        }
+        renderPeak();
+    });
+}
+
+/** Z listy wpisów tryb/rasa/sezon robi jeden wiersz na tryb, z najlepszym wynikiem. */
+function groupPeaks(stats) {
+    const byMode = new Map();
+    for (const s of stats) {
+        let row = byMode.get(s.gameMode);
+        if (!row) {
+            row = { gameMode: s.gameMode, mode: modeName(s.gameMode, s.id), games: 0, combos: [], peak: null };
+            byMode.set(s.gameMode, row);
+        }
+        row.games += s.games;
+        // MMR z końca sezonu jest na start przybliżeniem szczytu
+        const combo = { ...s, peak: { mmr: s.mmr, date: null, approx: true } };
+        row.combos.push(combo);
+        if (!row.peak || combo.peak.mmr > row.peak.mmr) row.peak = { ...combo.peak, combo };
+    }
+    return Array.from(byMode.values()).sort((a, b) => b.games - a.games);
+}
+
+/** Krok 2 — przegląda historię MMR każdej kombinacji i podmienia szczyty. */
+async function refinePeak() {
+    if (state.peak.running) return;
+    state.peak.running = true;
+    const st = $('[data-status="peak"]');
+    const headBtn = $('[data-load="peak"]');
+    headBtn.disabled = true;
+    const jobs = state.peak.rows.flatMap(row => row.combos.map(combo => ({ row, combo })));
+
+    try {
+        await mapLimit(jobs, FETCH_LIMIT, async ({ combo }) => {
+            try {
+                const data = await api(`/players/${encodeURIComponent(state.tag)}/mmr-rp-timeline`,
+                    { race: combo.race, gateWay: combo.gateWay, season: combo.season, gameMode: combo.gameMode });
+                const pts = data?.mmrRpAtDates || [];
+                if (!pts.length) return;
+                const top = pts.reduce((best, p) => (p.mmr > best.mmr ? p : best), pts[0]);
+                // historia bywa ucięta przed końcem sezonu — zostawiamy wyższą z wartości
+                if (top.mmr >= combo.peak.mmr) combo.peak = { mmr: top.mmr, date: top.date, approx: false };
+                else combo.peak = { ...combo.peak, approx: false };
+            } catch {
+                /* brak historii dla kombinacji — zostaje MMR z końca sezonu */
+            }
+        }, (a, b) => setStatus(st, t('peak.refining', { a, b }), 'busy'));
+
+        for (const row of state.peak.rows) {
+            row.peak = row.combos.reduce((best, combo) =>
+                (!best || combo.peak.mmr > best.mmr ? { ...combo.peak, combo } : best), null);
+        }
+        state.peak.refined = true;
+        renderPeak();
+    } catch (err) {
+        setStatus(st, t('common.error', { msg: err.message }), 'error');
+    } finally {
+        state.peak.running = false;
+        headBtn.disabled = false;
+    }
+}
+
+function renderPeak() {
+    const body = $('[data-body="peak"]');
+    const st = $('[data-status="peak"]');
+    const rows = state.peak.rows;
+
+    if (!rows.length) {
+        body.innerHTML = '';
+        setStatus(st, state.peak.seasons.length ? t('peak.empty') : t('peak.noSeasons'));
+        return;
+    }
+
+    const peakRace = (p) => raceOf(p.combo.race);
+    const where = (p) => p.date
+        ? t('peak.card.date', { n: p.combo.season, gw: gatewayName(p.combo.gateWay), date: dateShort(p.date) })
+        : t('peak.card.where', { n: p.combo.season, gw: gatewayName(p.combo.gateWay) });
+
+    const best = rows.reduce((a, r) => (r.peak.mmr > a.peak.mmr ? r : a), rows[0]);
+    const combos = rows.flatMap(r => r.combos).length;
+
+    body.innerHTML = `
+        <div class="tiles" style="margin-bottom:18px">
+            ${tile(num(best.peak.mmr), t('peak.tile.best'), t('peak.tile.bestSub', {
+                mode: best.mode,
+                race: peakRace(best.peak).none ? t('season.teamMode') : peakRace(best.peak).name
+            }))}
+            ${tile(rows.length, t('peak.tile.modes'), t('peak.tile.modesSub'))}
+            ${tile(state.peak.seasons.length, t('peak.tile.seasons'), t('peak.tile.seasonsSub'))}
+        </div>
+
+        <div class="mode-grid">
+            ${rows.map(r => {
+                const race = peakRace(r.peak);
+                return `<div class="mode-card">
+                    <div class="mc-head">
+                        <span class="mc-race">${race.none ? esc(r.mode)
+                            : `<span class="swatch" style="background:${race.color}"></span>${race.name}`}</span>
+                        <span class="mc-mode">${race.none ? t('season.teamMode') : esc(r.mode)}</span>
+                    </div>
+                    <div class="mc-mmr">${num(r.peak.mmr)} <small>${t('peak.card.mmr')}</small></div>
+                    <div class="mc-meta">${esc(where(r.peak))}</div>
+                    <div class="mc-meta">${t('peak.card.games', { n: num(r.games) })}</div>
+                </div>`;
+            }).join('')}
+        </div>
+
+        <details style="margin-top:14px">
+            <summary class="dim" style="cursor:pointer;font-size:12px">${t('peak.details', { n: combos })}</summary>
+            ${tableHtml(
+                [{ label: t('th.mode') }, { label: t('th.race') }, { label: t('th.peak'), type: 'num' },
+                 { label: t('th.season'), type: 'num' }, { label: t('th.server') },
+                 { label: t('th.games'), type: 'num' }, { label: t('th.winrate'), type: 'num' }],
+                rows.flatMap(r => r.combos).sort((a, b) => b.peak.mmr - a.peak.mmr).map(c => ({
+                    cells: [
+                        esc(modeName(c.gameMode, c.id)),
+                        `<span class="race-cell"><span class="swatch" style="background:${raceOf(c.race).color}"></span>${raceOf(c.race).name}</span>`,
+                        num(c.peak.mmr), t('season.n', { n: c.season }), esc(gatewayName(c.gateWay)),
+                        num(c.games), pct(c.winrate)
+                    ],
+                    sort: [modeName(c.gameMode, c.id), raceOf(c.race).name, c.peak.mmr, c.season,
+                           gatewayName(c.gateWay), c.games, c.winrate]
+                })))}
+        </details>
+
+        <div class="load-more">
+            ${state.peak.refined
+                ? `<span class="dim" style="font-size:11.5px">${t('peak.refinedNote')}</span>`
+                : `<button class="btn small" id="peak-refine">${t('peak.refine', { n: combos })}</button>
+                   <span class="dim" style="font-size:11.5px">${t('peak.approx')}</span>`}
+        </div>`;
+
+    $('#peak-refine')?.addEventListener('click', refinePeak);
+    setStatus(st, t('peak.status', { list: state.peak.seasons.join(', '), k: rows.length }));
+}
+
+/* =========================================================================
+   SEKCJA 2 — statystyki sezonu
    ========================================================================= */
 
 async function loadSeason() {
@@ -599,7 +804,7 @@ async function loadSeason() {
 }
 
 /* =========================================================================
-   SEKCJA 2 — wykres MMR
+   SEKCJA 3 — wykres MMR
    ========================================================================= */
 
 async function loadMmr() {
@@ -680,7 +885,7 @@ async function loadMmr() {
 }
 
 /* =========================================================================
-   SEKCJA 3 — matchupy i mapy (agregaty po stronie W3Champions)
+   SEKCJA 4 — matchupy i mapy (agregaty po stronie W3Champions)
    ========================================================================= */
 
 async function loadMatchup() {
@@ -766,7 +971,7 @@ async function loadMatchup() {
 }
 
 /* =========================================================================
-   SEKCJA 4 — mecze i przeciwnicy (stronicowane, po 100)
+   SEKCJA 5 — mecze i przeciwnicy (stronicowane, po 100)
    ========================================================================= */
 
 async function loadMatches() {
