@@ -32,7 +32,7 @@ const $  = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 // tryby drużynowe nie mają podziału na rasy — API zwraca wtedy race === null
-const raceOf = (r) => RACES[r] || (r === null || r === undefined
+const raceOf = (r) => (r === 16 ? { ...RACES[16], name: t('race.all') } : RACES[r]) || (r === null || r === undefined
     ? { name: t('race.none'), short: '—', color: 'var(--text-muted)', none: true }
     : { name: `Race ${r}`, short: `R${r}`, color: 'var(--text-muted)' });
 
@@ -122,6 +122,7 @@ const state = {
     gateway: 20,
     loaded: { peak: false, season: false, mmr: false, matchup: false, matches: false },
     peak: { rows: [], seasons: [], refined: false, running: false },
+    matchup: { mode: null },
     matches: { offset: 0, count: null, list: [], mode: '', loading: false }
 };
 
@@ -531,6 +532,7 @@ function resetSections() {
         btn.textContent = key === 'matches' ? t('btn.loadMatches', { n: PAGE_SIZE }) : t('btn.load');
         state.loaded[key] = false;
     });
+    state.matchup = { mode: null };
     state.matches = { offset: 0, count: null, list: [], mode: '', loading: false };
 }
 
@@ -895,22 +897,154 @@ async function loadMmr() {
 }
 
 /* =========================================================================
-   SEKCJA 4 — matchupy i mapy (agregaty po stronie W3Champions)
+   SEKCJA 4 — matchupy i mapy
+
+   race-on-map-versus-race po stronie W3Champions istnieje TYLKO dla 1v1
+   (endpoint nie przyjmuje nawet gameMode). Dla 2v2/3v3/4v4/FFA i trybów
+   custom te same statystyki liczymy sami z historii meczów i podajemy
+   dalej w identycznej strukturze, więc rysowanie jest wspólne.
    ========================================================================= */
+
+/** Tryby faktycznie rozegrane w wybranym sezonie, z serwerami, na których padły. */
+async function seasonModes() {
+    const lists = await Promise.all(GATEWAYS.map(async gw =>
+        [gw, await api(`/players/${encodeURIComponent(state.tag)}/game-mode-stats`,
+            { gateWay: gw, season: state.season }).catch(() => [])]));
+
+    const byMode = new Map();
+    for (const [gw, list] of lists) {
+        for (const s of list) {
+            if (!s.games) continue;
+            const e = byMode.get(s.gameMode)
+                || { gameMode: s.gameMode, name: modeName(s.gameMode, s.id), games: 0, gateways: [] };
+            e.games += s.games;
+            if (!e.gateways.includes(gw)) e.gateways.push(gw);
+            byMode.set(s.gameMode, e);
+        }
+    }
+    return [...byMode.values()].sort((a, b) => b.games - a.games);
+}
+
+/** Wszystkie mecze danego trybu w sezonie — pierwsza strona daje `count`, reszta leci równolegle. */
+async function allMatches(mode, onProgress) {
+    const out = [];
+    for (const gw of mode.gateways) {
+        const page = (offset) => api('/matches/search', {
+            playerId: state.tag, gateway: gw, season: state.season,
+            gameMode: mode.gameMode, offset, pageSize: PAGE_SIZE
+        });
+        const first = await page(0);
+        out.push(...(first.matches || []));
+        const total = first.count ?? out.length;
+        onProgress?.(out.length, total);
+
+        const offsets = [];
+        for (let o = PAGE_SIZE; o < total; o += PAGE_SIZE) offsets.push(o);
+        const rest = await mapLimit(offsets, FETCH_LIMIT, async (o) => (await page(o)).matches || [],
+            (done) => onProgress?.(Math.min(PAGE_SIZE * (done + 1), total), total));
+        rest.forEach(batch => out.push(...batch));
+    }
+    return out;
+}
+
+/**
+ * Z historii meczów buduje strukturę identyczną z agregatem 1v1 (jeden „patch”: All).
+ * Rasa 16 = „All” zbiera wszystkie gry niezależnie od rasy gracza. W trybach
+ * drużynowych „vs rasa” liczy każdego przeciwnika osobno, ale mapa dostaje
+ * jeden wpis na mecz — dzięki temu tabela map nie mnoży gier przez skład drużyny.
+ */
+function matchupFromMatches(matches, myTag) {
+    const races = new Map();
+    const bucket = (race) => {
+        if (!races.has(race)) races.set(race, { vs: new Map(), maps: new Map() });
+        return races.get(race);
+    };
+    const bump = (map, key, won, extra = {}) => {
+        const e = map.get(key) || { wins: 0, losses: 0, ...extra };
+        if (won) e.wins++; else e.losses++;
+        map.set(key, e);
+    };
+
+    for (const m of matches) {
+        let me = null, myTeam = -1;
+        (m.teams || []).forEach((team, i) => (team.players || []).forEach(p => {
+            if (eqTag(p.battleTag, myTag)) { me = p; myTeam = i; }
+        }));
+        if (!me) continue;
+
+        const won = !!me.won;
+        const opponents = (m.teams || []).filter((_, i) => i !== myTeam).flatMap(team => team.players || []);
+        for (const race of new Set([me.race, 16])) {
+            const b = bucket(race);
+            bump(b.maps, m.map || m.mapName || '—', won, { mapName: m.mapName });
+            opponents.forEach(o => bump(b.vs, o.race, won));
+        }
+    }
+
+    const wl = (race, e) => {
+        const games = e.wins + e.losses;
+        return { race, wins: e.wins, losses: e.losses, games, winrate: games ? e.wins / games : 0 };
+    };
+    const rank = (race) => (race === 16 ? -1 : RACE_ORDER.indexOf(race));
+
+    const entries = [...races].map(([race, b]) => ({
+        race,
+        winLossesOnMap: [
+            { map: 'Overall', mapName: null, winLosses: [...b.vs].map(([r, e]) => wl(r, e)) },
+            ...[...b.maps].map(([key, e]) => ({ map: key, mapName: e.mapName, winLosses: [wl(16, e)] }))
+        ]
+    })).sort((a, b) => rank(a.race) - rank(b.race));
+
+    return entries.length ? { All: entries } : {};
+}
 
 async function loadMatchup() {
     await withStatus('matchup', t('mu.loading'), async (st) => {
-        const data = await api(`/player-stats/${encodeURIComponent(state.tag)}/race-on-map-versus-race`, { season: state.season });
         const body = $('[data-body="matchup"]');
-        const patches = Object.keys(data?.raceWinsOnMapByPatch || {});
+        const modes = await seasonModes();
+        if (!modes.length) { setStatus(st, t('mu.noSeasonGames', { n: state.season })); body.innerHTML = ''; return; }
 
-        if (!patches.length) { setStatus(st, t('mu.empty', { n: state.season })); body.innerHTML = ''; return; }
+        const mode = modes.find(m => m.gameMode === state.matchup.mode)
+            || modes.find(m => m.gameMode === 1) || modes[0];
+        state.matchup.mode = mode.gameMode;
+
+        const local = mode.gameMode !== 1;
+        let matchCount = 0;
+        let byPatch;
+        if (local) {
+            const matches = await allMatches(mode, (a, b) =>
+                setStatus(st, t('mu.scan', { a: num(a), b: num(b), mode: mode.name }), 'busy'));
+            matchCount = matches.length;
+            byPatch = matchupFromMatches(matches, state.tag);
+        } else {
+            const res = await api(`/player-stats/${encodeURIComponent(state.tag)}/race-on-map-versus-race`,
+                { season: state.season });
+            byPatch = res?.raceWinsOnMapByPatch || {};
+        }
+
+        const patches = Object.keys(byPatch);
+        const modeFilter = `<label>${t('mu.mode')}
+            <select id="mu-mode">${modes.map(m =>
+                `<option value="${m.gameMode}"${m.gameMode === mode.gameMode ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}
+            </select></label>`;
+        const bindMode = () => $('#mu-mode').addEventListener('change', (ev) => {
+            state.matchup.mode = +ev.target.value;
+            loadMatchup();
+        });
+
+        if (!patches.length) {
+            body.innerHTML = `<div class="inline-filters">${modeFilter}</div>`;
+            bindMode();
+            setStatus(st, t('mu.empty', { n: state.season, mode: mode.name }));
+            return;
+        }
 
         const preferred = patches.includes('All') ? 'All' : patches[0];
         body.innerHTML = `
             <div class="inline-filters">
+                ${modeFilter}
                 <label>${t('mu.yourRace')} <select id="mu-race"></select></label>
-                <label>${t('mu.patch')}
+                <label${patches.length < 2 ? ' hidden' : ''}>${t('mu.patch')}
                     <select id="mu-patch">
                         ${patches.map(p => `<option value="${esc(p)}"${p === preferred ? ' selected' : ''}>${p === 'All' ? t('mu.allPatches') : esc(p)}</option>`).join('')}
                     </select>
@@ -919,7 +1053,7 @@ async function loadMatchup() {
             <div id="mu-body"></div>`;
 
         const fillRaces = () => {
-            const entries = data.raceWinsOnMapByPatch[$('#mu-patch').value] || [];
+            const entries = byPatch[$('#mu-patch').value] || [];
             const played = entries.filter(e => {
                 const ov = e.winLossesOnMap.find(m => m.map === 'Overall');
                 return ov && ov.winLosses.some(w => w.games > 0);
@@ -931,7 +1065,7 @@ async function loadMatchup() {
         };
 
         const draw = () => {
-            const entries = data.raceWinsOnMapByPatch[$('#mu-patch').value] || [];
+            const entries = byPatch[$('#mu-patch').value] || [];
             const entry = entries.find(e => String(e.race) === $('#mu-race').value);
             const holder = $('#mu-body');
             if (!entry) { holder.innerHTML = `<p class="empty">${t('mu.noGamesRace')}</p>`; return; }
@@ -949,7 +1083,8 @@ async function loadMatchup() {
             holder.innerHTML = `
                 <div class="split">
                     <div>
-                        <div class="chart-title">${t('mu.vsTitle', { race: raceOf(entry.race).name })}</div>
+                        <div class="chart-title">${entry.race === 16 ? t('mu.vsTitleAll')
+                            : t('mu.vsTitle', { race: raceOf(entry.race).name })}</div>
                         ${barsHtml(vs.map(w => ({
                             label: t('mu.vs', { race: raceOf(w.race).name }),
                             value: w.winrate,
@@ -972,11 +1107,13 @@ async function loadMatchup() {
                 </div>`;
         };
 
+        bindMode();
         $('#mu-patch').addEventListener('change', () => { fillRaces(); draw(); });
         $('#mu-race').addEventListener('change', draw);
         fillRaces();
         draw();
-        setStatus(st, t('mu.status', { n: state.season }));
+        setStatus(st, local ? t('mu.statusLocal', { n: state.season, mode: mode.name, k: num(matchCount) })
+                            : t('mu.status', { n: state.season, mode: mode.name }));
     });
 }
 

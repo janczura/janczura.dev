@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="projects updated">
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="MMR PEAK">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/w3champions/i18n.js" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/i18n.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/w3champions/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/w3champions/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/script.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -323,6 +323,7 @@
     <MESSAGE value="Updated style" />
     <MESSAGE value="w3champions" />
     <MESSAGE value="projects updated" />
-    <option name="LAST_COMMIT_MESSAGE" value="projects updated" />
+    <MESSAGE value="MMR PEAK" />
+    <option name="LAST_COMMIT_MESSAGE" value="MMR PEAK" />
   </component>
 </project>
