@@ -1,7 +1,18 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-theme="dark">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sergiusz Jańczura — Java Developer z Poznania. Specjalista backend z doświadczeniem w Spring, PostgreSQL, Docker i dużych systemach e-commerce.">
+    <meta property="og:title" content="Sergiusz Jańczura — Java Developer">
+    <meta property="og:description" content="Backend specialist with experience in Spring, PostgreSQL, Docker and large-scale e-commerce systems.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://janczura.dev">
+    <meta property="og:image" content="https://janczura.dev/img/foto.jpg">
+    <meta name="theme-color" content="#0f0d0b">
+    <title>Sergiusz Jańczura — Java Developer</title>
     <link rel="icon" type="image/jpg" href="img/icon.jpg">
+
     <script>
         // Consent Mode — analytics stays denied until the user accepts in the cookie banner
         window.dataLayer = window.dataLayer || [];
@@ -21,142 +32,190 @@
         gtag('config', 'G-KG2N67JZP0');
     </script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KG2N67JZP0"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Sergiusz Jańczura — Java Developer z Poznania. Specjalista backend z doświadczeniem w Spring, PostgreSQL, Docker i dużych systemach e-commerce.">
-    <meta property="og:title" content="Sergiusz Jańczura — Java Developer">
-    <meta property="og:description" content="Backend specialist with experience in Spring, PostgreSQL, Docker and large-scale e-commerce systems.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://janczura.dev">
-    <meta property="og:image" content="https://janczura.dev/img/foto.jpg">
-    <title>Sergiusz Jańczura</title>
-    <link rel="stylesheet" href="css/style.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- CV palette: warm dark + crimson, zero blue -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="intro-flash"></div>
-    <div id="energy-ring"></div>
-    <div id="code-glitch"></div>
-    <div id="particle-grid"></div>
-    <div id="custom-cursor"></div>
-    <div id="cursor-trail"></div>
+    <a class="skip-link" href="#about">Skip to content</a>
 
-    <nav class="site-nav">
-        <a href="#about" data-section="about">about</a>
-        <a href="#experience" data-section="experience">experience</a>
-        <a href="#projects" data-section="projects">projects</a>
-        <a href="#skills" data-section="skills">skills</a>
-        <a href="#education" data-section="education">education</a>
+    <div class="waves" aria-hidden="true"></div>
+    <canvas id="petals" aria-hidden="true"></canvas>
+
+    <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+    <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+
+    <nav class="nav" id="site-nav" aria-label="Main navigation">
+        <a class="nav-brand" href="#top">
+            <span class="seal seal-sm" aria-hidden="true">碼</span>
+            <span class="nav-name">Sergiusz Jańczura</span>
+        </a>
+        <div class="nav-links">
+            <a href="#about" data-section="about">About</a>
+            <a href="#experience" data-section="experience">Experience</a>
+            <a href="#projects" data-section="projects">Projects</a>
+            <a href="#skills" data-section="skills">Skills</a>
+            <a href="#education" data-section="education">Education</a>
+        </div>
     </nav>
-    <button id="theme-toggle">_ LIGHT MODE</button>
 
-    <div class="container">
-        <section class="header">
-            <div class="header-bg"></div>
-            <div class="header-content">
-                <div class="photo-frame intro-item">
-                    <div class="armor-spin"></div>
-                    <div class="armor-pulse"></div>
-                    <div class="frame-border-outer"></div>
-                    <div class="frame-border-inner"></div>
-                    <div class="frame-border-accent"></div>
-                    <img src="img/foto.jpg" alt="Sergiusz Jańczura"/>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle day / night theme">
+        <span id="theme-glyph">日</span>
+    </button>
+
+    <main>
+        <!-- ============ HERO ============ -->
+        <header class="hero" id="top">
+            <div class="hero-inner">
+                <span class="rail rail-left" aria-hidden="true">匠心獨運</span>
+                <span class="rail rail-right" aria-hidden="true">道之所存</span>
+
+                <div class="hero-text">
+                    <p class="hero-kicker"><span class="kicker-dot" aria-hidden="true"></span>Java Developer — Poznań, Poland</p>
+                    <h1 class="hero-name">Sergiusz<br>Jańczura</h1>
+                    <svg class="brush" viewBox="0 0 320 14" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="brushG" x1="0" y1="0" x2="320" y2="0" gradientUnits="userSpaceOnUse">
+                                <stop offset="0" class="bs-a"/>
+                                <stop offset="1" class="bs-b"/>
+                            </linearGradient>
+                        </defs>
+                        <path class="brush-path" d="M4 9 C 70 3, 130 12, 200 7 S 300 5, 316 8" stroke="url(#brushG)" stroke-width="5" stroke-linecap="round"/>
+                    </svg>
+                    <p class="hero-role">
+                        <span class="role-lead">Crafting</span>
+                        <span class="typed-wrap">
+                            <span id="typing" class="typing-text"></span><span class="type-caret" aria-hidden="true"></span>
+                        </span>
+                    </p>
+                    <div class="hero-links">
+                        <a class="hlink" href="https://github.com/janczura" target="_blank" rel="noopener noreferrer"><span class="hlink-mark" aria-hidden="true"></span>GitHub</a>
+                        <a class="hlink" href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer"><span class="hlink-mark" aria-hidden="true"></span>GitLab</a>
+                        <a class="hlink" href="cv/cv.pdf" download><span class="hlink-mark" aria-hidden="true"></span>Download CV</a>
+                    </div>
                 </div>
-                <h1 class="glitch intro-item" data-text="Sergiusz Jańczura">Sergiusz Jańczura</h1>
-                <p class="subtitle intro-item"><span class="typing-wrapper"><span class="typing-text" data-typing="Java Developer">Java Developer</span></span> <span class="neon-dot"></span> <span class="typing-wrapper"><span class="typing-text" data-typing="Poland">Poland</span></span><span class="typing-cursor"></span></p>
-                <div class="header-links intro-item">
-                    <a class="link-btn github" href="https://github.com/janczura" target="_blank" rel="noopener noreferrer"><span class="btn-icon">>_</span> GitHub</a>
-                    <a class="link-btn gitlab" href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer"><span class="btn-icon">>_</span> GitLab</a>
-                    <a class="link-btn cv" href="cv/cv.pdf" download><span class="btn-icon">>_</span> Download CV</a>
+
+                <div class="hero-photo">
+                    <div class="photo-ring">
+                        <img src="img/foto.jpg" alt="Portrait of Sergiusz Jańczura">
+                    </div>
+                    <div class="seal hero-seal" aria-hidden="true">匠</div>
+                </div>
+            </div>
+
+            <a class="scroll-hint" href="#about" aria-label="Scroll to about section">
+                <span class="sh-line" aria-hidden="true"></span>
+                <span class="sh-label">scroll</span>
+            </a>
+        </header>
+
+        <!-- ============ ABOUT ============ -->
+        <section id="about" class="sec">
+            <span class="ghost" aria-hidden="true">關</span>
+            <div class="wrap">
+                <div class="sec-head" data-reveal>
+                    <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">關</span>About me</h2>
+                    <span class="sec-rule" aria-hidden="true"></span>
+                </div>
+                <div class="card frame" data-reveal>
+                    <p>I am a Java Developer with many years of experience in building and maintaining complex backend applications. I currently work at Hummerce (formerly Best.net), where I am responsible for developing a large-scale e-commerce platform powering multiple online shops across different markets. My work involves designing scalable solutions, optimizing performance, and integrating with external systems — including ERP/CRM platforms, payment providers, and marketing tools.</p>
+                    <p>In my free time, I enjoy playing computer games, swimming, and keeping up with the latest tech trends. I&rsquo;m passionate about creating stable, well-optimized systems that meet the needs of rapidly growing businesses. I also like to explore lower-level programming — currently learning Rust.</p>
+                    <div class="meta-row">
+                        <span class="meta">Poznań, Poland</span>
+                        <span class="meta">Backend · E-commerce</span>
+                        <span class="meta">Java · Spring · PostgreSQL</span>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section id="about" class="card-section about">
-            <div class="card">
-                <div class="card-border"></div>
-                <h2>About me</h2>
-                <p>I am a Java Developer with many years of experience in building and maintaining complex backend applications. I currently work at Hummerce (formerly Best.net), where I am responsible for developing a large-scale e-commerce platform powering multiple online shops across different markets. My work involves designing scalable solutions, optimizing performance, and integrating with external systems — including ERP/CRM platforms, payment providers, and marketing tools.</p>
-                <p>In my free time, I enjoy playing computer games, swimming, and keeping up with the latest tech trends. I'm passionate about creating stable, well-optimized systems that meet the needs of rapidly growing businesses. I also like to explore lower-level programming — currently learning Rust.</p>
-            </div>
-        </section>
-
-        <section id="experience" class="card-section experience">
-            <div class="card">
-                <div class="card-border"></div>
-                <h2>Experience</h2>
+        <!-- ============ EXPERIENCE ============ -->
+        <section id="experience" class="sec">
+            <span class="ghost ghost-r" aria-hidden="true">歷</span>
+            <div class="wrap">
+                <div class="sec-head" data-reveal>
+                    <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">歷</span>Experience</h2>
+                    <span class="sec-rule" aria-hidden="true"></span>
+                </div>
                 <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <span class="timeline-role">Java Developer</span>
-                            <a href="https://hummerce.com/" class="timeline-company">@ Hummerce</a>
-                            <span class="timeline-date">03.2020 — Current</span>
+                    <div class="tl-item" data-reveal>
+                        <span class="tl-mark" aria-hidden="true"></span>
+                        <div class="card tl-content">
+                            <span class="tl-date">03.2020 — Current</span>
+                            <h3 class="tl-role">Java Developer</h3>
+                            <a class="tl-co" href="https://hummerce.com/" target="_blank" rel="noopener noreferrer">Hummerce</a>
                         </div>
                     </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <span class="timeline-role">Tester</span>
-                            <a href="https://hummerce.com/" class="timeline-company">@ Hummerce</a>
-                            <span class="timeline-date">10.2019 — 03.2020</span>
+                    <div class="tl-item" data-reveal>
+                        <span class="tl-mark" aria-hidden="true"></span>
+                        <div class="card tl-content">
+                            <span class="tl-date">10.2019 — 03.2020</span>
+                            <h3 class="tl-role">Tester</h3>
+                            <a class="tl-co" href="https://hummerce.com/" target="_blank" rel="noopener noreferrer">Hummerce</a>
                         </div>
                     </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <span class="timeline-role">Game Tester/Designer</span>
-                            <a href="http://www.game-factory.eu/" class="timeline-company">@ FabrykaGier</a>
-                            <span class="timeline-date">07.2018</span>
+                    <div class="tl-item" data-reveal>
+                        <span class="tl-mark" aria-hidden="true"></span>
+                        <div class="card tl-content">
+                            <span class="tl-date">07.2018</span>
+                            <h3 class="tl-role">Game Tester / Designer</h3>
+                            <a class="tl-co" href="http://www.game-factory.eu/" target="_blank" rel="noopener noreferrer">FabrykaGier</a>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="projects" class="card-section projects">
-            <div class="card">
-                <div class="card-border"></div>
-                <h2>Some projects</h2>
-                <div class="project-grid">
-                    <a href="#" class="project-card" data-glow="cyan">
-                        <span class="project-icon">⚔</span>
-                        <span class="project-name">WoW Fishing Bot</span>
+        <!-- ============ PROJECTS ============ -->
+        <section id="projects" class="sec">
+            <span class="ghost" aria-hidden="true">作</span>
+            <div class="wrap">
+                <div class="sec-head" data-reveal>
+                    <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">作</span>Some projects</h2>
+                    <span class="sec-rule" aria-hidden="true"></span>
+                </div>
+                <div class="proj-grid">
+                    <a href="#" class="proj frame" data-hue="red" data-reveal>
+                        <span class="proj-cjk" aria-hidden="true">釣</span>
+                        <span class="proj-name">WoW Fishing Bot</span>
                     </a>
-                    <a href="https://www.youtube.com/watch?v=kkQkUmEpfO0" target="_blank" class="project-card" data-glow="red">
-                        <span class="project-icon">⬡</span>
-                        <span class="project-name">Venatio</span>
+                    <a href="https://www.youtube.com/watch?v=kkQkUmEpfO0" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="gold" data-reveal>
+                        <span class="proj-cjk" aria-hidden="true">獵</span>
+                        <span class="proj-name">Venatio</span>
                     </a>
-                    <a href="https://janczura.dev/arcraiders/talents/" target="_blank" class="project-card" data-glow="gold">
-                        <span class="project-icon">◆</span>
-                        <span class="project-name">Arc Raiders — Talent Calculator</span>
+                    <a href="https://janczura.dev/arcraiders/talents/" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="jade" data-reveal>
+                        <span class="proj-cjk" aria-hidden="true">才</span>
+                        <span class="proj-name">Arc Raiders — Talent Calculator</span>
                     </a>
-                    <a href="https://janczura.dev/arcraiders/market/" target="_blank" class="project-card" data-glow="magenta">
-                        <span class="project-icon">◇</span>
-                        <span class="project-name">Arc Raiders — Blueprint Exchange</span>
+                    <a href="https://janczura.dev/arcraiders/market/" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="gold" data-reveal>
+                        <span class="proj-cjk" aria-hidden="true">易</span>
+                        <span class="proj-name">Arc Raiders — Blueprint Exchange</span>
                     </a>
-                    <a href="https://gitlab.com/janczura/remote-server-controller" target="_blank" class="project-card" data-glow="cyanF">
-                        <span class="project-icon">◇</span>
-                        <span class="project-name">Remote server controller</span>
+                    <a href="https://gitlab.com/janczura/remote-server-controller" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="red" data-reveal>
+                        <span class="proj-cjk" aria-hidden="true">御</span>
+                        <span class="proj-name">Remote Server Controller</span>
                     </a>
-                    <a href="https://janczura.dev/w3champions/" target="_blank" class="project-card" data-glow="red">
-                        <span class="project-icon">◈</span>
-                        <span class="project-name">W3Champions — Player Stats</span>
+                    <a href="https://janczura.dev/w3champions/" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="jade" data-reveal>
+                        <span class="proj-cjk" aria-hidden="true">競</span>
+                        <span class="proj-name">W3Champions — Player Stats</span>
                     </a>
                 </div>
             </div>
         </section>
 
-        <section id="skills" class="card-section skills">
-            <div class="card">
-                <div class="card-border"></div>
-                <h2>Skills</h2>
+        <!-- ============ SKILLS ============ -->
+        <section id="skills" class="sec">
+            <span class="ghost ghost-r" aria-hidden="true">藝</span>
+            <div class="wrap">
+                <div class="sec-head" data-reveal>
+                    <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">藝</span>Skills</h2>
+                    <span class="sec-rule" aria-hidden="true"></span>
+                </div>
                 <div class="skill-groups">
-                    <div class="skill-group">
-                        <h3 class="group-label" data-color="#ff2d55">Backend & Core</h3>
+                    <div class="skill-group" data-accent="red" data-reveal>
+                        <h3 class="group-label"><span class="gl-di" aria-hidden="true"></span>Backend &amp; Core<span class="gl-cjk" aria-hidden="true">後端</span></h3>
                         <div class="tags">
                             <span class="tag">Java</span>
                             <span class="tag">Spring Framework</span>
@@ -166,8 +225,8 @@
                             <span class="tag">RESTful APIs</span>
                         </div>
                     </div>
-                    <div class="skill-group">
-                        <h3 class="group-label" data-color="#00f0ff">DevOps & Tools</h3>
+                    <div class="skill-group" data-accent="jade" data-reveal>
+                        <h3 class="group-label"><span class="gl-di" aria-hidden="true"></span>DevOps &amp; Tools<span class="gl-cjk" aria-hidden="true">工具</span></h3>
                         <div class="tags">
                             <span class="tag">Git</span>
                             <span class="tag">Docker</span>
@@ -177,8 +236,8 @@
                             <span class="tag">Postman</span>
                         </div>
                     </div>
-                    <div class="skill-group">
-                        <h3 class="group-label" data-color="#ffd700">Other Languages</h3>
+                    <div class="skill-group" data-accent="gold" data-reveal>
+                        <h3 class="group-label"><span class="gl-di" aria-hidden="true"></span>Other Languages<span class="gl-cjk" aria-hidden="true">語言</span></h3>
                         <div class="tags">
                             <span class="tag">JavaScript</span>
                             <span class="tag">HTML / CSS</span>
@@ -188,57 +247,64 @@
                         </div>
                     </div>
                 </div>
-                <div class="languages-row">
-                    <span class="lang-badge"><span class="lang-dot"></span> Polish (native)</span>
-                    <span class="lang-badge"><span class="lang-dot"></span> English (B2)</span>
+                <div class="langs" data-reveal>
+                    <span class="lang"><span class="lang-di" aria-hidden="true"></span>Polish — native</span>
+                    <span class="lang"><span class="lang-di" aria-hidden="true"></span>English — B2</span>
                 </div>
             </div>
         </section>
 
-        <section id="education" class="card-section education">
-            <div class="card">
-                <div class="card-border"></div>
-                <h2>Education</h2>
+        <!-- ============ EDUCATION ============ -->
+        <section id="education" class="sec">
+            <span class="ghost" aria-hidden="true">學</span>
+            <div class="wrap">
+                <div class="sec-head" data-reveal>
+                    <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">學</span>Education</h2>
+                    <span class="sec-rule" aria-hidden="true"></span>
+                </div>
                 <div class="edu-grid">
-                    <div class="edu-card">
+                    <div class="card frame edu-card" data-reveal>
                         <span class="edu-degree">Master of Computer Science</span>
-                        <span class="edu-school">Adam Mickiewicz University</span>
+                        <span class="edu-school">Adam Mickiewicz University, Poznań</span>
                         <span class="edu-year">2020 — 2021</span>
                     </div>
-                    <div class="edu-card">
+                    <div class="card frame edu-card" data-reveal>
                         <span class="edu-degree">Bachelor of Computer Science</span>
-                        <span class="edu-school">Adam Mickiewicz University</span>
+                        <span class="edu-school">Adam Mickiewicz University, Poznań</span>
                         <span class="edu-year">2013 — 2019</span>
                     </div>
                 </div>
             </div>
         </section>
+    </main>
 
-        <footer>
-            <div class="footer-line"></div>
-            <p>
-                E-mail: <span id="email-display"></span> <button id="reveal-email-btn">Show</button>
-                &nbsp;·&nbsp;
-                LinkedIn: <a href="https://www.linkedin.com/in/serq0/">Sergiusz Jańczura</a>
-                &nbsp;·&nbsp;
+    <footer class="footer">
+        <div class="foot-inner wrap">
+            <span class="seal foot-seal" aria-hidden="true">龍</span>
+            <p class="foot-line">
+                E-mail: <span id="email-display" class="email"></span>
+                <button id="reveal-email-btn" class="mini-btn" type="button">Show</button>
+                <span class="foot-sep" aria-hidden="true">·</span>
+                LinkedIn: <a href="https://www.linkedin.com/in/serq0/" target="_blank" rel="noopener noreferrer">Sergiusz Jańczura</a>
+                <span class="foot-sep" aria-hidden="true">·</span>
                 GitHub: <a href="https://github.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
-                &nbsp;·&nbsp;
+                <span class="foot-sep" aria-hidden="true">·</span>
                 GitLab: <a href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
             </p>
-            <p>&copy; <span id="current-year"></span> Sergiusz Jańczura. All rights reserved.</p>
-        </footer>
-    </div>
+            <p class="foot-copy">&copy; <span id="current-year"></span> Sergiusz Jańczura. All rights reserved.</p>
+        </div>
+    </footer>
 
     <div id="cookie-banner" role="dialog" aria-label="Cookie notice" aria-live="polite" hidden>
         <div class="cookie-inner">
+            <p class="cookie-kicker"><span aria-hidden="true">◈</span> Cookie notice</p>
             <p class="cookie-text">
-                <span class="cookie-prompt">&gt;_</span>
                 This site uses cookies for anonymous traffic statistics (Google Analytics).
                 No ads, no profiling. Analytics stays off until you accept.
             </p>
             <div class="cookie-actions">
-                <button type="button" id="cookie-decline" class="cookie-btn decline">_ DECLINE</button>
-                <button type="button" id="cookie-accept" class="cookie-btn accept">_ ACCEPT</button>
+                <button type="button" id="cookie-decline" class="cookie-btn">Decline</button>
+                <button type="button" id="cookie-accept" class="cookie-btn accept">Accept</button>
             </div>
         </div>
     </div>
