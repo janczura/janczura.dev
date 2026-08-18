@@ -4,8 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="MMR PEAK">
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="New janczura.dev style">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cv/cv.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/cv/cv.pdf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cv/document.tex" beforeDir="false" afterPath="$PROJECT_DIR$/cv/document.tex" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/w3champions/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/w3champions/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/styles.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

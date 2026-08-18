@@ -1,68 +1,135 @@
-\documentclass[10.5pt,a4paper]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
-\renewcommand{\familydefault}{\sfdefault}
+% ── CV — "Ink & Vermilion" (styl janczura.dev) ───────────────────────────────
+% Kompilacja: tectonic document.tex   (lub xelatex document.tex)
+\documentclass[10pt,a4paper]{article}
 \usepackage[a4paper, top=0pt, bottom=0pt, left=0pt, right=0pt]{geometry}
+\usepackage{fontspec}
 \usepackage[dvipsnames,svgnames]{xcolor}
 \usepackage{tikz}
+\usetikzlibrary{calc}
 \usepackage{fontawesome5}
 \usepackage{paracol}
 \usepackage{graphicx}
 \usepackage{tabularx}
 \usepackage{array}
-\usepackage{microtype}
 \usepackage{tcolorbox}
 \usepackage{etoolbox}
 \usepackage{calc}
 
 \tcbuselibrary{skins}
 
-% ── Palette (janczura.dev: warm dark + crimson, zero blue) ────────────────────
-\definecolor{sidebar}{HTML}{1A1515}     % warm near-black (no blue)
-\definecolor{heading}{HTML}{3B1515}     % very dark maroon for headings
-\definecolor{accent}{HTML}{C0392B}      % crimson
-\definecolor{accentlight}{HTML}{E74C3C} % lighter crimson for icons
-\definecolor{datecol}{HTML}{8A8080}     % warm gray
-\definecolor{tagbg}{HTML}{FDECEC}       % light pink
-\definecolor{tagrule}{HTML}{DEB5B5}     % muted pink border
-\definecolor{subtlegray}{HTML}{5A4E4E}  % warm dark gray
+% ── Fonty (te same co na stronie: Cormorant Garamond / Manrope / JetBrains
+%    Mono / Ma Shan Zheng; CJK: Noto Serif CJK SC z systemu) ─────────────────
+\defaultfontfeatures{Ligatures=TeX}
+\setmainfont{manrope-v20-latin_latin-ext-regular.ttf}[
+  Path=./fonts/,
+  BoldFont=manrope-v20-latin_latin-ext-700.ttf]
+\newfontfamily\manmed{manrope-v20-latin_latin-ext-500.ttf}[Path=./fonts/]
+\newfontfamily\mansemi{manrope-v20-latin_latin-ext-600.ttf}[Path=./fonts/]
+\newfontfamily\serifmed{CormorantGaramond-Medium.otf}[
+  Path=./fonts/,
+  BoldFont=CormorantGaramond-SemiBold.otf,
+  ItalicFont=CormorantGaramond-MediumItalic.otf]
+\newfontfamily\serifbold{CormorantGaramond-Bold.otf}[Path=./fonts/]
+\newfontfamily\monofont{JetBrainsMono-Regular.ttf}[
+  Path=./fonts/,
+  BoldFont=JetBrainsMono-Medium.ttf]
+\newfontfamily\brushfont{MaShanZheng-Regular.ttf}[Path=./fonts/]
+\newfontfamily\cjkfont{NotoSerifCJKsc-Regular.otf}[
+  Path=/home/janczura/.local/share/fonts/noto-cjk/,
+  BoldFont=NotoSerifCJKsc-Bold.otf]
 
-% ── Skill tag ────────────────────────────────────────────────────────────────
-\newtcbox{\stag}{on line, arc=2.5pt,
-  colback=tagbg, colframe=tagrule,
-  boxsep=0pt, left=3.5pt, right=3.5pt, top=1.5pt, bottom=1.5pt,
-  boxrule=0.4pt,
-  fontupper=\scriptsize\color{heading}}
+% ── Paleta (tokeny z css/style.css) ──────────────────────────────────────────
+% ciemny motyw (sidebar = "ink night")
+\definecolor{inkbg}{HTML}{141110}       % --bg-soft
+\definecolor{inkcard}{HTML}{1C1714}     % --card-solid
+\definecolor{ricetext}{HTML}{ECE5D8}    % --text (dark)
+\definecolor{ricemuted}{HTML}{A89C8D}   % --muted (dark)
+\definecolor{ricefaint}{HTML}{6E655B}   % --faint (dark)
+\definecolor{vermilion}{HTML}{D0492F}   % --vermilion (dark)
+\definecolor{gold}{HTML}{C9A227}        % --gold (dark)
+\definecolor{jade}{HTML}{5D9C7F}        % --jade (dark)
+\definecolor{sealpaper}{HTML}{F6EDDC}   % --seal-paper
+% jasny motyw (główna kolumna = "rice paper")
+\definecolor{paper}{HTML}{F4EDDE}       % --bg (light)
+\definecolor{papercard}{HTML}{FBF5E9}   % --card-solid (light)
+\definecolor{inktext}{HTML}{2B2219}     % --text (light)
+\definecolor{lightmuted}{HTML}{6F6353}  % --muted (light)
+\definecolor{lightfaint}{HTML}{A2937E}  % --faint (light)
+\definecolor{lvermilion}{HTML}{AD2F1E}  % --vermilion (light)
+\definecolor{lgold}{HTML}{8F6F18}       % --gold (light)
+\definecolor{ljade}{HTML}{2E6B51}       % --jade (light)
+% pochodne (odpowiedniki rgba hairlines)
+\colorlet{goldlineD}{gold!30!inkbg}     % --line na ciemnym
+\colorlet{goldlineL}{lgold!38!paper}    % --line na papierze
+\colorlet{tagborder}{inktext!13!paper}  % --line-soft (light)
+\colorlet{tagbg}{papercard!45!paper}    % tło tagu jak na stronie
 
-% ── Sidebar section heading ──────────────────────────────────────────────────
-\newcommand{\sideSection}[1]{%
-  \vspace*{8pt}%
-  {\color{white}\small\textls[200]{\textbf{\MakeUppercase{#1}}}\par}%
-  \vspace*{2pt}%
-  \noindent\textcolor{accent!55!white}{\rule{\linewidth}{0.6pt}}\par%
+% ── Romb (motyw ◆ ze strony: kicker-dot / hlink-mark / meta) ────────────────
+\newcommand{\dmark}[2][3pt]{\tikz[baseline=-0.6ex]{%
+  \node[fill=#2, minimum size=#1, inner sep=0pt, rotate=45]{};}}
+
+% ── Tag umiejętności (jak .tag: hairline, promień 3px, stonowane tło) ───────
+\newtcbox{\stag}{on line, arc=2pt,
+  colback=tagbg, colframe=tagborder,
+  boxsep=0pt, left=4pt, right=4pt, top=2pt, bottom=2pt,
+  boxrule=0.5pt,
+  fontupper=\manmed\scriptsize\color{lightmuted}}
+
+% ── Kwadracik CJK przy nagłówku (jak .sec-cjk) ──────────────────────────────
+\newcommand{\cjksq}[4]{% #1 rozmiar boxu  #2 rozmiar znaku  #3 wariant(D/L)  #4 znak
+  \ifstrequal{#3}{D}%
+  {\tikz[baseline=-3.4pt]{\node[draw=goldlineD, fill=vermilion!12!inkbg,
+      rounded corners=1.6pt, inner sep=0pt, minimum size=#1, line width=0.5pt]
+      {\cjkfont\bfseries\fontsize{#2}{#2}\selectfont\color{vermilion}#4};}}%
+  {\tikz[baseline=-3.8pt]{\node[draw=goldlineL, fill=lvermilion!9!paper,
+      rounded corners=1.8pt, inner sep=0pt, minimum size=#1, line width=0.5pt]
+      {\cjkfont\bfseries\fontsize{#2}{#2}\selectfont\color{lvermilion}#4};}}}
+
+% ── Nagłówki sekcji (jak .sec-head: znak CJK + tytuł serif + złota linia
+%    z rombem, gasnąca w prawo) ──────────────────────────────────────────────
+\newlength{\secrest}
+\newcommand{\sideSection}[2]{% #1 tytuł  #2 znak CJK
+  \vspace*{11pt}%
+  \sbox0{\cjksq{11.5pt}{6.5}{D}{#2}\hspace{7pt}%
+    {\serifmed\bfseries\fontsize{12.5}{12.5}\selectfont\color{ricetext}#1}}%
+  \setlength{\secrest}{\dimexpr\linewidth-\wd0-9pt\relax}%
+  \noindent\usebox0\hspace{5pt}\raisebox{2.6pt}{\tikz{%
+    \shade[left color=gold!38!inkbg, right color=inkbg]
+      (0,0) rectangle (\secrest,0.55pt);
+    \node[fill=gold, minimum size=2.5pt, inner sep=0pt, rotate=45]
+      at (2.5pt,0.27pt) {};}}\par
+  \vspace*{6pt}}
+
+\newcommand{\mainSection}[2]{% #1 tytuł  #2 znak CJK
   \vspace*{5pt}%
-}
+  \sbox0{\cjksq{14pt}{8}{L}{#2}\hspace{8pt}%
+    {\serifmed\bfseries\fontsize{16.5}{16.5}\selectfont\color{inktext}#1}}%
+  \setlength{\secrest}{\dimexpr\linewidth-\wd0-10pt\relax}%
+  \noindent\usebox0\hspace{6pt}\raisebox{3.4pt}{\tikz{%
+    \shade[left color=goldlineL, right color=paper]
+      (0,0) rectangle (\secrest,0.6pt);
+    \node[fill=lgold, minimum size=2.8pt, inner sep=0pt, rotate=45]
+      at (3pt,0.3pt) {};}}\par
+  \vspace*{4pt}}
 
-% ── Main section heading ────────────────────────────────────────────────────
-\newcommand{\mainSection}[1]{%
-  \vspace*{6pt}%
-  \noindent{\color{heading}\normalsize\textls[180]{\textbf{\MakeUppercase{#1}}}}\par%
-  \vspace*{2pt}%
-  \noindent{\color{accent}\rule{\linewidth}{1pt}}\par%
-  \vspace*{4pt}%
-}
+% ── Etykieta grupy umiejętności (jak .group-label: romb + serif + CJK) ──────
+\newcommand{\groupLabel}[3]{% #1 kolor akcentu  #2 tytuł  #3 znak CJK
+  {\noindent\dmark[3.4pt]{#1}\hspace{5pt}%
+   {\serifmed\bfseries\fontsize{11.5}{11.5}\selectfont\color{inktext}#2}%
+   \hfill{\cjkfont\fontsize{6.5}{6.5}\selectfont\color{lightfaint}#3}\par}%
+  \vspace*{3pt}}
 
-% ── CV entry (#1 date  #2 title  #3 company  #4 tech  #5 description) ───────
+% ── Wpis CV (#1 data  #2 tytuł  #3 firma  #4 tech  #5 opis) ─────────────────
 \newcommand{\cvEntry}[5]{%
   \noindent\begin{tabularx}{\linewidth}%
-    {@{}p{2cm}@{\hspace{5pt}}X@{}}%
-    {\footnotesize\color{datecol}\raggedright #1} &
-      {\small\textbf{#2}}%
-      \ifstrempty{#3}{}{\newline{\footnotesize\color{accent}\textit{#3}}}%
-      \ifstrempty{#4}{}{\newline{\scriptsize\color{accent!65!black}\textit{#4}}}%
-      \ifstrempty{#5}{}{\newline{\footnotesize #5}}%
-    \\[5pt]
+    {@{}p{2cm}@{\hspace{6pt}}X@{}}%
+    {\monofont\fontsize{6.8}{9}\selectfont\addfontfeatures{LetterSpace=6}%
+      \color{lgold}\raggedright #1} &
+      {\serifmed\bfseries\fontsize{13}{13.5}\selectfont\color{inktext}#2}%
+      \ifstrempty{#3}{}{\newline{\manmed\fontsize{7.6}{9.5}\selectfont\color{lightmuted}#3}}%
+      \ifstrempty{#4}{}{\newline{\monofont\fontsize{6.3}{8.5}\selectfont\color{ljade}#4}}%
+      \ifstrempty{#5}{}{\newline{\fontsize{7.8}{10.6}\selectfont\color{inktext!88!paper}#5}}%
+    \\[4pt]
   \end{tabularx}%
 }
 
@@ -74,20 +141,54 @@
 
 \begin{document}
 
-% ── Full-page sidebar background (always fills entire page height) ──
+% ── Tła: papier ryżowy + atramentowy sidebar + złote linie + duchy CJK ──────
 \begin{tikzpicture}[remember picture, overlay]
-  \fill[sidebar] (current page.north west) rectangle
+  % papier ryżowy na całej stronie
+  \fill[paper] (current page.north west) rectangle (current page.south east);
+  % duchy CJK w tle głównej kolumny (jak .ghost na stronie)
+  \node[anchor=north east, text=inktext!7!paper]
+    at ([xshift=-14pt, yshift=-30pt]current page.north east)
+    {\cjkfont\bfseries\fontsize{95}{95}\selectfont 歷};
+  \node[anchor=south east, text=inktext!6!paper]
+    at ([xshift=-14pt, yshift=95pt]current page.south east)
+    {\cjkfont\bfseries\fontsize{95}{95}\selectfont 作};
+  % ciemny sidebar (ink night)
+  \fill[inkbg] (current page.north west) rectangle
     ([xshift=0.31\paperwidth]current page.south west);
-  % subtle thin accent line at sidebar edge
-  \fill[accent] ([xshift=0.31\paperwidth]current page.north west) rectangle
-    ([xshift=0.31\paperwidth+1.5pt]current page.south west);
+  % delikatna poświata w sidebarze (odpowiednik --glow)
+  \begin{scope}
+    \clip (current page.north west) rectangle
+      ([xshift=0.31\paperwidth]current page.south west);
+    \fill[vermilion!6!inkbg] ([xshift=0.31\paperwidth, yshift=-0.1cm]current page.north west)
+      circle (3.2cm);
+  \end{scope}
+  % złota linia na krawędzi sidebaru (hairline jak --line)
+  \fill[gold!55!inkbg] ([xshift=0.31\paperwidth]current page.north west) rectangle
+    ([xshift=0.31\paperwidth+0.8pt]current page.south west);
+  % narożniki (jak .frame corner marks)
+  \draw[gold!50!paper, line width=0.9pt]
+    ([xshift=-10pt, yshift=-24pt]current page.north east) --
+    ([xshift=-10pt, yshift=-10pt]current page.north east) --
+    ([xshift=-24pt, yshift=-10pt]current page.north east);
+  \draw[gold!50!paper, line width=0.9pt]
+    ([xshift=-10pt, yshift=24pt]current page.south east) --
+    ([xshift=-10pt, yshift=10pt]current page.south east) --
+    ([xshift=-24pt, yshift=10pt]current page.south east);
+  \draw[gold!35!inkbg, line width=0.9pt]
+    ([xshift=10pt, yshift=-24pt]current page.north west) --
+    ([xshift=10pt, yshift=-10pt]current page.north west) --
+    ([xshift=24pt, yshift=-10pt]current page.north west);
+  \draw[gold!35!inkbg, line width=0.9pt]
+    ([xshift=10pt, yshift=24pt]current page.south west) --
+    ([xshift=10pt, yshift=10pt]current page.south west) --
+    ([xshift=24pt, yshift=10pt]current page.south west);
 \end{tikzpicture}
 
-% ── RODO pinned to bottom-right (only on the white area) ──
+% ── RODO na dole jasnej części ──
 \begin{tikzpicture}[remember picture, overlay]
   \node[anchor=south west, text width=0.65\paperwidth, align=center]
     at ([xshift=0.32\paperwidth, yshift=5pt]current page.south west) {%
-    \fontsize{5.5}{7}\selectfont\color{gray!50}%
+    \fontsize{5.3}{6.8}\selectfont\color{inktext!38!paper}%
     Wyrażam zgodę na przetwarzanie moich danych osobowych dla potrzeb niezbędnych do realizacji procesu rekrutacji, zgodnie z art. 6 ust. 1 lit. a Rozporządzenia Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016 r. (RODO).\enspace
     I consent to the processing of my personal data for the purposes necessary to carry out the recruitment process, in accordance with Article 6(1)(a) of Regulation (EU) 2016/679 of the European Parliament and of the Council of 27 April 2016 (GDPR).%
   };
@@ -99,92 +200,116 @@
 \begin{paracol}{2}
 
 %% ═══════════════════════════════════════════════════════════════════════════
-%% LEFT COLUMN  (12pt padding each side via minipage)
+%% LEWA KOLUMNA — atrament
 %% ═══════════════════════════════════════════════════════════════════════════
-\hspace*{12pt}\begin{minipage}[t]{\dimexpr\linewidth-24pt\relax}
+\hspace*{13pt}\begin{minipage}[t]{\dimexpr\linewidth-26pt\relax}
 
-\vspace*{14pt}
+\vspace*{16pt}
 
-% ── Photo ──
+% ── Zdjęcie (jak .photo-ring: hairline + pierścienie + pieczęć 匠) ──
 {\centering
 \begin{tikzpicture}
   \begin{scope}
-    \clip (0,0) circle (1.65cm);
-    \node at (0,0.1) {\includegraphics[width=3.3cm]{1558968250668.jpg}};
+    \clip (0,0) circle (1.55cm);
+    \node at (0,0.1) {\includegraphics[width=3.1cm]{1558968250668.jpg}};
   \end{scope}
-  \draw[accent, line width=2pt] (0,0) circle (1.65cm);
+  \draw[gold!45!inkbg, line width=0.8pt] (0,0) circle (1.55cm);
+  \draw[ricetext!12!inkbg, line width=0.6pt] (0,0) circle (1.78cm);
+  \draw[gold!35!inkbg, line width=0.6pt, dash pattern=on 2.6pt off 3.8pt]
+    (0,0) circle (1.665cm);
+  % pieczęć (jak .hero-seal)
+  \node[fill=vermilion, rounded corners=2.2pt, minimum size=24pt,
+        inner sep=0pt] (seal) at (1.32,-1.32)
+    {\brushfont\fontsize{15}{15}\selectfont\color{sealpaper}匠};
+  \draw[sealpaper!42!vermilion, line width=0.5pt, rounded corners=1.3pt]
+    ($(seal.south west)+(1.9pt,1.9pt)$) rectangle ($(seal.north east)-(1.9pt,1.9pt)$);
 \end{tikzpicture}\par}
 
-\vspace*{7pt}
+\vspace*{10pt}
 
-% ── Name ──
-{\centering\color{white}\fontsize{16}{19}\selectfont
-  \textls[80]{\textbf{SERGIUSZ}}\par}
-\vspace*{1pt}
-{\centering\color{white}\fontsize{16}{19}\selectfont
-  \textls[80]{\textbf{JAŃCZURA}}\par}
+% ── Imię i nazwisko (jak .hero-name: serif 600) + pociągnięcie pędzla ──
+{\centering\serifmed\bfseries\fontsize{23}{25}\selectfont\color{ricetext}%
+  Sergiusz\par}
+\vspace*{-2pt}
+{\centering\serifmed\bfseries\fontsize{23}{25}\selectfont\color{ricetext}%
+  Jańczura\par}
 \vspace*{3pt}
-{\centering\color{accentlight!70!white}\small\textit{Software Engineer}\par}
-\vspace*{1pt}
-{\centering\color{white!50}\scriptsize Poznań, Poland\par}
+% pociągnięcie pędzla z gradientem cynober→złoto (jak .brush)
+{\centering
+\begin{tikzpicture}[x=1cm, y=1cm]
+  \foreach \i in {0,...,4}{%
+    \begin{scope}
+      \clip ({\i*0.84-0.06},-0.35) rectangle ({(\i+1)*0.84+0.06},0.12);
+      \draw[gold!\the\numexpr\i*25\relax!vermilion, line width=1.9pt,
+            line cap=round]
+        (0.05,-0.117) .. controls (0.91,-0.039) and (1.69,-0.156) .. (2.60,-0.091)
+                      .. controls (3.51,-0.026) and (3.90,-0.065) .. (4.11,-0.104);
+    \end{scope}}
+\end{tikzpicture}\par}
+\vspace*{5pt}
+% kicker (jak .hero-kicker: mono + romb cynobrowy)
+{\centering\monofont\fontsize{7}{9}\selectfont\addfontfeatures{LetterSpace=10}%
+  \color{ricemuted}\dmark[3.2pt]{vermilion}\hspace{5pt}Software Engineer\par}
+\vspace*{2pt}
+{\centering\monofont\fontsize{6.4}{8.5}\selectfont\addfontfeatures{LetterSpace=8}%
+  \color{ricefaint}Poznań, Poland\par}
 
-% ── PROFILE ──
-\sideSection{Profile}
+% ── PROFIL ──
+\sideSection{Profile}{關}
 
-{\color{white!85}\footnotesize\setlength{\parskip}{3pt}
+{\color{ricetext!88!inkbg}\fontsize{7.6}{11}\selectfont\setlength{\parskip}{3pt}
 Java Developer with extensive back-end experience building
 and maintaining complex e-commerce systems. Designing scalable
 solutions, optimising performance, and integrating with
 external platforms. Interested in lower-level programming,
 particularly Rust.\par}
 
-% ── CONTACT ──
-\sideSection{Contact}
+% ── KONTAKT ──
+\sideSection{Contact}{聯}
 
-{\color{white}\footnotesize
-\begin{tabular}{@{}c@{\hspace{6pt}}l@{}}
-  \textcolor{accentlight}{\faPhone*}     & (+48) 732 xxx xxx          \\[4pt]
-  \textcolor{accentlight}{\faEnvelope}   & xxx@xxx.com \\[4pt]
-  \textcolor{accentlight}{\faLinkedin}   & linkedin.com/in/serq0/     \\[4pt]
-  \textcolor{white!80}{\faGithub}        & github.com/janczura        \\[4pt]
-  \textcolor{accentlight}{\faGitlab}     & gitlab.com/janczura        \\[4pt]
-  \textcolor{accentlight}{\faGlobe}      & janczura.dev               \\[4pt]
-  \textcolor{accentlight}{\faGlobe}      & serq0.github.io (deprecated)               \\
+{\color{ricetext}\fontsize{7.4}{9}\selectfont
+\begin{tabular}{@{}c@{\hspace{7pt}}l@{}}
+  \textcolor{gold}{\faPhone*}     & (+48) 732 xxx xxx      \\[4.5pt]
+  \textcolor{gold}{\faEnvelope}   & xxx@xxx.com            \\[4.5pt]
+  \textcolor{gold}{\faLinkedin}   & linkedin.com/in/serq0/ \\[4.5pt]
+  \textcolor{gold}{\faGithub}     & github.com/janczura    \\[4.5pt]
+  \textcolor{gold}{\faGitlab}     & gitlab.com/janczura    \\[4.5pt]
+  \textcolor{vermilion}{\faGlobe} & janczura.dev           \\[4.5pt]
+  \textcolor{gold}{\faGlobe}      & \textcolor{ricemuted}{serq0.github.io (deprecated)} \\
 \end{tabular}\par}
 
-% ── LANGUAGES ──
-\sideSection{Languages}
+% ── JĘZYKI ──
+\sideSection{Languages}{語}
 
-{\color{white}\footnotesize
-\begin{tabular}{@{}c@{\hspace{6pt}}l@{}}
-  \textcolor{accent!55!white}{\faComments} & Polish \textcolor{white!55}{(Native)}  \\[4pt]
-  \textcolor{accent!55!white}{\faComments} & English \textcolor{white!55}{(B2)}     \\[4pt]
- % \textcolor{accent!55!white}{\faComments} & Chinese \textcolor{white!55}{(HSK1)}     \\
+{\color{ricetext}\fontsize{7.4}{9}\selectfont
+\begin{tabular}{@{}c@{\hspace{7pt}}l@{}}
+  \dmark[3pt]{gold} & Polish \textcolor{ricefaint}{— native} \\[4.5pt]
+  \dmark[3pt]{gold} & English \textcolor{ricefaint}{— B2}    \\
 \end{tabular}\par}
 
-% ── OTHER ──
-\sideSection{Other}
+% ── INNE ──
+\sideSection{Other}{餘}
 
-{\color{white}\footnotesize
-\begin{tabular}{@{}c@{\hspace{6pt}}l@{}}
-  \faCar & Driving licence B \\
+{\color{ricetext}\fontsize{7.4}{9}\selectfont
+\begin{tabular}{@{}c@{\hspace{7pt}}l@{}}
+  \textcolor{gold}{\faCar} & Driving licence B \\
 \end{tabular}\par}
 
 \end{minipage}
 
 %% ═══════════════════════════════════════════════════════════════════════════
 \switchcolumn
-%% RIGHT COLUMN  (22pt left, 10pt right padding via minipage)
+%% PRAWA KOLUMNA — papier ryżowy
 %% ═══════════════════════════════════════════════════════════════════════════
-\hspace*{22pt}\begin{minipage}[t]{\dimexpr\linewidth-32pt\relax}
+\hspace*{22pt}\begin{minipage}[t]{\dimexpr\linewidth-34pt\relax}
 
-\vspace*{10pt}
+\vspace*{12pt}
 
-% ── EXPERIENCE ──────────────────────────────────────────────────────────────
-\mainSection{Experience}
+% ── DOŚWIADCZENIE ───────────────────────────────────────────────────────────
+\mainSection{Experience}{歷}
 
-\cvEntry{03.2020\\[1pt]\textit{Present}}{Backend Developer}%
-  {Hummerce \normalfont\scriptsize(formerly Best.net)}{}%
+\cvEntry{03.2020\\[1pt]Present}{Backend Developer}%
+  {Hummerce {\fontsize{6.6}{8}\selectfont(formerly Best.net)}}{}%
 {Developing a large-scale e-commerce platform powering multiple
 online shops across different markets. Designing scalable solutions,
 optimising performance, and integrating with external systems
@@ -200,35 +325,34 @@ bug detection.}
 {Game testing, design, documentation and QA; created a game
 trailer. One-month internship in a three-person team.}
 
-% ── TECHNICAL SKILLS ───────────────────────────────────────────────────────
-\mainSection{Technical Skills}
+% ── UMIEJĘTNOŚCI ────────────────────────────────────────────────────────────
+\mainSection{Technical skills}{藝}
 
-\vspace*{1pt}
-{\footnotesize\color{subtlegray}\textbf{Back-end}\par}\vspace*{2pt}
+\groupLabel{vermilion}{Back-end}{後端}
 {\raggedright\noindent
 \stag{Java} \stag{Spring Framework} \stag{Hibernate / JPA}
 \stag{PostgreSQL} \stag{RESTful APIs} \stag{Maven} \stag{Gradle}\par}
-\vspace*{3pt}
+\vspace*{5pt}
 
-{\footnotesize\color{subtlegray}\textbf{DevOps \& Tools}\par}\vspace*{2pt}
+\groupLabel{jade}{DevOps \& Tools}{工具}
 {\raggedright\noindent
 \stag{Docker} \stag{Jenkins} \stag{Git} \stag{Gerrit}
 \stag{IntelliJ IDEA} \stag{Redmine}\par}
-\vspace*{3pt}
+\vspace*{5pt}
 
-{\footnotesize\color{subtlegray}\textbf{Front-end \& Other}\par}\vspace*{2pt}
+\groupLabel{gold}{Front-end \& Other}{語言}
 {\raggedright\noindent
 \stag{JavaScript} \stag{HTML} \stag{CSS}
 \stag{Python} \stag{Rust}\par}
-\vspace*{3pt}
+\vspace*{5pt}
 
-{\footnotesize\color{subtlegray}\textbf{Testing \& Security}\par}\vspace*{2pt}
+\groupLabel{vermilion}{Testing \& Security}{測試}
 {\raggedright\noindent
 \stag{JUnit} \stag{Mockito} \stag{Selenium}
 \stag{Postman} \stag{Burp Suite}\par}
 
-% ── EDUCATION ──────────────────────────────────────────────────────────────
-\mainSection{Education}
+% ── EDUKACJA ────────────────────────────────────────────────────────────────
+\mainSection{Education}{學}
 
 \cvEntry{2020\\2021}{M.Sc.\ Computer Science}%
   {Adam Mickiewicz University, Poznań}{}{}
@@ -236,25 +360,25 @@ trailer. One-month internship in a three-person team.}
 \cvEntry{2013\\2019}{B.Sc.\ Computer Science}%
   {Adam Mickiewicz University, Poznań}{}{}
 
-% ── PROJECTS ───────────────────────────────────────────────────────────────
-\mainSection{Projects}
+% ── PROJEKTY ────────────────────────────────────────────────────────────────
+\mainSection{Projects}{作}
 
 \cvEntry{2026}{Arc Raiders --- Talent Calculator}{}{JavaScript, HTML/CSS}%
-{Interactive web tool for planning character talent builds.
-\textcolor{accent}{\scriptsize janczura.dev/arcraiders/talents/}}
+{Interactive web tool for planning character talent builds.\newline
+{\monofont\fontsize{6.3}{8}\selectfont\color{lvermilion}\dmark[2.2pt]{lgold}\hspace{3pt}janczura.dev/arcraiders/talents/}}
 
 \cvEntry{2026}{Arc Raiders --- Blueprint Exchange}{}{JavaScript, HTML/CSS}%
-{Web-based marketplace tool for in-game blueprint trading.
-\textcolor{accent}{\scriptsize janczura.dev/arcraiders/market/}}
+{Web-based marketplace tool for in-game blueprint trading.\newline
+{\monofont\fontsize{6.3}{8}\selectfont\color{lvermilion}\dmark[2.2pt]{lgold}\hspace{3pt}janczura.dev/arcraiders/market/}}
 
 \cvEntry{2023}{World of Warcraft Fishing Bot}{}{Java, OpenCV}%
 {Image recognition, automated mouse control with randomised
 movements, buff management and auto-harvesting.}
 
 \cvEntry{2018}{Venatio}{}{Game project}%
-{3-person indie game project (designer, artist, programmer). Responsible for game design and quality assurance testing. Product demo available on YouTube.
-\textcolor{accent}{\scriptsize youtube.com/watch?v=kkQkUmEpfO0}}
-
+{3-person indie game project (designer, artist, programmer). Responsible
+for game design and quality assurance testing. Product demo available on YouTube.\newline
+{\monofont\fontsize{6.3}{8}\selectfont\color{lvermilion}\dmark[2.2pt]{lgold}\hspace{3pt}youtube.com/watch?v=kkQkUmEpfO0}}
 
 \end{minipage}
 
