@@ -9,19 +9,20 @@
     color-scheme: dark;
 
     /* powierzchnie i chrom */
-    --bg:            #171414;
-    --surface-1:     #1e1a1a;
-    --surface-2:     #262020;
-    --line:          #342b2b;
-    --line-soft:     #2a2323;
+    --bg:            #120d08;
+    --surface-1:     #1d1610;
+    --surface-2:     #2a2015;
+    --line:          #514027;
+    --line-soft:     #3a2f1e;
 
-    --text-primary:   #f2ece6;
-    --text-secondary: #b8aca4;
-    --text-muted:     #8b7f78;
+    --text-primary:   #ece0c8;
+    --text-secondary: #bfa985;
+    --text-muted:     #8d7a5e;
 
-    --accent:        #C0392B;
-    --accent-soft:   rgba(192, 57, 43, 0.14);
-    --accent-line:   rgba(192, 57, 43, 0.35);
+    --accent:        #d9a441;
+    --accent-soft:   rgba(217, 164, 65, 0.13);
+    --accent-line:   rgba(217, 164, 65, 0.4);
+    --blood:         #a03a2c;
 
     /* dane — kategoryczne sloty (paleta dark), przypisane do encji */
     --race-hu:  #3987e5;  /* slot 1 */
@@ -30,9 +31,9 @@
     --race-ud:  #c98500;  /* slot 4 */
     --race-rnd: #d55181;  /* slot 5 */
     --series-1: #3987e5;
-    --grid:     #2e2727;
+    --grid:     #332a1c;
 
-    --radius: 10px;
+    --radius: 6px;
 }
 
 * , *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -41,11 +42,15 @@
 [hidden] { display: none !important; }
 
 body {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    background: var(--bg);
+    font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    background:
+        radial-gradient(1200px 520px at 50% -8%, rgba(217, 164, 65, 0.07), transparent 70%),
+        radial-gradient(1800px 1000px at 50% 125%, rgba(0, 0, 0, 0.55), transparent 65%),
+        var(--bg);
+    background-attachment: fixed;
     color: var(--text-primary);
-    line-height: 1.5;
-    font-size: 14px;
+    line-height: 1.55;
+    font-size: 15px;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
 }
@@ -299,3 +304,223 @@ svg.chart .hover-layer[hidden] { display: none; }
 .footer-note, .cookie-note { line-height: 1.6; }
 .cookie-note { font-size: 11px !important; opacity: .8; }
 .footer-copy { margin-top: 16px; font-size: 11px !important; }
+
+/* ============================================================
+   MOTYW WARCRACHT (Warcraft UI) — nakładka
+   Złote litery (Cinzel), kute miedziane ramy, pergamin.
+   ============================================================ */
+
+h1, h2 { font-family: 'Cinzel', Georgia, serif; }
+
+.topbar {
+    border-bottom: 1px solid #6b5533;
+    background: linear-gradient(180deg, rgba(217, 164, 65, 0.06), transparent 80%);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+}
+
+.topbar h1 {
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #e8c05e;
+    text-shadow: 0 1px 0 #5c4416, 0 2px 10px rgba(0, 0, 0, 0.8), 0 0 28px rgba(217, 164, 65, 0.25);
+}
+
+/* kuta podwójna linia pod tytułem */
+.topbar h1::after {
+    content: "";
+    display: block;
+    width: 240px;
+    height: 2px;
+    margin-top: 12px;
+    background: linear-gradient(90deg, #d9a441, transparent);
+    box-shadow: 0 0 10px rgba(217, 164, 65, 0.45);
+}
+
+.accent {
+    color: #f3d98b;
+    text-shadow: 0 0 14px rgba(243, 217, 139, 0.35);
+}
+
+.tagline { font-style: italic; }
+
+/* panele jak kute drewniane tablice z wewnętrzną złotą obwódką */
+.panel {
+    position: relative;
+    background: linear-gradient(180deg, #251b11, #1b140c);
+    border: 1px solid var(--line);
+    border-top-color: #6b5533;
+    box-shadow: inset 0 1px 0 rgba(255, 218, 140, 0.05),
+        inset 0 0 28px rgba(0, 0, 0, 0.35),
+        0 8px 22px rgba(0, 0, 0, 0.5);
+}
+
+.panel::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(217, 164, 65, 0.14);
+    border-radius: calc(var(--radius) - 2px);
+    pointer-events: none;
+}
+
+.section-head h2 {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #e3bd63;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+.section-head h2::before {
+    content: "⚔";
+    font-size: 12px;
+    color: #a67c2e;
+    margin-right: 10px;
+    vertical-align: 1px;
+}
+
+/* formularze — mosiężne */
+input, select {
+    font-family: 'EB Garamond', Georgia, serif;
+    border-radius: 5px;
+}
+
+select, .filters input {
+    background: #191309;
+    border-color: #55432a;
+}
+
+select:focus, input:focus {
+    border-color: #d9a441;
+    box-shadow: 0 0 0 2px rgba(217, 164, 65, 0.18);
+}
+
+/* przyciski — kute brązowe z mosiężną krawędzią */
+.btn {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #e8d5a3;
+    background: linear-gradient(180deg, #3a2d1b, #251b0f);
+    border: 1px solid #6b5533;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 0 rgba(255, 220, 150, 0.1), 0 2px 6px rgba(0, 0, 0, 0.45);
+    transition: border-color .15s, color .15s, box-shadow .15s, background .15s;
+}
+
+.btn:hover:not(:disabled) {
+    border-color: #d9a441;
+    color: #f6e7bb;
+    box-shadow: inset 0 1px 0 rgba(255, 220, 150, 0.12), 0 0 12px rgba(217, 164, 65, 0.25), 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.btn.primary {
+    color: #1c1305;
+    background: linear-gradient(180deg, #cfa03a, #8f6a1f);
+    border-color: #e0b455;
+    text-shadow: 0 1px 0 rgba(255, 236, 185, 0.3);
+}
+
+.btn.primary:hover:not(:disabled) {
+    background: linear-gradient(180deg, #e0b455, #a2791f);
+    color: #140d03;
+}
+
+.identity h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #ead9b0;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+.mono-chip {
+    font-family: 'Cinzel', serif;
+    font-size: 11.5px;
+    letter-spacing: 1px;
+    color: #cfa74f;
+    background: linear-gradient(180deg, #2b2114, #221a0f);
+    border: 1px solid #55432a;
+}
+
+.tile {
+    background: linear-gradient(180deg, #2b2114, #221a0f);
+    border: 1px solid #55432a;
+}
+
+.tile .tile-value {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: #e8c05e;
+}
+
+.sub {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: #cfa74f;
+    border-bottom: 1px solid rgba(217, 164, 65, 0.18);
+}
+
+.candidates button:hover { background: #2f2517; }
+
+.mode-card {
+    background: linear-gradient(180deg, #281e12, #201809);
+    border: 1px solid #55432a;
+}
+
+.mode-card .mc-mmr {
+    font-family: 'Cinzel', serif;
+    color: #e8c05e;
+}
+
+thead th {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #cfa74f;
+}
+
+tbody tr:hover { background: #2b2114; }
+
+.tabs button[aria-selected="true"] {
+    color: #e8c05e;
+    border-bottom-color: #d9a441;
+}
+
+.progress span { background: linear-gradient(90deg, #d9a441, #e8c05e); }
+
+svg.chart text { font-family: 'EB Garamond', Georgia, serif; }
+
+.footer a { color: #d9a441; }
+.footer a:hover { color: #f3d98b; text-shadow: 0 0 10px rgba(217, 164, 65, 0.5); }
+
+#email-display { color: #e8c05e; }
+
+#reveal-email-btn {
+    font-family: 'Cinzel', serif;
+    background: rgba(217, 164, 65, 0.12);
+    border-color: #8a6d3b;
+    color: #d9a441;
+}
+
+#reveal-email-btn:hover {
+    background: rgba(217, 164, 65, 0.25);
+    box-shadow: 0 0 14px rgba(217, 164, 65, 0.3);
+    color: #f3d98b;
+}
+
+.footer-line { background: linear-gradient(90deg, transparent, #d9a441, #a03a2c, transparent); }
+
+@media (max-width: 640px) {
+    .topbar h1 { font-size: 26px; letter-spacing: 1.5px; }
+    .topbar h1::after { width: 60%; }
+}
