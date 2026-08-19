@@ -1487,3 +1487,90 @@ function renderMatches(st) {
         loadPlayer(parseInput(q));
     }
 })();
+
+/* ============================================================
+   Padający śnieg (Frozen Throne atmosphere)
+   Canvas nałożony nad całe UI; pauza przy ukrytej karcie
+   i gdy użytkownik prosi o ograniczenie ruchu.
+   ============================================================ */
+(function () {
+    'use strict';
+
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const canvas = document.getElementById('snow');
+    if (!canvas || !canvas.getContext) return;
+    const ctx = canvas.getContext('2d');
+
+    const MAX_FLAKES = 160;
+    let flakes = [];
+    let w = 0, h = 0, dpr = 1;
+    let wind = 0;
+    let raf = null;
+
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = Math.max(1, Math.floor(window.innerWidth * dpr));
+        h = Math.max(1, Math.floor(window.innerHeight * dpr));
+        canvas.width = w;
+        canvas.height = h;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+    }
+
+    function makeFlake(randomY) {
+        const big = Math.random() < 0.18;
+        return {
+            x: Math.random() * w,
+            y: randomY ? Math.random() * h : -12 * dpr,
+            r: (big ? 2.4 : 0.8) + Math.random() * (big ? 1.8 : 1.6),
+            speed: (0.35 + Math.random() * 0.9) * dpr,
+            alpha: 0.22 + Math.random() * 0.5,
+            phase: Math.random() * Math.PI * 2,
+            sway: 0.4 + Math.random() * 0.9,
+            big: big
+        };
+    }
+
+    function initFlakes() {
+        const count = Math.min(MAX_FLAKES, Math.round((window.innerWidth * window.innerHeight) / 14000));
+        flakes = Array.from({ length: count }, () => makeFlake(true));
+    }
+
+    function step() {
+        wind = Math.max(-0.45, Math.min(0.45, wind + (Math.random() - 0.5) * 0.006));
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#eaf6ff';
+        for (let i = 0; i < flakes.length; i++) {
+            const f = flakes[i];
+            f.phase += 0.012 + f.speed * 0.004;
+            f.y += f.speed * 1.5;
+            f.x += (Math.sin(f.phase) * f.sway * 0.5 + wind) * dpr;
+            if (f.y > h + 14 * dpr) { flakes[i] = makeFlake(false); continue; }
+            if (f.x > w + 14 * dpr) f.x -= w + 28 * dpr;
+            else if (f.x < -14 * dpr) f.x += w + 28 * dpr;
+            ctx.globalAlpha = f.alpha;
+            if (f.big) {
+                ctx.shadowColor = 'rgba(190, 228, 255, 0.9)';
+                ctx.shadowBlur = 6 * dpr;
+            }
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.r * dpr, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+        ctx.globalAlpha = 1;
+        raf = requestAnimationFrame(step);
+    }
+
+    function start() { if (raf === null) raf = requestAnimationFrame(step); }
+    function stop() { if (raf !== null) { cancelAnimationFrame(raf); raf = null; } }
+
+    resize();
+    initFlakes();
+    start();
+
+    window.addEventListener('resize', () => { resize(); initFlakes(); });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stop(); else start();
+    });
+})();

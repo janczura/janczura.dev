@@ -1,67 +1,77 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <meta name="description" content="Statystyki gracza W3Champions — MMR, sezony, matchupy, bilans z przeciwnikami. Dane pobierane na żądanie z publicznego API W3Champions.">
-    <title>W3Champions Stats</title>
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>W3Champions Stats — Warcraft III: The Frozen Throne</title>
+    <meta name="description"
+          content="Profesjonalny czytnik statystyk Warcraft III: The Frozen Throne — MMR, rekordy, matchupy i mapy z publicznego API W3Champions.">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
+<canvas id="snow" aria-hidden="true"></canvas>
+
 <header class="topbar">
-    <div class="topbar-inner">
-        <div class="topbar-row">
-            <a class="home-link" href="https://janczura.dev">← janczura.dev</a>
-            <button id="lang-toggle" class="btn small" type="button" data-i18n="app.lang.btn" data-i18n-title="app.lang.title">EN</button>
-        </div>
-        <h1>W3Champions <span class="accent">Stats</span></h1>
-        <p class="tagline" data-i18n="app.tagline"></p>
+    <div class="wrap topbar-in">
+        <span class="topbar-mark" aria-hidden="true"></span>
+        <a class="home-link" href="https://janczura.dev">janczura.dev</a>
+        <span class="topbar-sep" aria-hidden="true">/</span>
+        <span class="topbar-title">W3C Stats</span>
+        <button id="lang-toggle" class="btn btn-small" type="button"
+                data-i18n="app.lang.btn" data-i18n-title="app.lang.title">EN</button>
     </div>
 </header>
 
-<main class="app">
+<main class="wrap">
 
-    <!-- ============ WYSZUKIWARKA ============ -->
-    <section class="search-box">
-        <form id="search-form" autocomplete="off">
+    <!-- ============ NAGŁÓWEK + WYSZUKIWARKA ============ -->
+    <section class="hero">
+        <h1 class="hero-title">W3Champions <span class="hero-accent">Stats</span></h1>
+        <p class="tagline" data-i18n="app.tagline"></p>
+
+        <form id="search-form" class="search-box" autocomplete="off">
             <input id="search-input" type="text" spellcheck="false"
                    data-i18n-ph="app.search.ph" data-i18n-aria="app.search.aria">
-            <button id="search-btn" class="btn primary" type="submit" data-i18n="app.search.btn"></button>
+            <button id="search-btn" class="btn btn-primary" type="submit"
+                    data-i18n="app.search.btn"></button>
         </form>
-        <div id="search-status" class="status" role="status" aria-live="polite"></div>
+
+        <p id="search-status" class="status" role="status" aria-live="polite"></p>
         <ul id="search-results" class="candidates" hidden></ul>
     </section>
 
     <!-- ============ PROFIL ============ -->
-    <section id="profile" class="panel" hidden>
+    <section id="profile" class="card" hidden>
         <div class="identity">
             <div class="identity-main">
-                <h2 id="p-name">—</h2>
+                <h2 class="profile-name" id="p-name">—</h2>
                 <div class="identity-meta">
-                    <span id="p-tag" class="mono-chip"></span>
-                    <a id="p-link" class="ext-link" target="_blank" rel="noopener" data-i18n="profile.link"></a>
+                    <span class="mono-chip" id="p-tag"></span>
+                    <a class="ext-link" id="p-link" target="_blank" rel="noopener"
+                       data-i18n="profile.link"></a>
                 </div>
             </div>
             <div class="tiles" id="p-tiles"></div>
         </div>
 
-        <h3 class="sub"><span data-i18n="profile.races.head"></span> <small data-i18n="profile.races.sub"></small></h3>
+        <h3 class="sub">
+            <span data-i18n="profile.races.head"></span>
+            <small data-i18n="profile.races.sub"></small>
+        </h3>
         <div class="split">
             <div id="p-race-chart" class="chart-holder"></div>
             <div id="p-race-table" class="table-holder"></div>
         </div>
     </section>
 
-    <!-- ============ REKORDY KONTA (niezależne od wybranego sezonu) ============ -->
-    <section class="panel section" id="sec-peak" hidden>
+    <!-- ============ REKORDY KONTA (niezależnie od sezonów) ============ -->
+    <section id="sec-peak" class="card section" hidden>
         <header class="section-head">
             <h2 data-i18n="sec.peak.title"></h2>
             <button class="btn" data-load="peak" data-i18n="btn.load"></button>
@@ -72,21 +82,25 @@
     </section>
 
     <!-- ============ FILTRY ============ -->
-    <section id="filters" class="filters" hidden>
-        <label><span data-i18n="filters.season"></span>
-            <select id="f-season"></select>
-        </label>
-        <label><span data-i18n="filters.server"></span>
-            <select id="f-gateway">
-                <option value="20" data-i18n="gw.20"></option>
-                <option value="10" data-i18n="gw.10"></option>
-            </select>
-        </label>
+    <section id="filters" class="card filters" hidden>
+        <div class="filter-row">
+            <label class="filter">
+                <span data-i18n="filters.season"></span>
+                <select id="f-season"></select>
+            </label>
+            <label class="filter">
+                <span data-i18n="filters.server"></span>
+                <select id="f-gateway">
+                    <option value="20" data-i18n="gw.20"></option>
+                    <option value="10" data-i18n="gw.10"></option>
+                </select>
+            </label>
+        </div>
         <p class="filters-hint" data-i18n="filters.hint"></p>
     </section>
 
-    <!-- ============ SEKCJE ŁADOWANE NA ŻĄDANIE ============ -->
-    <section class="panel section" id="sec-season" hidden>
+    <!-- ============ STATYSTYKI SEZONU ============ -->
+    <section id="sec-season" class="card section" hidden>
         <header class="section-head">
             <h2 data-i18n="sec.season.title"></h2>
             <button class="btn" data-load="season" data-i18n="btn.load"></button>
@@ -96,7 +110,8 @@
         <div class="section-body" data-body="season"></div>
     </section>
 
-    <section class="panel section" id="sec-mmr" hidden>
+    <!-- ============ WYKRES MMR ============ -->
+    <section id="sec-mmr" class="card section" hidden>
         <header class="section-head">
             <h2 data-i18n="sec.mmr.title"></h2>
             <button class="btn" data-load="mmr" data-i18n="btn.load"></button>
@@ -106,7 +121,8 @@
         <div class="section-body" data-body="mmr"></div>
     </section>
 
-    <section class="panel section" id="sec-matchup" hidden>
+    <!-- ============ MATCHUPY I MAPY ============ -->
+    <section id="sec-matchup" class="card section" hidden>
         <header class="section-head">
             <h2 data-i18n="sec.matchup.title"></h2>
             <button class="btn" data-load="matchup" data-i18n="btn.load"></button>
@@ -116,10 +132,11 @@
         <div class="section-body" data-body="matchup"></div>
     </section>
 
-    <section class="panel section" id="sec-matches" hidden>
+    <!-- ============ MECZE I PRZECIWNICY ============ -->
+    <section id="sec-matches" class="card section" hidden>
         <header class="section-head">
             <h2 data-i18n="sec.matches.title"></h2>
-            <button class="btn" data-load="matches"></button>
+            <button class="btn btn-primary" data-load="matches"></button>
         </header>
         <p class="section-desc" data-i18n="sec.matches.desc"></p>
         <div class="section-status status" data-status="matches"></div>
@@ -129,22 +146,15 @@
 </main>
 
 <footer class="footer">
-    <div class="footer-line"></div>
-    <div class="footer-inner">
-        <p class="footer-author" data-i18n-html="footer.author"></p>
-        <p class="footer-contact">
-            <span data-i18n="footer.email"></span> <span id="email-display"></span>
-            <button type="button" id="reveal-email-btn" data-i18n="footer.showEmail"></button>
-            &nbsp;·&nbsp;
-            LinkedIn: <a href="https://www.linkedin.com/in/serq0/" target="_blank" rel="noopener noreferrer">Sergiusz Jańczura</a>
-            &nbsp;·&nbsp;
-            GitHub: <a href="https://github.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
-            &nbsp;·&nbsp;
-            GitLab: <a href="https://gitlab.com/janczura" target="_blank" rel="noopener noreferrer">janczura</a>
+    <div class="wrap">
+        <p data-i18n-html="footer.source"></p>
+        <p data-i18n-html="footer.author"></p>
+        <p class="footer-line">
+            <span data-i18n="footer.email"></span>
+            <span id="email-display" class="mail"></span><button id="reveal-email-btn" class="btn btn-small"
+                                                                 type="button" data-i18n="footer.showEmail"></button>
         </p>
-        <p class="footer-note" data-i18n-html="footer.source"></p>
-        <p class="cookie-note" data-i18n="footer.cookies"></p>
-        <p class="footer-copy">&copy; <span id="current-year"></span> Sergiusz Jańczura. <span data-i18n="footer.rights"></span></p>
+        <p class="dim">© <span id="current-year"></span> <span data-i18n="footer.rights"></span></p>
     </div>
 </footer>
 
