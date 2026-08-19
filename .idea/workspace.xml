@@ -4,12 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="New janczura.dev style">
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="w3champions new style">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cv/cv.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/cv/cv.pdf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cv/document.tex" beforeDir="false" afterPath="$PROJECT_DIR$/cv/document.tex" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/w3champions/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/w3champions/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/w3champions/i18n.js" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/i18n.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/w3champions/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/w3champions/script.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -326,6 +324,8 @@
     <MESSAGE value="w3champions" />
     <MESSAGE value="projects updated" />
     <MESSAGE value="MMR PEAK" />
-    <option name="LAST_COMMIT_MESSAGE" value="MMR PEAK" />
+    <MESSAGE value="cv updated to new style" />
+    <MESSAGE value="w3champions new style" />
+    <option name="LAST_COMMIT_MESSAGE" value="w3champions new style" />
   </component>
 </project>

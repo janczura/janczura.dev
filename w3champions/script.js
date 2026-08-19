@@ -1168,7 +1168,8 @@ function aggregate(matches, myTag) {
     const agg = {
         games: 0, wins: 0, mmrDelta: 0, durationSum: 0,
         opponents: new Map(), maps: new Map(), oppRaces: new Map(),
-        myRaces: new Map(), heroes: new Map(), buckets: new Map(), rows: []
+        myRaces: new Map(), heroes: new Map(), heroesByRace: new Map(),
+        buckets: new Map(), bucketsByRace: new Map(), durByRace: new Map(), rows: []
     };
     const bump = (map, key, won, extra = {}) => {
         const e = map.get(key) || { key, games: 0, wins: 0, mmr: 0, last: 0, ...extra };
@@ -1204,11 +1205,29 @@ function aggregate(matches, myTag) {
         bump(agg.maps, m.mapName || prettyMap(m.map), won);
         bump(agg.myRaces, me.race === 0 && me.rndRace != null
             ? t('mt.rnd', { race: raceOf(me.rndRace).short }) : raceOf(me.race).name, won);
-        if (me.heroes?.length) bump(agg.heroes, me.heroes[0].name, won);
+        if (me.heroes?.length) {
+            bump(agg.heroes, me.heroes[0].name, won);
+            // podział na rasę przeciwnika ma sens tylko przy jednym przeciwniku (1v1)
+            if (opponents.length === 1) {
+                let byRace = agg.heroesByRace.get(opponents[0].race);
+                if (!byRace) agg.heroesByRace.set(opponents[0].race, byRace = new Map());
+                bump(byRace, me.heroes[0].name, won);
+            }
+        }
 
         const mins = (m.durationInSeconds || 0) / 60;
-        bump(agg.buckets, mins < 5 ? '< 5 min' : mins < 10 ? '5–10 min' : mins < 15 ? '10–15 min'
-            : mins < 25 ? '15–25 min' : '25+ min', won);
+        const bucketKey = mins < 5 ? '< 5 min' : mins < 10 ? '5–10 min' : mins < 15 ? '10–15 min'
+            : mins < 25 ? '15–25 min' : '25+ min';
+        bump(agg.buckets, bucketKey, won);
+        // jak wyżej — długość gry per rasa przeciwnika tylko dla 1v1
+        if (opponents.length === 1) {
+            let byRace = agg.bucketsByRace.get(opponents[0].race);
+            if (!byRace) agg.bucketsByRace.set(opponents[0].race, byRace = new Map());
+            bump(byRace, bucketKey, won);
+            const d = agg.durByRace.get(opponents[0].race) || { games: 0, sum: 0 };
+            d.games++; d.sum += m.durationInSeconds || 0;
+            agg.durByRace.set(opponents[0].race, d);
+        }
 
         agg.rows.push({
             date: m.startTime, won, map: m.mapName || prettyMap(m.map),
@@ -1338,31 +1357,72 @@ function renderMatches(st) {
                 </div>
             </div>`;
         } else if (tab === 'heroes') {
-            const rows = listOf(a.heroes, minGames);
-            panel.innerHTML = `<div class="chart-title">${t('mt.heroesTitle', { n: rows.length })}</div>
+            const heroRace = state.matches.heroRace ?? 'all';
+            const source = heroRace === 'all' ? a.heroes : (a.heroesByRace.get(+heroRace) || new Map());
+            const rows = listOf(source, minGames);
+            const raceOpts = [...a.heroesByRace.keys()]
+                .sort((x, y) => RACE_ORDER.indexOf(x) - RACE_ORDER.indexOf(y));
+            panel.innerHTML = `
+                <div class="inline-filters">
+                    <label>${t('mt.heroRace')}
+                        <select id="mt-hero-race">
+                            <option value="all">${t('race.all')}</option>
+                            ${raceOpts.map(r => `<option value="${r}"${String(r) === heroRace ? ' selected' : ''}>${t('mu.vs', { race: raceOf(r).name })}</option>`).join('')}
+                        </select>
+                    </label>
+                </div>
+                <div class="chart-title">${heroRace === 'all'
+                    ? t('mt.heroesTitle', { n: rows.length })
+                    : t('mt.heroesTitleVs', { race: raceOf(+heroRace).name, n: rows.length })}</div>
                 ${barsHtml(rows.slice(0, 12).map(e => ({
                     label: e.key, value: e.winrate, right: `${pct(e.winrate)} <small class="dim">(${wl(e)})</small>`,
                     tip: `<b>${esc(e.key)}</b><div class="t-row">${t('tip.gamesWl', { n: num(e.games), w: e.wins, l: e.games - e.wins })}</div>`
                 })), { reference: 0.5 })}`;
+            $('#mt-hero-race').addEventListener('change', (e) => {
+                state.matches.heroRace = e.target.value;
+                renderTab();
+            });
         } else if (tab === 'length') {
+            const lenRace = state.matches.lengthRace ?? 'all';
+            const source = lenRace === 'all' ? a.buckets : (a.bucketsByRace.get(+lenRace) || new Map());
             const order = ['< 5 min', '5–10 min', '10–15 min', '15–25 min', '25+ min'];
-            const rows = listOf(a.buckets).sort((x, y) => order.indexOf(x.key) - order.indexOf(y.key));
-            panel.innerHTML = `<div class="split">
+            const rows = listOf(source).sort((x, y) => order.indexOf(x.key) - order.indexOf(y.key));
+            const raceOpts = [...a.bucketsByRace.keys()]
+                .sort((x, y) => RACE_ORDER.indexOf(x) - RACE_ORDER.indexOf(y));
+            const dur = lenRace === 'all' ? null : a.durByRace.get(+lenRace);
+            panel.innerHTML = `
+                <div class="inline-filters">
+                    <label>${t('mt.heroRace')}
+                        <select id="mt-len-race">
+                            <option value="all">${t('race.all')}</option>
+                            ${raceOpts.map(r => `<option value="${r}"${String(r) === lenRace ? ' selected' : ''}>${t('mu.vs', { race: raceOf(r).name })}</option>`).join('')}
+                        </select>
+                    </label>
+                </div>
+                <div class="split">
                 <div>
-                    <div class="chart-title">${t('mt.lengthWr')}</div>
+                    <div class="chart-title">${lenRace === 'all' ? t('mt.lengthWr')
+                        : t('mt.lengthWrVs', { race: raceOf(+lenRace).name })}</div>
                     ${barsHtml(rows.map(e => ({
                         label: e.key, value: e.winrate, right: `${pct(e.winrate)} <small class="dim">(${wl(e)})</small>`,
                         tip: `<b>${esc(e.key)}</b><div class="t-row">${t('tip.gamesWl', { n: num(e.games), w: e.wins, l: e.games - e.wins })}</div>`
                     })), { reference: 0.5 })}
                 </div>
                 <div>
-                    <div class="chart-title">${t('mt.lengthShare')}</div>
+                    <div class="chart-title">${lenRace === 'all' ? t('mt.lengthShare')
+                        : t('mt.lengthShareVs', { race: raceOf(+lenRace).name })}</div>
                     ${barsHtml(rows.map(e => ({
                         label: e.key, value: e.games, right: t('mt.games', { n: num(e.games) }),
                         tip: `<b>${esc(e.key)}</b><div class="t-row">${t('mt.games', { n: num(e.games) })}</div>`
                     })), { max: Math.max(...rows.map(e => e.games), 1) })}
                 </div>
-            </div>`;
+                </div>
+                ${dur ? `<p class="dim" style="font-size:12px;margin-top:10px">${t('mt.lengthAvgVs', {
+                    race: raceOf(+lenRace).name, avg: duration(dur.games ? dur.sum / dur.games : 0), n: num(dur.games) })}</p>` : ''}`;
+            $('#mt-len-race').addEventListener('change', (e) => {
+                state.matches.lengthRace = e.target.value;
+                renderTab();
+            });
         } else {
             panel.innerHTML = tableHtml(
                 [{ label: t('th.date') }, { label: t('th.result') }, { label: t('th.race') }, { label: t('th.opponent') },
