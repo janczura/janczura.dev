@@ -1,6 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#171414"/>
-  <path d="M10 44 L22 20 L32 38 L42 20 L54 44" fill="none" stroke="#C0392B" stroke-width="5"
+  <!-- Kafel: zimna stal w pionowym gradiencie + obwódka jak na stronie -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#182741"/>
+      <stop offset="1" stop-color="#0a0f16"/>
+    </linearGradient>
+    <linearGradient id="frost" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fcdff"/>
+      <stop offset="0.6" stop-color="#6fb7ff"/>
+      <stop offset="1" stop-color="#3f8fdd"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="url(#tile)" stroke="#233349" stroke-width="2"/>
+  <!-- „W" — logotyp W3Champions, czytelne też jako linia historii MMR -->
+  <path d="M9 16 L18 46 L32 26 L46 46 L55 16"
+        fill="none" stroke="url(#frost)" stroke-width="5.5"
         stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="54" cy="44" r="4" fill="#3987e5"/>
+  <!-- Złoty szczyt: mistrzostwo / szczyt MMR -->
+  <circle cx="32" cy="24.5" r="6" fill="#e0b458" opacity="0.22"/>
+  <circle cx="32" cy="24.5" r="3.2" fill="#e0b458"/>
 </svg>
