@@ -31,7 +31,7 @@ janczura.dev/
 │   └── gta.ttf
 ├── img/
 │   ├── foto.jpg
-│   └── icon.jpg
+│   └── icon.svg
 └── arcraiders/         # Side projects (Arc Raiders tools)
     ├── talents/
     ├── market/
