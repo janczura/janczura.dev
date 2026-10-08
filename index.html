@@ -61,6 +61,8 @@
         </div>
     </nav>
 
+    <div class="scroll-progress" aria-hidden="true"></div>
+
     <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle day / night theme">
         <span id="theme-glyph">日</span>
     </button>
@@ -68,6 +70,9 @@
     <main>
         <!-- ============ HERO ============ -->
         <header class="hero" id="top">
+            <span class="lantern lantern-l" aria-hidden="true"></span>
+            <span class="lantern lantern-r" aria-hidden="true"></span>
+
             <div class="hero-inner">
                 <span class="rail rail-left" aria-hidden="true">匠心獨運</span>
                 <span class="rail rail-right" aria-hidden="true">道之所存</span>
@@ -113,7 +118,7 @@
 
         <!-- ============ ABOUT ============ -->
         <section id="about" class="sec">
-            <span class="ghost" aria-hidden="true">關</span>
+            <span class="ghost" data-reveal aria-hidden="true">關</span>
             <div class="wrap">
                 <div class="sec-head" data-reveal>
                     <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">關</span>About me</h2>
@@ -133,7 +138,7 @@
 
         <!-- ============ EXPERIENCE ============ -->
         <section id="experience" class="sec">
-            <span class="ghost ghost-r" aria-hidden="true">歷</span>
+            <span class="ghost ghost-r" data-reveal aria-hidden="true">歷</span>
             <div class="wrap">
                 <div class="sec-head" data-reveal>
                     <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">歷</span>Experience</h2>
@@ -170,36 +175,28 @@
 
         <!-- ============ PROJECTS ============ -->
         <section id="projects" class="sec">
-            <span class="ghost" aria-hidden="true">作</span>
+            <span class="ghost" data-reveal aria-hidden="true">作</span>
             <div class="wrap">
                 <div class="sec-head" data-reveal>
                     <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">作</span>Some projects</h2>
                     <span class="sec-rule" aria-hidden="true"></span>
                 </div>
                 <div class="proj-grid">
-                    <a href="#" class="proj frame" data-hue="red" data-reveal>
-                        <span class="proj-cjk" aria-hidden="true">釣</span>
-                        <span class="proj-name">WoW Fishing Bot</span>
-                    </a>
                     <a href="https://www.youtube.com/watch?v=kkQkUmEpfO0" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="gold" data-reveal>
                         <span class="proj-cjk" aria-hidden="true">獵</span>
                         <span class="proj-name">Venatio</span>
                     </a>
-                    <a href="https://janczura.dev/arcraiders/talents/" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="jade" data-reveal>
-                        <span class="proj-cjk" aria-hidden="true">才</span>
-                        <span class="proj-name">Arc Raiders — Talent Calculator</span>
-                    </a>
-                    <a href="https://janczura.dev/arcraiders/market/" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="gold" data-reveal>
-                        <span class="proj-cjk" aria-hidden="true">易</span>
-                        <span class="proj-name">Arc Raiders — Blueprint Exchange</span>
-                    </a>
-                    <a href="https://gitlab.com/janczura/remote-server-controller" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="red" data-reveal>
-                        <span class="proj-cjk" aria-hidden="true">御</span>
-                        <span class="proj-name">Remote Server Controller</span>
-                    </a>
                     <a href="https://janczura.dev/w3champions/" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="jade" data-reveal>
                         <span class="proj-cjk" aria-hidden="true">競</span>
                         <span class="proj-name">W3Champions — Player Stats</span>
+                    </a>
+                    <a href="https://w3eye.janczura.dev/" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="red" data-reveal>
+                        <span class="proj-cjk" aria-hidden="true">眼</span>
+                        <span class="proj-name">W3Eye</span>
+                    </a>
+                    <a href="https://gitlab.com/janczura/jelitolog" target="_blank" rel="noopener noreferrer" class="proj frame" data-hue="gold" data-reveal>
+                        <span class="proj-cjk" aria-hidden="true">腸</span>
+                        <span class="proj-name">JelitoLog</span>
                     </a>
                 </div>
             </div>
@@ -207,7 +204,7 @@
 
         <!-- ============ SKILLS ============ -->
         <section id="skills" class="sec">
-            <span class="ghost ghost-r" aria-hidden="true">藝</span>
+            <span class="ghost ghost-r" data-reveal aria-hidden="true">藝</span>
             <div class="wrap">
                 <div class="sec-head" data-reveal>
                     <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">藝</span>Skills</h2>
@@ -256,7 +253,7 @@
 
         <!-- ============ EDUCATION ============ -->
         <section id="education" class="sec">
-            <span class="ghost" aria-hidden="true">學</span>
+            <span class="ghost" data-reveal aria-hidden="true">學</span>
             <div class="wrap">
                 <div class="sec-head" data-reveal>
                     <h2 class="sec-title"><span class="sec-cjk" aria-hidden="true">學</span>Education</h2>

@@ -73,6 +73,7 @@
     /* ---------- NAV: scroll state, active section, smooth scroll ---------- */
     function initNav() {
         const nav = document.getElementById('site-nav');
+        const bar = document.querySelector('.scroll-progress');
         const links = Array.from(document.querySelectorAll('.nav-links a'));
         const sections = Array.from(document.querySelectorAll('main section[id]'));
         if (!nav || !links.length) return;
@@ -82,6 +83,11 @@
         function update() {
             ticking = false;
             nav.classList.toggle('scrolled', window.scrollY > 28);
+
+            if (bar) {
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                bar.style.transform = 'scaleX(' + (max > 0 ? window.scrollY / max : 0) + ')';
+            }
 
             let current = '';
             const pos = window.scrollY + window.innerHeight * 0.35;
