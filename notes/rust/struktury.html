@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Struktury i metody — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Struktury i metody
+    </nav>
+
+    <h1>Struktury i metody</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Grupowanie powiązanych danych i zachowanie przy nich.</p>
+
+    <h2>Tworzenie i inicjalizacja</h2>
+<pre><span class="kw">struct</span> <span class="typ">Prostokat</span> { szers: <span class="typ">u32</span>, wys: <span class="typ">u32</span> }
+
+<span class="kw">let</span> szers = <span class="num">30</span>;
+<span class="kw">let</span> p = <span class="typ">Prostokat</span> { szers, wys: <span class="num">10</span> };        <span class="cmt">// skrót gdy nazwa pola = nazwa zmiennej</span>
+<span class="kw">let</span> q = <span class="typ">Prostokat</span> { wys: <span class="num">5</span>, ..p };            <span class="cmt">// resztę bierze z p</span></pre>
+    <p>
+      Warianty: <strong>krotkowa</strong> <code>struct Punkt(i32, i32)</code> (dostęp przez <code>p.0</code>)
+      i <strong>jednostkowa</strong> <code>struct Marker;</code> — zero danych, przydatna jako typ-marka.
+    </p>
+
+    <h2>Wyprowadzanie zachowań</h2>
+    <p>
+      Zwykłe struktury nic nie potrafią wypisać czy porównać — trzeba to <em>derywować</em>:
+      <code>#[derive(Debug, Clone, PartialEq)]</code> plus drukowanie przez <code>{p:?}</code>
+      (lub <code>{:#?}</code> — wieloliniowo).
+    </p>
+
+    <h2>Metody</h2>
+    <p>
+      Metody definiuje się w bloku <code>impl</code>. Pierwszy parametr decyduje o pożyczce:
+      <code>&amp;self</code> (czyta), <code>&amp;mut self</code> (zmienia), <code>self</code> (zjada obiekt).
+      Przy wywołaniu <code>self</code> jest niejawne: <code>p.pole()</code>, nie <code>Prostokat::pole(&amp;p)</code>.
+    </p>
+<pre><span class="kw">impl</span> <span class="typ">Prostokat</span> {
+    <span class="kw">fn</span> <span class="fn">nowy</span>(szers: <span class="typ">u32</span>) -&gt; <span class="typ">Prostokat</span> {        <span class="cmt">// funkcja stowarzyszona (konstruktor)</span>
+        <span class="typ">Prostokat</span> { szers, wys: szers }
+    }
+
+    <span class="kw">fn</span> <span class="fn">pole</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">u32</span> { <span class="kw">self</span>.szers * <span class="kw">self</span>.wys }
+
+    <span class="kw">fn</span> <span class="fn">powieksz</span>(&amp;<span class="kw">mut</span> <span class="kw">self</span>, o: <span class="typ">u32</span>) { <span class="kw">self</span>.wys += o; }
+}
+
+<span class="kw">let mut</span> p = <span class="typ">Prostokat</span>::<span class="fn">nowy</span>(<span class="num">10</span>);
+p.<span class="fn">powieksz</span>(<span class="num">5</span>);
+<span class="mac">println!</span>(<span class="str">"pole = {}"</span>, p.<span class="fn">pole</span>());</pre>
+    <p>Funkcje bez <code>self</code> nazywa się stowarzyszonymi i wywołuje przez <code>Typ::funkcja()</code> — standard na konstruktory. Bloków <code>impl</code> może być wiele dla jednego typu.</p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        <code>struct</code> + skrót pól + update syntax <code>..</code>; zachowanie w <code>impl</code>.
+        Wybór pożyczki w sygnaturze (<code>&amp;self</code> / <code>&amp;mut self</code> / <code>self</code>)
+        to de facto API typu. <code>#[derive(Debug)]</code> i <code>{:?}</code> do podglądu.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Kiedy użyć <code>self</code> zamiast <code>&amp;mut self</code> w metodzie?</summary>
+        <div class="answer"><p>Gdy metoda chce przejąć i "zużyć" obiekt — zwrócić przekształconą wartość albo przerobić strukturę o inny typ (builder). Po takim wywołaniu oryginalna zmienna jest już nieaktywna, bo własność przeszła do metody.</p></div>
+      </details>
+      <details>
+        <summary>2. Co się stanie przy <code>let q = Prostokat { wys: 5, ..p };</code> jeśli <code>p</code> nie implementuje <code>Copy</code>?</summary>
+        <div class="answer"><p>Jeśli struktura ma typy nie-kopiowalne (np. pole <code>String</code>), nieprzejęte pola zostaną <em>przeniesione</em> z <code>p</code> do <code>q</code>, a <code>p</code> przestanie działać. Przy samych <code>u32</code> kopiowanie jest ciche i <code>p</code> wciąż żyje.</p></div>
+      </details>
+      <details>
+        <summary>3. Dodaj do struktury <code>Punkt</code> metodę zwracającą odległość od początku układu.</summary>
+        <div class="answer"><p><code>fn dist(&amp;self) -&gt; f64 { ((self.x * self.x + self.y * self.y) as f64).sqrt() }</code> — <code>&amp;self</code>, bo tylko czytamy pola; rzutowanie na <code>f64</code> przed <code>sqrt</code>.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

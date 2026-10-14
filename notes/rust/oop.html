@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obiektowość w Rust — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Obiektowość w Rust
+    </nav>
+
+    <h1>Obiektowość w Rust</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Trait objekty, dyn, dispatch — polymorfizm bez dziedziczenia.</p>
+
+    <h2>Części klasyczne, reszta inaczej</h2>
+    <ul>
+      <li>Dane razem z zachowaniem (struktura + metody) — jest. Enkapsulacja przez <code>pub</code>/prywatność — jest.</li>
+      <li>Dziedziczenia w rozumieniu klasycznym nie ma: zamiast hierarchii klas są cechy (trait'y) i kompozycja. Trait nie ma pól z danymi, implementacja nie „odziedzicza stanu".</li>
+    </ul>
+
+    <h2>Trait object i dyn</h2>
+    <pre><code><span class="kw">trait</span> <span class="typ">Rysunek</span> {
+    <span class="kw">fn</span> <span class="fn">powierzchnia</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">f64</span>;
+    <span class="kw">fn</span> <span class="fn">nazwa</span>(&amp;<span class="kw">self</span>) -&gt; &amp;<span class="kw">str</span>;
+}
+
+<span class="kw">struct</span> <span class="typ">Kolo</span> { <span class="kw">promień</span>: <span class="typ">f64</span> }
+<span class="kw">struct</span> <span class="typ">Prostokat</span> { a: <span class="typ">f64</span>, b: <span class="typ">f64</span> }
+
+<span class="cmt">// obiekt typu "cokolwiek, co rysuje" — kolekcja różnorodnych typów</span>
+<span class="kw">let</span> szkice: <span class="typ">Vec</span>&lt;<span class="typ">Box</span>&lt;<span class="kw">dyn</span> <span class="typ">Rysunek</span>&gt;&gt; = <span class="fn">vec!</span>[
+    <span class="typ">Box</span>::<span class="fn">new</span>(<span class="typ">Kolo</span> { promień: <span class="num">2.0</span> }),
+    <span class="typ">Box</span>::<span class="fn">new</span>(<span class="typ">Prostokat</span> { a: <span class="num">1.0</span>, b: <span class="num">4.0</span> }),
+];</code></pre>
+    <p>
+      <code>dyn Rysunek</code> to typ o nieznanym rozmiarze — musi mieszkać za wskazówką
+      (<code>Box</code>, <code>&amp;</code>, <code>Rc</code>). W środku siedzi vtable: wskazówki
+      na metody danego typu, rozwiązywane w biegu.
+    </p>
+
+    <h2>Dispatch statyczny vs dynamiczny</h2>
+    <pre><code><span class="cmt">// statycznie: monomorfizacja, generowana wersja dla każdego typu, zero narzutu</span>
+<span class="kw">fn</span> <span class="fn">policz</span>&lt;T: <span class="typ">Rysunek</span>&gt;(r: &amp;T) -&gt; <span class="typ">f64</span> { r.<span class="fn">powierzchnia</span>() }
+
+<span class="cmt">// dynamicznie: jedna funkcja, ale skok przez vtable przy każdym wywołaniu</span>
+<span class="kw">fn</span> <span class="fn">policz_dyn</span>(r: &amp;<span class="kw">dyn</span> <span class="typ">Rysunek</span>) -&gt; <span class="typ">f64</span> { r.<span class="fn">powierzchnia</span>() }</code></pre>
+    <ul>
+      <li>Generyk (<code>impl Trait</code> / <code>&lt;T: Trait&gt;</code>) — kompilator zna typ, generuje kod swoiście: szybko, ale koszt to ekspansja kodu i brak heterogenicznych kolekcji.</li>
+      <li><code>dyn</code> — rozstrzygnięcie w biegu, wolniej i mniej optymalizacji, ale za to: <code>Vec&lt;Box&lt;dyn Trait&gt;&gt;</code>, dodawanie typów bez ruszania API.</li>
+    </ul>
+
+    <h2>Ograniczenia dyn</h2>
+    <ul>
+      <li>Trait musi być „obiektowo bezpieczny": metody bez <code>Self</code> w zwracanym typu, bez generycznych parametrów, bez <code>self</code> wartościowego w newralgicznych miejscach.</li>
+      <li>Stąd czasem dwa modele: jeden trait na „interfejs" (dyn-compatybilny) i drugi generyczny na wydajność.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Rust oddaje polimorfizm w dwóch smakach: generyki (statycznie, szybko, statyczne kolekcje)
+        i <code>dyn</code> (dynamicznie, elastycznie, vtable). OOP-owy model „obiektów
+        komunikujących się przez wiadomości" da się odtworzyć — bez dziedziczenia, z cechami
+        zamiast klas bazowych.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego <code>Vec&lt;dyn Rysunek&gt;</code> nie przechodzi kompilacji, a <code>Vec&lt;Box&lt;dyn Rysunek&gt;&gt;</code> tak?</summary>
+        <div class="answer"><p><code>dyn Rysunek</code> nie ma znanego rozmiaru (to „cokolwiek implementującego"), a <code>Vec</code> potrzebuje stałego rozmiaru elementu. Wskazówka (<code>Box</code>, <code>&amp;</code>) ma znany rozmiar i prowadzi do danych dowolnej wielkości.</p></div>
+      </details>
+      <details>
+        <summary>2. Kiedy wybrać generyk zamiast trait objectu?</summary>
+        <div class="answer"><p>Gdy wszystkie elementy kolekcji są tego samego typu i liczy się wydajność — dispatch statyczny bez vtable i z inliningiem. Gdy potrzebujesz heterogenicznej kolekcji lub API otwartego na nowe typy bez rekompilacji wywołujących — <code>dyn</code>.</p></div>
+      </details>
+      <details>
+        <summary>3. Czym Rust zastępuje dziedziczenie „po klasie bazowej"?</summary>
+        <div class="answer"><p>Kompozycją z delegacją (trzymane pole + jawne wywołania albo wdrożenie cechy przez przekazanie) oraz cechami z domyślnymi implementacjami metod. Wspólny stan zostaje w strukturze, nie w „rodzicu".</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cargo głębiej — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Cargo głębiej
+    </nav>
+
+    <h1>Cargo głębiej</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Profile, dokumentacja, workspace'y — życie poza hello world.</p>
+
+    <h2>Profile kompilacji</h2>
+    <p>Domyślnie istnieją <code>dev</code> i <code>release</code>; w <code>Cargo.toml</code> można stroić optymalizację, LTO, panic=abort, a nawet dopisywać własne (np. <code>profiling</code>).</p>
+
+    <h2>Publikacja crate'u</h2>
+    <ul>
+      <li>Dokumentacja w komentarzach <code>///</code> (Markdown + blok <code>```</code> jako test przykładu — <code>cargo test</code> go kompiluje!).</li>
+      <li><code>pub use</code> w <code>lib.rs</code> buduje wygodne API: użytkownik widzi <code>krazik::Punkt</code>, nie wewnętrzną strukturę modułów.</li>
+      <li><code>cargo publish</code> po założeniu konta na crates.io; <code>cargo package</code> robi paczkę i sprawdza, co w niej siedzi. Nowa wersja = zmiana numeru w manifeście.</li>
+    </ul>
+
+    <h2>Workspace</h2>
+    <p>
+      Kilka pakietów, jeden wspólny <code>Cargo.toml</code> z sekcją <code>[workspace]</code>
+      i wspólne <code>target/</code> — mniejsze dyski i wspólne lockowanie zależności:
+    </p>
+<pre>[workspace]
+members = ["krazik_core", "krazik_kli"]
+resolver = "2"</pre>
+
+    <h2>Reszta wygód</h2>
+    <ul>
+      <li><code>cargo install nazwa</code> — budowa i instalacja programu z crates.io.</li>
+      <li>Własne komendy: wykonywalny plik <code>cargo-nazwa</code> w PATH staje się <code>cargo nazwa</code>.</li>
+      <li><code>cargo doc --open</code>, <code>cargo bench</code>, <code>cargo clippy</code> (linty, instalacja raz).</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Profile sterują kompromisem czas kompilacji / szybkość. Dokumentacja to obywatel pierwszej
+        klasy (a przykłady są testami). Workspace scala monorepo, crates.io dzieli kod ze światem.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Co się stanie, jeśli w komentarzu <code>///</code> zamieścisz blok kodu z błędem?</summary>
+        <div class="answer"><p><code>cargo test</code> (dok testów) nie skompiluje przykładu i zgłosi błąd. To zaleta: przykłady w dokumentacji nigdy nie rozjeżdżają się z API.</p></div>
+      </details>
+      <details>
+        <summary>2. Po co workspace, skoro pakiety mogą być osobno?</summary>
+        <div class="answer"><p>Wspólny katalog build (mniej kopiowania artefaktów), jeden <code>Cargo.lock</code> dla całego zestawu i wzajemne zależności pakietów rozwiązują się lokalnie. Idealne, gdy biblioteka i jej binarka/klienty żyją w jednym repo.</p></div>
+      </details>
+      <details>
+        <summary>3. Jak ukryć wewnętrzną implementację, udostępniając jedno API?</summary>
+        <div class="answer"><p>Prywatne moduły (<code>mod wnetrze;</code> bez <code>pub</code>) + re-eksport: <code>pub use wnetrze::Punkt;</code> w <code>lib.rs</code>. Ścieżka publiczna jest stabilna niezależnie od przemeblowania w środku.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

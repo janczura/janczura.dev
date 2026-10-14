@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moduły i widoczność — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Moduły i widoczność
+    </nav>
+
+    <h1>Moduły i widoczność</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Jak pogodzić duży projekt z kompilatorem.</p>
+
+    <h2>Pojęcia</h2>
+    <ul>
+      <li><strong>crate</strong> — skompilowana jednostka: binarny (<code>main.rs</code>) albo biblioteczny (<code>lib.rs</code>).</li>
+      <li><strong>package</strong> — jeden katalog z <code>Cargo.toml</code>; może zawierać kilka crate'ów.</li>
+      <li><strong>moduł</strong> (<code>mod</code>) — drzewo porządkujące namespace wewnątrz crate'u.</li>
+    </ul>
+
+    <h2>Prywatność</h2>
+    <p>
+      Wszystko jest <strong>prywatne domyślnie</strong>. <code>pub</code> udostępnia element modułom
+      zewnętrznym; dzieci widzą rodziców, rodzice <em>nie</em> widzą dzieci. Ścieżki względne
+      zaczynasz od <code>self::</code>, <code>super::</code> lub pełnej od korzenia crate'u.
+    </p>
+<pre><span class="kw">mod</span> ogrod {
+    <span class="kw">pub mod</span> krzewy {
+        <span class="kw">pub fn</span> <span class="fn">przycinaj</span>() { }
+    }
+    <span class="kw">fn</span> <span class="fn">podlewanie</span>() { }     <span class="cmt">// prywatne — widzi je tylko ogrod i jego dzieci</span>
+}</pre>
+
+    <h2>Skracanie ścieżek — use</h2>
+<pre><span class="kw">use</span> ogrod::krzewy;
+<span class="kw">use</span> ogrod::krzewy::<span class="fn">przycinaj</span> <span class="kw">as</span> przytnij;    <span class="cmt">// alias</span>
+<span class="kw">use</span> std::{collections::<span class="typ">HashMap</span>, fmt};         <span class="cmt">// zagnieżdżone</span>
+<span class="kw">use</span> std::io::prelude::<span class="kw">*</span>;                       <span class="cmt">// glob — ostrożnie, może kolidować</span></pre>
+    <p>
+      Konwencja: importuj rodzica modułu (<code>use std::collections;</code>) i wołaj
+      <code>collections::HashMap</code> — widać źródło pochodzenia. <code>pub use</code> re-eksportuje
+      wewnętrzną implementację pod publiczną ścieżką API.
+    </p>
+
+    <h2>Podział na pliki</h2>
+    <p>
+      Moduł <code>front_of_house</code> szuka kodu w <code>front_of_house.rs</code> (tam deklaruje
+      podmoduły) albo w <code>front_of_house/mod.rs</code>. Nowoczesny styl: jeden plik z nazwą
+      modułu obok katalogu z resztą.
+    </p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Drzewo modułów organizuje kod, <code>pub</code> decyduje o widoczności (domyślnie prywatne),
+        <code>use</code> skraca ścieżki w zasięgu. Zależności z crates.io importuje się dokładnie
+        tak samo jak własne moduły.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego Rust wymaga osobnego <code>use</code>, skoro ścieżka jest pełna?</summary>
+        <div class="answer"><p>Ścieżka opisuje położenie w drzewie; <code>use</code> tworzy lokalny alias, żeby nie przepisywać prefiksów. To świadome rozdzielenie: widzisz, skąd coś pochodzi, bez zanieczyszczania globalnej przestrzeni nazw.</p></div>
+      </details>
+      <details>
+        <summary>2. Struktura z polami prywatnymi, ale publiczną metodą <code>wartosc()</code> — co to daje?</summary>
+        <div class="answer"><p>Enkapsulację: pola bez <code>pub</code> pozostają dostępne tylko w swoim module. Zewnętrzny świat może korzystać z API metody, ale nie może nadpisać stanu — kontrola dostępu na poziomie pól.</p></div>
+      </details>
+      <details>
+        <summary>3. Zagnieźdź importy <code>use std::io;</code> i <code>use std::fs;</code>.</summary>
+        <div class="answer"><p><code>use std::{fs, io};</code> — nawiasy klamrowe w <code>use</code> łączą wspólny przedrostek; tak samo grupuje się elementy wewnątrz jednego modułu.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

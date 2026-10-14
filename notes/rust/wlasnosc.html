@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Własność i pożyczanie — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Własność i pożyczanie
+    </nav>
+
+    <h1>Własność i pożyczanie</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Model pamięci bez garbage collectora — serduszko języka.</p>
+
+    <h2>Zasady</h2>
+    <ol>
+      <li>Każda wartość ma dokładnie <strong>jednego właściciela</strong>.</li>
+      <li>Gdy właściciel wychodzi z zasięgu, wartość jest zwalniana.</li>
+      <li>Przypisanie lub przekazanie do funkcji <strong>przenosi</strong> własność (move) — stary uchwyt staje się nieważny.</li>
+    </ol>
+<pre><span class="kw">let</span> a = <span class="typ">String</span>::<span class="fn">from</span>(<span class="str">"ala"</span>);
+<span class="kw">let</span> b = a;        <span class="cmt">// własność przeszła do b; a jest nieaktywne</span>
+<span class="mac">println!</span>(<span class="str">"{b}"</span>);
+<span class="cmt">// println!("{a}"); ← błąd kompilacji: a nie żyje</span></pre>
+    <p>
+      Proste typy (<code>i32</code>, <code>bool</code>, <code>char</code>, krotki z nich) implementują <code>Copy</code>
+      i są duplikowane bit po bicie — tu stary uchwyt nadal działa. Dla danych na stosie używamy jawnego
+      <code>.clone()</code>.
+    </p>
+
+    <h2>Pożyczki</h2>
+    <p>
+      Zamiast oddawać własność, pożyczamy: <code>&amp;</code> (do czytania) albo <code>&amp;mut</code> (do zmiany).
+      Żelazna reguła: <strong>albo dowolna liczba pożyczek czytających, albo jedna mutująca</strong> —
+      nigdy naraz. Dzięki temu nie ma data race'ów już na etapie kompilacji.
+    </p>
+<pre><span class="kw">fn</span> <span class="fn">dlugosc</span>(s: &amp;<span class="typ">String</span>) -&gt; <span class="typ">usize</span> { s.<span class="fn">len</span>() }   <span class="cmt">// właściciel nic nie traci</span>
+<span class="kw">fn</span> <span class="fn">dopisz</span>(s: &amp;<span class="kw">mut</span> <span class="typ">String</span>) { s.<span class="fn">push_str</span>(<span class="str">"!"</span>); }
+
+<span class="kw">let mut</span> tekst = <span class="typ">String</span>::<span class="fn">from</span>(<span class="str">"tak"</span>);
+<span class="fn">dopisz</span>(&amp;<span class="kw">mut</span> tekst);
+<span class="mac">println!</span>(<span class="str">"{tekst} (dł. {})"</span>, <span class="fn">dlugosc</span>(&amp;tekst));</pre>
+    <p>
+      Nie wolno zwrócić referencji do wartości utworzonej wewnątrz funkcji — wskazówka
+      zostałaby po zwolnionym buforze (tzw. wisząca referencja).
+    </p>
+
+    <h2>Wycinki</h2>
+    <p>
+      <code>&amp;s[0..5]</code> to <em>wycinek</em> (slice) — pożyczka kawałka danych bez właściciela.
+      Dla tekstów typ to <code>&amp;str</code>; działa też na tablicach (<code>&amp;arr[1..3]</code>).
+      W funkcjach przyjmuj <code>&amp;str</code> — akceptuje zarówno <code>String</code>, jak i literał tekstowy.
+    </p>
+<pre><span class="kw">fn</span> <span class="fn">pierwsze_slowo</span>(s: &amp;<span class="typ">str</span>) -&gt; &amp;<span class="typ">str</span> {
+    <span class="kw">match</span> s.<span class="fn">find</span>(<span class="str">' '</span>) {
+        <span class="typ">Some</span>(i) =&gt; &amp;s[..i],
+        <span class="typ">None</span> =&gt; s,
+    }
+}</pre>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Jeden właściciel, move przy przypisaniu, pożyczki czytają albo modyfikują przez <code>&amp;</code>/<code>&amp;mut</code>,
+        a reguła "wielu czytających XOR jeden mutujący" wygasza wyścigi. Wycinki pożyczają fragmenty.
+        To ten model zastępuje garbage collector — koszt jest płacony w głowie, nie w czasie działania.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego <code>let v = vec![1, 2]; let w = v;</code> unieważnia <code>v</code>, a <code>let x = 5; let y = x;</code> nie?</summary>
+        <div class="answer"><p><code>Vec</code> trzyma dane na stosie i ma wskaźnik w strukturze — kopiowanie wskaźnika zostawiłoby dwóch właścicieli tego samego bufora (podwójne zwolnienie), więc następuje <em>move</em>. <code>i32</code> implementuje <code>Copy</code>, więc po prostu duplikuje wartość.</p></div>
+      </details>
+      <details>
+        <summary>2. Czy można jednocześnie mieć <code>&amp;s</code> i <code>&amp;mut s</code> do tej samej wartości?</summary>
+        <div class="answer"><p>Nie. W jednym zasięgu mutowalna pożyczka wyklucza czytające (i odwrotnie). Kompilator pilnuje, by pożyczki nie nachodziły na siebie — w przeciwnym razie odczyt mógłby zobaczyć dane w trakcie zmiany.</p></div>
+      </details>
+      <details>
+        <summary>3. Napisz funkcję zwracającą ostatni fragment tekstu po spacji — bez kopiowania znaków.</summary>
+        <div class="answer"><p>Wyszukać ostatnią spację i zwrócić wycinek: <code>&amp;s[i + 1..]</code>. Sygnatura <code>fn ogon(s: &amp;str) -&gt; &amp;str</code> — wynik pozostaje pożyczką oryginalnych danych, bez alokacji.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

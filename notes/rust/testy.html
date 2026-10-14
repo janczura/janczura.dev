@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testy automatyczne — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Testy
+    </nav>
+
+    <h1>Testy automatyczne</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Test wbudowany w język — bez zewnętrznych frameworków.</p>
+
+    <h2>Pisanie</h2>
+<pre><span class="kw">fn</span> <span class="fn">dlugosc</span>(s: &amp;<span class="typ">str</span>) -&gt; <span class="typ">usize</span> { s.<span class="fn">chars</span>().<span class="fn">count</span>() }
+
+<span class="mac">#[cfg(test)</span>]
+<span class="kw">mod</span> tests {
+    <span class="kw">use super</span>::*;
+
+    <span class="mac">#[test]</span>
+    <span class="kw">fn</span> <span class="fn">liczy_znaki</span>() {
+        <span class="mac">assert_eq!</span>(<span class="fn">dlugosc</span>(<span class="str">"zażółć"</span>), 6);
+    }
+
+    <span class="mac">#[test]</span>
+    <span class="mac">#[should_panic]</span>
+    <span class="kw">fn</span> <span class="fn">indeks_poza_koncem</span>() {
+        <span class="kw">let</span> v = <span class="mac">vec!</span>[<span class="num">1</span>];
+        <span class="kw">let</span> _ = v[<span class="num">5</span>];
+    }
+}</pre>
+    <ul>
+      <li><code>assert!</code>, <code>assert_eq!</code>, <code>assert_ne!</code> — atrybut <code>#[should_panic]</code> dla awarii.</li>
+      <li>Test może zwracać <code>Result&lt;(), Box&lt;dyn Error&gt;&gt;</code> i używać <code>?</code>.</li>
+      <li><code>#[cfg(test)]</code> — moduł istnieje tylko przy <code>cargo test</code>.</li>
+    </ul>
+
+    <h2>Uruchamianie</h2>
+<pre>cargo test                     <span class="cmt">// wszystkie testy</span>
+cargo test liczy               <span class="cmt">// filtr po nazwie</span>
+cargo test -- --test-threads=1 <span class="cmt">// bez równoległości</span>
+cargo test -- --show-output    <span class="cmt">// pokaż println! z testu</span>
+cargo test -- --ignored        <span class="cmt">// tylko pominięte (#[ignore])</span></pre>
+    <p>Domyślnie testy lecą równolegle — używaj osobnych zasobów, jeśli test coś globalnego rusza.</p>
+
+    <h2>Struktura</h2>
+    <ul>
+      <li><strong>Jednostkowe</strong> — w tym samym pliku, w module <code>tests</code>; widzą kod prywatny.</li>
+      <li><strong>Integracyjne</strong> — w katalogu <code>tests/</code> obok <code>src/</code>; każdy plik to osobny crate korzystający z API biblioteki. Cargo kompiluje je automatycznie.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Atrybut <code>#[test]</code> plus <code>assert_*</code> — zero konfiguracji.
+        Filtry nazw, <code>#[ignore]</code>, osobne miejsce na testy integracyjne przez API publiczne.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Po co <code>use super::*;</code> w module testowym?</summary>
+        <div class="answer"><p>Testy mieszkają w zagnieżdżonym module <code>tests</code> — <code>super</code> wskazuje na kod testowany, a <code>*</code> wciąga wszystko do zasięgu. Testy widzą też elementy prywatne rodzica, bo są wewnątrz tego samego pliku/modułu.</p></div>
+      </details>
+      <details>
+        <summary>2. Oznacz test wymagający sieci jako drogi i uruchom tylko go.</summary>
+        <div class="answer"><p><code>#[ignore]</code> przy funkcji; potem <code>cargo test -- --ignored</code>. Dzięki temu szybka pętla <code>cargo test</code> nie czeka na wolne przypadki.</p></div>
+      </details>
+      <details>
+        <summary>3. Czego NIE testuje katalog <code>tests/</code> wprost?</summary>
+        <div class="answer"><p>Elementów prywatnych crate'u — każdy plik w <code>tests/</code> to osobny crate, więc dostęp ma tylko do rzeczy oznaczonych <code>pub</code>. Logika wewnętrzna zostaje testom jednostkowym.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

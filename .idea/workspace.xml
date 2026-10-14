@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="projects update" />
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="img/icon change">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -325,6 +327,7 @@
     <MESSAGE value="w3champions new style" />
     <MESSAGE value="w3champions new icon" />
     <MESSAGE value="projects update" />
-    <option name="LAST_COMMIT_MESSAGE" value="projects update" />
+    <MESSAGE value="img/icon change" />
+    <option name="LAST_COMMIT_MESSAGE" value="img/icon change" />
   </component>
 </project>

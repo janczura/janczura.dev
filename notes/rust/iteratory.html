@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domknięcia i iteratory — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Domknięcia i iteratory
+    </nav>
+
+    <h1>Domknięcia i iteratory</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Funkcyjny styl bez utraty wydajności pętli.</p>
+
+    <h2>Domknięcia</h2>
+    <p>
+      Anonimowa funkcja przechwytująca otoczenie. Przechwytuje albo przez pożyczkę,
+      albo przez <code>move</code> (przeniesienie własności):
+    </p>
+<pre><span class="kw">let</span> mnoznik = <span class="num">3</span>;
+<span class="kw">let</span> potrojk = |x: <span class="typ">i32</span>| x * mnoznik;        <span class="cmt">// pożycza tylko do czytania</span>
+
+<span class="kw">let</span> napis = <span class="typ">String</span>::<span class="fn">from</span>(<span class="str">"cześć"</span>);
+<span class="kw">let</span> zjedz = <span class="kw">move</span> || <span class="mac">println!</span>(<span class="str">"{napis}"</span>);   <span class="cmt">// napis przechodzi do domknięcia</span></pre>
+    <p>
+      Trzy poziomy apetytu (kompilator wybiera sam, <code>move</code> wymusza najwyższy):
+      <code>Fn</code> czyta, <code>FnMut</code> modyfikuje, <code>FnOnce</code> zużywa przechwyconą wartość.
+    </p>
+
+    <h2>Iteratory</h2>
+    <p>
+      Iterator produkuje elementy kolejnymi wywołaniami <code>next()</code> (zwraca <code>Option</code>).
+      Leniwy — nic nie robi do konsumpcji. Konsumenci: <code>sum</code>, <code>count</code>, <code>collect</code>;
+      adaptery: <code>map</code>, <code>filter</code>, <code>take</code>, <code>skip</code>, <code>enumerate</code>, <code>zip</code>, <code>rev</code>:
+    </p>
+<pre><span class="kw">let</span> v = <span class="mac">vec!</span>[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>];
+
+<span class="kw">let</span> sum_parzystych: <span class="typ">i32</span> = v.<span class="fn">iter</span>()
+    .<span class="fn">filter</span>(|&amp;x| x % <span class="num">2</span> == <span class="num">0</span>)
+    .<span class="fn">map</span>(|x| x * x)
+    .<span class="fn">sum</span>();                                  <span class="cmt">// 4 + 16 = 20</span>
+
+<span class="kw">let</span> nazwy: <span class="typ">Vec</span>&lt;_&gt; = v.<span class="fn">iter</span>().<span class="fn">enumerate</span>()
+    .<span class="fn">map</span>(|(i, x)| <span class="typ">format!</span>(<span class="str">"{i}: {x}"</span>))
+    .<span class="fn">collect</span>();</pre>
+    <p>
+      <code>iter()</code> → <code>&amp;T</code>, <code>iter_mut()</code> → <code>&amp;mut T</code>,
+      <code>into_iter()</code> → <code>T</code> (zjada kolekcję). Adaptery nic nie kosztują:
+      łańcuch rozpuszcza się w pętlę porównywalną z ręczną — to nie jest "wolny styl funkcyjny".
+    </p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Domknięcia przechwytują kontekst (najlepiej jak najłagodniej, <code>move</code> gdy trzeba
+        wynieść poza zasięg). Iteratory: adaptery leniwe + konsumenci zbierający wynik.
+        Kod czytelniejszy niż pętla, koszt ten sam.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Co wyświetli <code>(1..=5).filter(|x| x % 2 == 0).count()</code>?</summary>
+        <div class="answer"><p>2 — tylko 2 i 4. Zakres <code>1..=5</code> to iterator leniwy; <code>count()</code> jest konsumentem, który go wyczerpuje.</p></div>
+      </details>
+      <details>
+        <summary>2. Zsumuj długości napisów z <code>Vec&lt;String&gt;</code> bez kopiowania.</summary>
+        <div class="answer"><p><code>v.iter().map(|s| s.len()).sum()</code> — <code>iter()</code> pożycza elementy, <code>len()</code> tylko czyta. <code>into_iter()</code> zużyłby całe <code>Vec</code>.</p></div>
+      </details>
+      <details>
+        <summary>3. Kiedy domknięcie MUSI użyć <code>move</code>?</summary>
+        <div class="answer"><p>Gdy ma przeżyć dłużej niż zmienne, które przechwytuje — np. zwracane z funkcji albo przekazywane do innego wątku. Bez <code>move</code> pożyczka nie przetrwałaby końca zasięgu.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

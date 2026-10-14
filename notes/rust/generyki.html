@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generyki, cechy i lifetime'y — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Generyki, cechy i lifetime'y
+    </nav>
+
+    <h1>Generyki, cechy i lifetime'y</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Abstrakcja bez utraty szybkości.</p>
+
+    <h2>Generyki</h2>
+    <p>
+      Ten sam kod dla wielu typów; monomorfizacja — kompilator generuje osobną wersję pod każdy
+      użycie, więc brak narzutu w działaniu:
+    </p>
+<pre><span class="kw">fn</span> <span class="fn">najwieksze</span>&lt;T: <span class="typ">PartialOrd</span> + <span class="typ">Copy</span>&gt;(l: &amp;[T]) -&gt; T {
+    <span class="kw">let mut</span> wynik = l[<span class="num">0</span>];
+    <span class="kw">for</span> &amp;v <span class="kw">in</span> l { <span class="kw">if</span> v &gt; wynik { wynik = v; } }
+    wynik
+}</pre>
+
+    <h2>Cechy (traits)</h2>
+    <p>
+      Trait opisuje wspólne zachowanie — kontrakt. Typ implementuje go przez <code>impl</code>:
+    </p>
+<pre><span class="kw">trait</span> <span class="typ">Opisowy</span> {
+    <span class="kw">fn</span> <span class="fn">opis</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">String</span>;
+
+    <span class="kw">fn</span> <span class="fn">naglowek</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">String</span> {         <span class="cmt">// implementacja domyślna</span>
+        <span class="typ">format!</span>(<span class="str">"### {}"</span>, <span class="kw">self</span>.<span class="fn">opis</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="typ">Opisowy</span> <span class="kw">for</span> <span class="typ">Film</span> {
+    <span class="kw">fn</span> <span class="fn">opis</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">String</span> { <span class="kw">self</span>.tytul.<span class="fn">clone</span>() }
+}</pre>
+    <p>
+      Ograniczenia generyczne (trait bound) — trzy równoważne zapisy:
+      <code>fn f&lt;T: Suma&gt;(x: T)</code>, <code>fn f(x: impl Suma)</code> (sugar) albo
+      <code>&amp;dyn Suma</code> (dynamiczny dispatch). Przy wielu boundach czytelniej wygląda
+      sekcja <code>where</code>.
+    </p>
+
+    <h2>Lifetime'y</h2>
+    <p>
+      Adnotacje przy referencjach mówią <em>jak długo</em> pożyczka pozostaje ważna —
+      chronią przed wiszącymi wskaźnikami. Nazwy (<code>'a</code>) nie zmieniają czasu życia,
+      tylko opisują zależność:
+    </p>
+<pre><span class="cmt">// zwrócony wycinek pozostaje ważny najdłużej jak najkrótsza z pożyczek</span>
+<span class="kw">fn</span> <span class="fn">krotsze</span>&lt;<span class="str">'a</span>&gt;(x: &amp;<span class="str">'a</span> <span class="typ">str</span>, y: &amp;<span class="str">'a</span> <span class="typ">str</span>) -&gt; &amp;<span class="str">'a</span> <span class="typ">str</span> {
+    <span class="kw">if</span> x.<span class="fn">len</span>() &lt; y.<span class="fn">len</span>() { x } <span class="kw">else</span> { y }
+}</pre>
+    <ul>
+      <li>Większość sygnatur nie potrzebuje adnotacji — <em>elizja</em> wstawia reguły automatycznie (1 wejście → 1 wyjście).</li>
+      <li>Struktury trzymające referencje wymagają pola lifetime: <code>struct Koszulka&lt;'a&gt; { material: &amp;'a str }</code>.</li>
+      <li><code>'static</code>: literały tekstowe żyją cały czas trwania programu.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Generyki usuwają duplikację, traits opisują zachowania (z domyślnymi metodami),
+        bound'y ograniczają typy do tych, które potrafią to, czego potrzebujesz.
+        Lifetime'y dokumentują pożyczki — zwykle wyliczalnie, bez pisania ich ręcznie.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego <code>impl Trait</code> w argumencie to nie to samo co <code>Box&lt;dyn Trait&gt;</code>?</summary>
+        <div class="answer"><p><code>impl Trait</code> = monomorfizacja (osobna wersja funkcji per typ, statyczne wiązanie, brak alokacji). <code>Box&lt;dyn Trait&gt;</code> = dynamiczny dispatch przez tabelę metod (vtable) — jeden kod dla wielu typów, koszt wskaźnika i pośredniego wywołania.</p></div>
+      </details>
+      <details>
+        <summary>2. Co znaczy bound <code>T: Clone</code> i kiedy jest potrzebny?</summary>
+        <div class="answer"><p>"T musi umieć się sklonować". Potrzebny, gdy wewnątrz funkcji wywołujesz <code>x.clone()</code> — bez bounda kompilator nie wie, czy typ to potrafi. Analogicznie <code>Debug</code>, <code>PartialOrd</code>, itd.</p></div>
+      </details>
+      <details>
+        <summary>3. Struktura przechowująca pożyczony <code>&amp;str</code> — co dopisać?</summary>
+        <div class="answer"><p>Parametr lifetime: <code>struct Naglowek&lt;'a&gt; { tytul: &amp;'a str }</code>. Obowiązuje ona w całym implu typu; wymusza, by obiekt nie przeżył tekstu, na który wskazuje.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

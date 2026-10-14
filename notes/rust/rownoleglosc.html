@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Równoległość — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Równoległość
+    </nav>
+
+    <h1>Równoległość</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Wątki, kanały i współdzielony stan — bez data race'ów, ale nie bez wysiłku.</p>
+
+    <h2>Wątek z domknięciem</h2>
+    <pre><code><span class="kw">use</span> std::thread;
+
+<span class="kw">let</span> uchwyt = thread::<span class="fn">spawn</span>(|| {
+    <span class="fn">println!</span>(<span class="str">"pracuję w tle"</span>);
+});
+uchwyt.<span class="fn">join</span>().<span class="fn">unwrap</span>();</code></pre>
+    <p>
+      Wątek zwykle żyje krócej niż <code>main</code>, więc domknięcie musi przejąć dane na
+      własność — stąd <code>move</code>: zamyka zmienne „do środka", a nie pożycza referencje,
+      które mogłyby przeżyć zapożyczającego.
+    </p>
+    <p><code>join</code> czeka na koniec wątku i zwraca <code>Result</code>: <code>Err</code>, gdy wątek się zbuntował (panika). Wątek można też „odpalić i zapomnieć" — main skończy się bez czekania.</p>
+
+    <h2>Kanały — komunikacja przez wysyłkę</h2>
+    <pre><code><span class="kw">use</span> std::sync::mpsc;
+
+<span class="kw">let</span> (nadawca, odbiornik) = mpsc::<span class="fn">channel</span>();
+<span class="kw">let</span> h = thread::<span class="fn">spawn</span>(<span class="kw">move</span> || {
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="num">0</span>..<span class="num">5</span> { nadawca.<span class="fn">send</span>(i).<span class="fn">unwrap</span>(); }
+});
+<span class="kw">for</span> otrzymane <span class="kw">in</span> odbiornik { <span class="fn">println!</span>(<span class="str">"odebrane {otrzymane}"</span>); }
+h.<span class="fn">join</span>().<span class="fn">unwrap</span>();</code></pre>
+    <ul>
+      <li><code>mpsc</code>: wielu nadawców, jeden odbiorca. Wszystkie końcówki wysyłające trzeba pozbyć się (klonować przez <code>clone</code> albo zużyć), bo pętla po <code>odbiorca</code> czeka do ostatniej — to najczęstsza pułapka.</li>
+      <li>Wysłanie wartości przenosi jej własność — data race z definicji niemożliwy: w jednym miejscu tylko jeden właściciel.</li>
+      <li>Są też warianty: <code>sync_channel</code> (ograniczony bufor, wysyłka blokuje), a dla jednego nadawcy i wielu odbiorców <code>mpsc</code> nie istnieje — tam z reguły wchodzi <code>Mutex</code>.</li>
+    </ul>
+
+    <h2>Współdzielony stan: Mutex i Arc</h2>
+    <pre><code><span class="kw">use</span> std::sync::{<span class="typ">Arc</span>, <span class="typ">Mutex</span>};
+<span class="kw">use</span> std::thread;
+
+<span class="kw">let</span> licznik = <span class="typ">Arc</span>::<span class="fn">new</span>(<span class="typ">Mutex</span>::<span class="fn">new</span>(<span class="num">0</span>));
+<span class="kw">let</span> mut uchwyty = <span class="fn">vec!</span>[];
+
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="num">0</span>..<span class="num">3</span> {
+    <span class="kw">let</span> licznik = <span class="typ">Arc</span>::<span class="fn">clone</span>(&amp;licznik);
+    uchwyty.<span class="fn">push</span>(thread::<span class="fn">spawn</span>(<span class="kw">move</span> || {
+        <span class="kw">*</span>licznik.<span class="fn">lock</span>().<span class="fn">unwrap</span>() += <span class="num">1</span>;
+    }));
+}
+<span class="kw">for</span> h <span class="kw">in</span> uchwyty { h.<span class="fn">join</span>().<span class="fn">unwrap</span>(); }</code></pre>
+    <ul>
+      <li><code>Mutex&lt;T&gt;</code> to <code>RefCell</code> dla wielu wątków: <code>lock()</code> blokuje i daje „strażnika" (guard), który zwalnia blokadę przy upuszczeniu. Panika wewnątrz sekcji krytycznej nie zostawia zamka otwartego — <code>lock()</code> zwraca <code>Result</code>, bo zamek może być „zatruty".</li>
+      <li><code>Arc</code> (atomowe <code>Rc</code>) dzieli własność między wątki — klonuje się licznik, nie dane. Bez niego Mutex nie ma nawet czego trzymać wspólnie: każdy wątek dostałby własną kopię.</li>
+      <li>Typowy wzorzec: <code>Arc&lt;Mutex&lt;T&gt;&gt;</code>. Trzyma się blokadę jak najkrócej — nie wolno trzymać jej przez <code>join</code> ani przy zagnieżdżonych zamkach, bo łatwo o zakleszczenie.</li>
+    </ul>
+
+    <h2>Send i Sync</h2>
+    <p>Dwie markerowe cechy, dzięki którym kompilator wyrzuca błędy współdzielenia <em>z góry</em>:</p>
+    <ul>
+      <li><code>Send</code>: wartość można przenieść do innego wątku (przez <code>spawn</code> lub kanał).</li>
+      <li><code>Sync</code>: wartość można bezpiecznie pożyczać z wielu wątków (<code>&amp;T</code> wysyłalne).</li>
+      <li><code>Rc</code> nie jest ani jednym, ani drugim — jego licznik nie jest atomowy, dlatego współdzielone wątkowo typy używają <code>Arc</code>. <code>RefCell</code> też nie jest <code>Sync</code> (jego licznik pożyczki też nie).</li>
+      <li>Większość typów jest automatycznie <code>Send</code>/<code>Sync</code>; to wyjątki (wskaźniki surowe, <code>Rc</code>) trzeba sobie przypomnieć.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Rust nie eliminuje wyścigów składniową magią — eliminuje je typem: wysyłka przenosi
+        własność, a współdzielony stan zamyka się w <code>Arc&lt;Mutex&lt;T&gt;&gt;</code>. Data race
+        nie jest tu wypadkiem przy pracy, tylko klasą błędów nie do skonstruowania.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego pętla <code>for v in odbiornik</code> wisi w nieskończoność, choć wątek wysłał już wszystko?</summary>
+        <div class="answer"><p>Odbiornik czeka, aż <em>wszystkie</em> końcówki nadawcze zostaną zniszczone. Jeśli oryginał nadawcy wciąż żyje w main (albo sklonowana wersja w innym wątku), kanał jest nadal otwarty. Rozwiązanie: puścić nadawcę (<code>drop</code>) albo nie kopiować go bez potrzeby.</p></div>
+      </details>
+      <details>
+        <summary>2. Co grozi trzymaniem <code>lock()</code> przez długi czas lub przy zagnieżdżonych zamkach?</summary>
+        <div class="answer"><p>Przy długim trzymaniu: inni czekają, współbieżność znika. Przy zagnieżdżeniu dwóch zamków w odwrotnej kolejności w dwóch wątkach — zakleszczenie (deadlock), bo oba wątki trzymają jeden zamek i czekają na drugi.</p></div>
+      </details>
+      <details>
+        <summary>3. Dlaczego sam <code>Mutex&lt;T&gt;</code> nie wystarczy do współdzielenia go między wątkami?</summary>
+        <div class="answer"><p>Bez przeniesienia własności żaden wątek go nie użyczy — clone Mutexa kopiuje dane, nie współdzieli. Trzeba owijek z udostępnianiem własności: <code>Arc</code> (wielowątkowo). <code>Rc</code> też dałoby współdzielenie, ale jego niestatyczny licznik nie jest wysyłalny między wątkami.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

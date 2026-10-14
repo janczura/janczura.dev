@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Miniserver HTTP — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Miniserver HTTP
+    </nav>
+
+    <h1>Miniserver HTTP</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Wszystko naraz: gniazda, wątki, kolejkowanie zadań i zamykanie strumieni.</p>
+
+    <h2>Cel</h2>
+    <p>
+      Serwer HTTP bez zewnętrznych bibliotek: słucha na porcie, przyjmuje połączenia,
+      czyta żądanie i odpowiada HTML-em. Obsługuje wiele zapytań jednocześnie — przez
+      pulę workerów i kolejkę zadań.
+    </p>
+
+    <h2>Szkielet</h2>
+    <pre><code><span class="kw">use</span> std::net::{<span class="typ">TcpListener</span>, <span class="typ">TcpStream</span>};
+<span class="kw">use</span> std::io::{<span class="typ">Read</span>, <span class="typ">Write</span>};
+
+<span class="kw">let</span> sluchacz = <span class="typ">TcpListener</span>::<span class="fn">bind</span>(<span class="str">"127.0.0.1:7878"</span>).<span class="fn">unwrap</span>();
+
+<span class="kw">for</span> polaczenie <span class="kw">in</span> sluchacz.<span class="fn">incoming</span>() {
+    <span class="kw">let</span> mut strumien = polaczenie.<span class="fn">unwrap</span>();
+    <span class="kw">let</span> mut buf = [<span class="num">0</span>; <span class="num">1024</span>];
+    <span class="kw">let</span> n = strumien.<span class="fn">read</span>(&amp;<span class="kw">mut</span> buf).<span class="fn">unwrap</span>();
+    <span class="fn">println!</span>(<span class="str">"pytanie: {:?}"</span>, &amp;buf[..n]);
+
+    strumien.<span class="fn">write_all</span>(<span class="str">b"HTTP/1.1 200 OK\r\n\r\n&lt;h1&gt;czesc&lt;/h1&gt;"</span>).<span class="fn">unwrap</span>();
+}</code></pre>
+    <p>
+      <code>incoming()</code> to iterator — czeka na kolejne połączenia. Zapis odpowiedzi to
+      surowe bajty zgodne z protokołem: linia statusu, pusta linia, ciało.
+    </p>
+
+    <h2>Wiele żądań naraz</h2>
+    <p>
+      Obsługa w pętli głównej wykonuje zapytania szeregowo. Poprawka: na każde połączenie
+      osobny wątek. Skala? Źle — wątek na żądanie kosztuje pamięć i kontekst przy
+      większym ruchu. Złoty środek: pula N workerów i kanał zadań.
+    </p>
+    <pre><code><span class="kw">let</span> (nadawca, odbiornik) = mpsc::<span class="fn">channel</span>();
+
+<span class="cmt">// N workerów czeka na zadania</span>
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="num">0</span>..<span class="num">4</span> {
+    <span class="kw">let</span> nadawca = nadawca.<span class="fn">clone</span>();
+    thread::<span class="fn">spawn</span>(<span class="kw">move</span> || {
+        <span class="kw">while let</span> <span class="typ">Ok</span>(strumien) = odbiornik.<span class="fn">recv</span>() {
+            <span class="fn">obslug</span>(strumien);
+        }
+    });
+}
+
+<span class="cmt">// pętla główna tylko wrzuca połączenia do kolejki</span>
+<span class="kw">for</span> polaczenie <span class="kw">in</span> sluchacz.<span class="fn">incoming</span>() {
+    nadawca.<span class="fn">send</span>(polaczenie.<span class="fn">unwrap</span>()).<span class="fn">unwrap</span>();
+}</code></pre>
+
+    <h2>Pułapki na końcu</h2>
+    <ul>
+      <li>Klient, który nie czyta odpowiedzi, blokuje workera na zapisie — jeden zły interesariusz spowalnia kolejkę. Praktyczne wyjście: buforowanie/timeouty albo osobne połączenia.</li>
+      <li>Praca w pętli głównej (parsowanie, logika) powinna być tania; drogie rzeczy — do workera.</li>
+      <li>Blokada strumienia po <code>write</code>: bez <code>flush</code>/zamknięcia klient może czekać. Odpowiedź „cała na raz, potem cisza".</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Kilkaset linii bez zależności: iterator gniazd, kanał, czterech workerów.
+        Projekt zamyka krąg — własność, cechy, wątki i błędy spotykają się w jednym,
+        działającym programie.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego „wątek na żądanie" nie skaluje się dobrze?</summary>
+        <div class="answer"><p>Każdy wątek to kawał pamięci na stos i koszt utworzenia/planowania. Przy dużym ruchu wątków przybywa szybciej niż rdzeni, a większość czeka na I/O. Pula o stałej liczbie workerów trzyma koszt w ryzach.</p></div>
+      </details>
+      <details>
+        <summary>2. Co się stanie, jeśli jeden worker utknie na zapisie do wolnego klienta?</summary>
+        <div class="answer"><p>Wolne miejsce w kolejce znika — pozostali workerzy i kolejkujący nadawca mogą czekać. Stąd koncepcja timeoutów albo zapisów nieblokujących; w wersji minimum: worker musi w końcu odpuścić strumień.</p></div>
+      </details>
+      <details>
+        <summary>3. Gdzie w tym serwerze widać regułę własności przy przechowywaniu strumienia?</summary>
+        <div class="answer"><p><code>send(polaczenie)</code> przenosi <code>TcpStream</code> do workera — jeden właściciel na raz, więc nikt inny nie zapisze i nie wyczyści go równolegle. Zamknięcie następuje samo, gdy worker zakończy obsługę (Drop).</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

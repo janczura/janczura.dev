@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rust — Notatki</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span> Rust
+    </nav>
+
+    <h1>Rust</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Notatki z nauki Rusta — od instalacji po wielowątkowy serwer. Esencja, przykłady i ćwiczenia.</p>
+
+    <h2>Podstawy</h2>
+    <div class="toc-grid">
+      <a href="pierwsze-kroki.html" class="toc-card">
+        <h3>Pierwsze kroki</h3>
+        <p>Instalacja, cargo, hello world i pierwszy prawdziwy program z wejściem z klawiatury.</p>
+      </a>
+      <a href="skladnia.html" class="toc-card">
+        <h3>Składnia i typy</h3>
+        <p>Zmienne, typy skalarne i złożone, funkcje, wyrażenia — szkielet języka.</p>
+      </a>
+      <a href="wlasnosc.html" class="toc-card">
+        <h3>Własność i pożyczki</h3>
+        <p>Serce Rusta: reguły własności, borrow checker, referencje i zasady życia danych.</p>
+      </a>
+      <a href="struktury.html" class="toc-card">
+        <h3>Struktury</h3>
+        <p>Struktury, metody, pola i implementacje — organizowanie danych w całość.</p>
+      </a>
+      <a href="enum-match.html" class="toc-card">
+        <h3>Enumy i match</h3>
+        <p>Warianty z danymi, Option, match i dopasowywanie bez null.</p>
+      </a>
+    </div>
+
+    <h2>Organizacja i błędy</h2>
+    <div class="toc-grid">
+      <a href="moduly.html" class="toc-card">
+        <h3>Moduły i pakiety</h3>
+        <p>Moduły, ścieżki, prywatność, pakiety i skrzynka narzędziowa pakietów.</p>
+      </a>
+      <a href="kolekcje.html" class="toc-card">
+        <h3>Kolekcje</h3>
+        <p>Vec, String, HashMap — kolekcje na stercie i ich pułapki.</p>
+      </a>
+      <a href="bledy.html" class="toc-card">
+        <h3>Obsługa błędów</h3>
+        <p>panic!, Result, z operator, propagowanie błędów i kiedy co stosować.</p>
+      </a>
+    </div>
+
+    <h2>Abstrakcje</h2>
+    <div class="toc-grid">
+      <a href="generyki.html" class="toc-card">
+        <h3>Generyki, cechy, życia</h3>
+        <p>Parametryzacja typów, cechy jako interfejsy, lifetime'y spinające referencje.</p>
+      </a>
+      <a href="testy.html" class="toc-card">
+        <h3>Testy</h3>
+        <p>test, assert, organizacja testów jednostkowych i integracyjnych.</p>
+      </a>
+      <a href="cli.html" class="toc-card">
+        <h3>Program wiersza poleceń</h3>
+        <p>Parsowanie argumentów, pliki, środowisko — budowa narzędzia od zera.</p>
+      </a>
+      <a href="iteratory.html" class="toc-card">
+        <h3>Iteratory i domknięcia</h3>
+        <p>Iterator, adaptatory map/filter, domknięcia i ich cechy Fn.</p>
+      </a>
+      <a href="cargo.html" class="toc-card">
+        <h3>Cargo głębiej</h3>
+        <p>Profile, dokumentacja, workspace'y i publikacja na crates.io.</p>
+      </a>
+    </div>
+
+    <h2>Pamięć i współbieżność</h2>
+    <div class="toc-grid">
+      <a href="wskazniki.html" class="toc-card">
+        <h3>Inteligentne wskaźniki</h3>
+        <p>Box, Deref, Drop, Rc, RefCell, Weak — wskazówki z logiką własności.</p>
+      </a>
+      <a href="rownoleglosc.html" class="toc-card">
+        <h3>Równoległość</h3>
+        <p>Wątki, kanały, Mutex i Arc; Send/Sync — wyścigi nie do skonstruowania.</p>
+      </a>
+      <a href="async.html" class="toc-card">
+        <h3>Async i await</h3>
+        <p>Futury, planisty, współbieżność bez wątków i pułapki blokowania.</p>
+      </a>
+    </div>
+
+    <h2>Model i wzorce</h2>
+    <div class="toc-grid">
+      <a href="oop.html" class="toc-card">
+        <h3>Obiektowość w Rust</h3>
+        <p>Trait objekty i dyn; dispatch statyczny vs dynamiczny; kompozycja zamiast dziedziczenia.</p>
+      </a>
+      <a href="wzorce.html" class="toc-card">
+        <h3>Wzorce</h3>
+        <p>match, if let, destructuring, zakresy i @ — pełny zestaw dopasowywania.</p>
+      </a>
+      <a href="zaawansowane.html" class="toc-card">
+        <h3>Funkcje zaawansowane</h3>
+        <p>unsafe, typy skojarzone, newtype, cechy domknięć, makra.</p>
+      </a>
+    </div>
+
+    <h2>Projekt</h2>
+    <div class="toc-grid">
+      <a href="webserver.html" class="toc-card">
+        <h3>Miniserver HTTP</h3>
+        <p>Własny serwer WWW: gniazda, pula workerów, kolejkowanie zadań — domknięcie kursu.</p>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

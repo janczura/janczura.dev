@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funkcje zaawansowane — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Funkcje zaawansowane
+    </nav>
+
+    <h1>Funkcje zaawansowane</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">unsafe, cechy głębiej, nowe typy, makra — warsztat wyżej w łańcuchu pokarmowym.</p>
+
+    <h2>unsafe Rust</h2>
+    <p>Blok <code>unsafe</code> nie wyłącza sprawdzania typów — włącza pięć nadużyć, za które odpowiadasz ręcznie:</p>
+    <ul>
+      <li>dereferencjacja wskaźnika surowego (<code>*const T</code> / <code>*mut T</code>)</li>
+      <li>wywołanie niezbezpiecznej funkcji (np. FFI)</li>
+      <li>implementacja niezbezpiecznej cechy</li>
+      <li>dotknięcie mutowalnej zmiennej globalnej (<code>static mut</code>)</li>
+      <li>(historycznie) dopasowanie wzorca na unii</li>
+    </ul>
+    <pre><code><span class="kw">let</span> wartosc = <span class="num">42</span>;
+<span class="kw">let</span> wskaznik = &amp;wartosc <span class="kw">as</span> <span class="kw">const</span> <span class="typ">i32</span>;   <span class="cmt">// wskaźnik surowy: pożyczka nie pilnowana</span>
+<span class="kw">unsafe</span> { <span class="fn">println!</span>(<span class="str">"{}"</span>, <span class="kw">*</span>wskaznik); }    <span class="cmt">// "na pewno wskaznik jest ważny" — Twoja wina</span></code></pre>
+    <p><code>unsafe fn</code> w przeszłości sam implikował unsafe dla ciała; nowe edycje wymagają jawnego bloku. Konwencja: ciało funkcji pozostaje bezpieczne, a dokumentacja <code># Safety</code> mówi, jakich zobowiązań musi dotrzymać wołający.</p>
+
+    <h2>Cechy głębiej</h2>
+    <ul>
+      <li><strong>Typy skojarzone:</strong> <code>type Output;</code> w cesze — jeden typ wynikowy na implementację. Bez tego generyczny parametr cechy pozwalałby na dwie implementacje „równoległe" do tego samego typu.</li>
+      <li><strong>Przeciążanie operatorów:</strong> cechy z <code>std::ops</code> (<code>Add</code>, <code>Index</code>, <code>Deref</code>…) — wdrażasz semantykę, nie nazwy.</li>
+      <li><strong>Cechy bazowe:</strong> <code>A: B</code> w nagłówku cechy — wymaga, by implementujący miał już B; albo <code>dyn A + B</code> dla składanych obiektów.</li>
+      <li><strong>Super-cecha vs asocjowana cecha:</strong> super-cecha = „musi być", asocjowana = „zwraca/czyni".</li>
+    </ul>
+
+    <h2>Nowe typy i aliasy</h2>
+    <pre><code><span class="cmt">// alias: ta sama wartość, inna nazwa — bez dodatkowej ochrony</span>
+<span class="kw">type</span> <span class="typ">Jednostka</span> = <span class="typ">u32</span>;
+
+<span class="cmt">// newtype: nowa tożsamość — kompilator pilnuje, by nie pomylić metrów ze stopami</span>
+<span class="kw">struct</span> <span class="typ">Metry</span>(<span class="typ">u32</span>);
+<span class="kw">struct</span> <span class="typ">Stopy</span>(<span class="typ">u32</span>);</code></pre>
+    <p>Newtype (krotka-jednoelementowa) to najtańsza domena: brak konwersji przez pomyłkę, własne implementacje cech, zerowy koszt (reprezentacja identyczna jak w środku).</p>
+
+    <h2>Funkcje i domknięcia głębiej</h2>
+    <ul>
+      <li>Trzy sposoby przyjmowania cechy domknięcia: <code>Fn</code> (pożycza), <code>FnMut</code> (mutuje pożyczoną), <code>FnOnce</code> (konsumuje — dozwolone raz).</li>
+      <li>Wymagaj jak najmniej (<code>Fn</code>), zwracaj konkretnie; w API publicznym: <code>impl Fn</code> dla prostoty, <code>Box&lt;dyn Fn&gt;</code> albo jawna nazwa typu, gdy funkcja jest przechowywana.</li>
+    </ul>
+
+    <h2>Makra</h2>
+    <ul>
+      <li>Rozwinięcie makra zachodzi przed kompilacją — makro widzi tokeny, nie typy. Może wygenerować kod, którego nie da się napisać generykiem (np. <code>vec!</code>, <code>println!</code> z argumentami różnego typu).</li>
+      <li>Deklaratywne (<code>macro_rules!</code>) — reguły wzorców tokenowych; proceduralne — funkcje produkujące tokeny (atrybuty, derive).</li>
+      <li>Cena: gorsze komunikaty błędów i czytelność — dlatego najpierw funkcja, potem generyk, makro na końcu.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        unsafe to mały obszar, gdzie ufasz sobie zamiast compilerowi. Cechy z typami skojarzonymi,
+        newtype'y i makra to narzędzia, które poszerzają język bez ruszania jego rdzenia — każde
+        z własnym, konkretnym zastosowaniem.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego preferować typ skojarzony nad parametr cechy?</summary>
+        <div class="answer"><p>Parametr dopuszcza wiele implementacji tej samej cechy dla jednego typu (trzeba doprecyzowywać <code>::&lt;..&gt;</code>), a typ skojarzony wymusza jedną — zwykle o to chodzi (np. jeden typ wartości zwracanej iteratora). Krótsze sygnatury, mniej adnotacji.</p></div>
+      </details>
+      <details>
+        <summary>2. Co daje newtype <code>struct Metry(u32)</code>, czego nie da alias?</summary>
+        <div class="answer"><p>Nowy, odrębny typ: funkcja oczekująca <code>Metry</code> nie przyjmie <code>Stopy</code> ani surowego <code>u32</code> bez jawnej konwersji. Alias to tylko przydomek — podmienialny w 100%, bez żadnej ochrony.</p></div>
+      </details>
+      <details>
+        <summary>3. Dlaczego makro dostaje gorzej sformułowane błędy niż funkcja?</summary>
+        <div class="answer"><p>Ekspanduje tokeny przed type checkingiem: błąd widzi dopiero rozwinięty kod, a ścieżka do oryginału ginie w rozwinięciu. Poza tym makro nie zna typów argumentów, więc semantyczne pomyłki łapie późno.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

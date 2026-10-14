@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enum i dopasowanie — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Enum i dopasowanie
+    </nav>
+
+    <h1>Enum i dopasowanie</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Warianty z danymi i <code>match</code> jako główny narzędzie rozumowania.</p>
+
+    <h2>Enum z pakunkiem</h2>
+    <p>Każdy wariant może nieść inne dane — enum to bezpieczna suma typów:</p>
+<pre><span class="kw">enum</span> <span class="typ">Ruch</span> {
+    <span class="typ">Start</span>,
+    <span class="typ">Skok</span> { wysokosc: <span class="typ">u8</span> },
+    <span class="typ">Atak</span>(<span class="typ">u16</span>, <span class="typ">u16</span>),
+}
+
+<span class="kw">enum</span> <span class="typ">Opcja</span>&lt;T&gt; { <span class="typ">Pelnia</span>(T), <span class="typ">Brak</span> }   <span class="cmt">// tak naprawdę Option&lt;T&gt;</span></pre>
+    <p>
+      <code>Option&lt;T&gt;</code> zastępuje null: brak wartości jest <em>typem w systemie</em>,
+      więc kompilator każe obsłużyć obie możliwości. To najczęstszy powód, dla którego Rust nie ma
+      wyjątków NullPointerException.
+    </p>
+
+    <h2>match</h2>
+<pre><span class="kw">fn</span> <span class="fn">opisz</span>(r: &amp;<span class="typ">Ruch</span>) -&gt; &amp;<span class="typ">str</span> {
+    <span class="kw">match</span> r {
+        <span class="typ">Ruch</span>::<span class="typ">Start</span>              =&gt; <span class="str">"start"</span>,
+        <span class="typ">Ruch</span>::<span class="typ">Skok</span> { wysokosc }   =&gt; <span class="str">"skok"</span>,        <span class="cmt">// wiązanie pola</span>
+        <span class="typ">Ruch</span>::<span class="typ">Atak</span>(x, y)          =&gt; <span class="kw">if</span> x == y { <span class="str">"po przekątnej"</span> } <span class="kw">else</span> { <span class="str">"atak"</span> },
+    }
+}</pre>
+    <ul>
+      <li><strong>Wyczerpywalność</strong>: brakujące warianty = błąd kompilacji. <code>_ =&gt;</code> łapie resztę.</li>
+      <li>Wzorce wiążą fragmenty wartości do nowych zmiennych (<code>Atak(x, y)</code>).</li>
+    </ul>
+
+    <h2>if let i let...else</h2>
+    <p>Gdy interesuje nas tylko jeden wariant, pełny <code>match</code> to nadmiar:</p>
+<pre><span class="kw">if let</span> <span class="typ">Some</span>(n) = liczba {
+    <span class="mac">println!</span>(<span class="str">"jest: {n}"</span>);
+}
+
+<span class="kw">let</span> <span class="typ">Some</span>(s) = odczyt() <span class="kw">else</span> {
+    <span class="mac">println!</span>(<span class="str">"brak danych"</span>);
+    <span class="kw">return</span>;                 <span class="cmt">// gałąź else musi kończyć ścieżkę</span>
+};</pre>
+    <p><code>let...else</code> to idiom na "sprawdź warunek, przy niepowodzeniu wyjdź", bez zagnieżdżania <code>if</code>.</p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Enum niesie dane i wymusza rozważenie każdego przypadku. <code>Option</code> zastępuje null,
+        <code>match</code> musi być wyczerpujący, a <code>if let</code> / <code>let else</code>
+        skracają codzienne użycie.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego <code>Option&lt;T&gt;</code> jest lepszy od wartości "null"?</summary>
+        <div class="answer"><p>Brak wartości jest widoczny w typie. Funkcja zwracająca <code>Option</code> nie da się użyć jak gotowej wartości — trzeba ją "rozpakować", więc zapomnienie o sprawdzeniu to błąd kompilacji, nie awaria w produkcji.</p></div>
+      </details>
+      <details>
+        <summary>2. Co trzeba zrobić, gdy w <code>match</code> nie obsługiesz jednego wariantu enuma?</summary>
+        <div class="answer"><p>Kompilator nie przepuści kodu — dopisz brakujące ramię albo <code>_ =&gt;</code>. To samo dotyczy dodania nowego wariantu do enuma później: kod sam się posypie i znajdzie wszystkie newralgiczne miejsca.</p></div>
+      </details>
+      <details>
+        <summary>3. Zamień na <code>if let</code>: <code>match opcja { Some(x) =&gt; println!("{x}"), None =&gt; {} }</code>.</summary>
+        <div class="answer"><p><code>if let Some(x) = opcja { println!("{x}"); }</code> — pusty brakujący przypadek w <code>match</code> to dokładnie to, co robi samotne <code>if let</code>.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

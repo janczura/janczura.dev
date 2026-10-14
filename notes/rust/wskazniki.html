@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inteligentne wskaźniki — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Inteligentne wskaźniki
+    </nav>
+
+    <h1>Inteligentne wskaźniki</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Box, Rc, RefCell — struktury, które zachowują się jak wskazówki, ale niosą dodatkową logikę własności.</p>
+
+    <h2>Czym różnią się od zwykłych &amp;</h2>
+    <ul>
+      <li>Smart pointer to struktura z metadanymi i zachowaniem: wdroża <code>Deref</code> (dostęp do zawartości jak przez <code>*</code>) i zwykle <code>Drop</code> (sprzątanie przy wyjściu z zasięgu).</li>
+      <li>Zwykły <code>&amp;T</code> tylko pożycza; smart pointer często <em>posiada</em> dane i decyduje, kiedy zwolnić pamięć.</li>
+      <li>Rust nie ma „pustego wskaźnika null" w sensie C-owym — brak wartości wyraża <code>Option</code>, nie zero w rejestrze.</li>
+    </ul>
+
+    <h2>Box&lt;T&gt; — wartość na stercie</h2>
+    <p>Najprostszy pointer: dane trafiają na heap, na stosie zostaje adres z informacją o typie. Używamy, gdy musimy: trzymać typ o znanym rozmiarze, rekurencyjnie zagnieżdżać wartości, albo przenieść duże dane bez kopiowania.</p>
+    <pre><code><span class="kw">enum</span> <span class="typ">Wyrazenie</span> {
+    <span class="typ">Liczba</span>(<span class="typ">f64</span>),
+    <span class="typ">Suma</span>(<span class="typ">Box</span>&lt;<span class="typ">Wyrazenie</span>&gt;, <span class="typ">Box</span>&lt;<span class="typ">Wyrazenie</span>&gt;),
+}
+
+<span class="kw">let</span> e = <span class="typ">Wyrazenie</span>::<span class="typ">Suma</span>(
+    <span class="typ">Box</span>::<span class="fn">new</span>(<span class="typ">Wyrazenie</span>::<span class="typ">Liczba</span>(<span class="num">2.0</span>)),
+    <span class="typ">Box</span>::<span class="fn">new</span>(<span class="typ">Wyrazenie</span>::<span class="typ">Liczba</span>(<span class="num">3.0</span>)),
+);</code></pre>
+    <p>Bez <code>Box</code> to by nie przeszło: rozmiar <code>Wyrazenia</code> zależałby od samego siebie. Pudełko ustala stały rozmiar (adres) tam, gdzie treść mogłaby być dowolnie głęboka.</p>
+
+    <h2>Deref i Drop</h2>
+    <ul>
+      <li><code>Deref</code> mówi kompilatorowi, jak rozwiązać <code>*wskaznik</code> na odwoływanie do zawartości — dlatego <code>String</code> (który wewnętrznie trzyma <code>Vec&lt;u8&gt;</code>) można podstawić tam, gdzie oczekuje się <code>&amp;str</code>: łańcuch derefuje.</li>
+      <li>Dereferencjacja automatyczna działa też przez kilka warstw wskaźników naraz — nie trzeba pisać <code>**</code> ręcznie.</li>
+      <li><code>Drop</code>: własna implementacja uruchamia się przy wyjściu zmiennej z zasięgu, w kolejności odwrotnej do deklaracji (najpierw ostatnia). Można ją wywołać też jawnie: <code>drop(wartosc)</code>.</li>
+    </ul>
+
+    <h2>Rc&lt;T&gt; — wiele właścicieli</h2>
+    <p>Klonowanie <code>Rc</code> nie kopiuje danych, tylko zwiększa licznik odwołań. Kiedy licznik spada do zera, dane znikają. Przydatne, gdy fragment danych ma należeć do kilku miejsc jednocześnie (węzły drzewa, wspólne konfiguracje).</p>
+    <pre><code><span class="kw">use</span> std::rc::<span class="typ">Rc</span>;
+
+<span class="kw">let</span> konfiguracja = <span class="typ">Rc</span>::<span class="fn">new</span>(<span class="typ">String</span>::<span class="fn">from</span>(<span class="str">"beta"</span>));
+<span class="kw">let</span> a = <span class="typ">Rc</span>::<span class="fn">clone</span>(&amp;konfiguracja);
+<span class="kw">let</span> b = <span class="typ">Rc</span>::<span class="fn">clone</span>(&amp;konfiguracja);
+<span class="cmt">// trzy właścicielki, jeden tekst w pamięci; gdy ostatnia zniknie — zwolnienie</span></code></pre>
+    <p><code>Rc</code> jest jedno wątkowy. Wiele wątków potrzebuje <code>Arc</code> (patrz notatka o równoległości).</p>
+
+    <h2>RefCell&lt;T&gt; — własność na poziomie wykonania</h2>
+    <p>Zwykłe pożyczki są sprawdzane przez kompilator: albo jedna mutowalna, albo wiele nie-mutowalnych. <code>RefCell</code> przenosi tę regułę na działanie programu: pozwala mutować zawartość nawet, gdy sama zmienna jest nie-mutowalna, ale pilnuje zasad w czasie biegu. Próba dwóch mutowalnych pożyczek naraz (albo mutowalnej obok nie-mutowalnej) to panika, nie błąd kompilacji.</p>
+    <pre><code><span class="kw">use</span> std::cell::<span class="typ">RefCell</span>;
+
+<span class="kw">let</span> licznik = <span class="typ">RefCell</span>::<span class="fn">new</span>(<span class="num">0</span>);
+<span class="kw">*licznik</span>.<span class="fn">borrow_mut</span>() += <span class="num">1</span>;
+<span class="fn">println!</span>(<span class="str">"{}, pożyczona wartość"</span>, <span class="kw">*</span>licznik.<span class="fn">borrow</span>());</code></pre>
+
+    <h2>Duet Rc&lt;RefCell&lt;T&gt;&gt;</h2>
+    <p>Połączona moc: <code>Rc</code> daje wielu właścicieli, <code>RefCell</code> pozwala modyfikować przez jednego z nich „na zaufanie". To standardowy sposób na współdzielony, zmienny stan w jednym wątku — np. węzeł drzewa, który zna swoje dzieci i rodzica.</p>
+    <pre><code><span class="kw">type</span> <span class="typ">WezelRef</span> = <span class="typ">Rc</span>&lt;<span class="typ">RefCell</span>&lt;<span class="typ">Wezel</span>&gt;&gt;;
+
+<span class="kw">let</span> korzen = <span class="typ">Rc</span>::<span class="fn">new</span>(<span class="typ">RefCell</span>::<span class="fn">new</span>(<span class="typ">Wezel</span> { wartosc: <span class="num">1</span>, dzieci: <span class="fn">vec!</span>[] }));
+korzen.<span class="fn">borrow_mut</span>().dzieci.<span class="fn">push</span>(<span class="typ">Rc</span>::<span class="fn">clone</span>(&amp;korzen));</code></pre>
+    <p>Za wadę płaci się runtime'em: <code>borrow</code>/<code>borrow_mut</code> to koszty licznika pożyczki, a błędna kolejność to panika programu, nie odmiana kompilacji.</p>
+
+    <h2>Cykle i Weak</h2>
+    <p><code>Rc</code> nie wykrywa pętli: węzeł wskazujący na rodzica, który wskazuje na dziecko, trzyma siebie nawzajem — licznik nigdy nie spada do zera i pamięć przecieka. Na krawędzie „wsteczne" stosuje się <code>Weak::new</code>/<code>Rc::downgrade</code>: wskazówka słaba nie zwiększa licznika silnego, a żeby z niej skorzystać trzeba ją „podnieść" do <code>Option&lt;Rc&gt;</code> (wartość mogła już zniknąć).</p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        <code>Box</code> = wartość na stercie i stały rozmiar rekurencji. <code>Rc</code> = wspólne
+        posiadanie z licznikiem. <code>RefCell</code> = mutowalność sprawdzana w biegu zamiast w
+        kompilacji. <code>Weak</code> = krawędź, która nie podtrzymuje życia. Każdy z nich zamienia
+        gwarancję kompilatora na coś tańszego lub elastyczniejszego — świadomie.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego bez <code>Box</code> rekurencyjny <code>enum</code> nie ma ustalonego rozmiaru?</summary>
+        <div class="answer"><p>Wariant zawierałby wartości tego samego typu wprost, a każda z nich znowu jego — rozmiar rósłby w nieskończoność. <code>Box</code> wstawia w to miejsce adres o stałej szerokości, więc cały typ zyskuje skończony rozmiar niezależnie od głębokości drzewa.</p></div>
+      </details>
+      <details>
+        <summary>2. Co zrobi program, gdy w jednym miejscu trzymasz <code>borrow()</code>, a w innym wywołasz <code>borrow_mut()</code> na tym samym <code>RefCell</code>?</summary>
+        <div class="answer"><p>Panika w czasie wykonania (<em>already borrowed</em>). Zasada „albo jeden mutowalny, albo dowolnie wiele stałych" nadal obowiązuje, tylko egzekwuje ją <code>RefCell</code> dynamicznie zamiast kompilatora.</p></div>
+      </details>
+      <details>
+        <summary>3. Masz drzewo z rodzicami i dziećmi trzymane przez <code>Rc&lt;RefCell&lt;Wezel&gt;&gt;</code>. Które krawędzie powinieneś zrobić słabymi i dlaczego?</summary>
+        <div class="answer"><p>Krawędzie do rodzica. Dzieci powinny podtrzymywać żywotność korzenia (silne Rc), a rodzic tylko „zaglądać" w górę — dzięki <code>Weak</code> rodzic nie zwiększa licznika dziecka i para nie trzyma siebie nawzajem w pętli, po zniknięciu korzenia cały poddrzew się zwolni.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

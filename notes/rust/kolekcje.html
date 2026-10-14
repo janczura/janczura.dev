@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kolekcje — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Kolekcje
+    </nav>
+
+    <h1>Kolekcje</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Wektor, tekst i mapa — trzy fundamenty codziennej pracy.</p>
+
+    <h2>Wektor</h2>
+<pre><span class="kw">let mut</span> v = <span class="typ">Vec</span>::<span class="fn">new</span>();
+v.<span class="fn">push</span>(<span class="num">1</span>); v.<span class="fn">push</span>(<span class="num">2</span>);
+<span class="kw">let</span> v2 = <span class="mac">vec!</span>[<span class="str">"a"</span>, <span class="str">"b"</span>];              <span class="cmt">// makro z literałem</span>
+
+<span class="kw">match</span> v.<span class="fn">get</span>(<span class="num">10</span>) {                        <span class="cmt">// get zwraca Option — bez paniki</span>
+    <span class="typ">Some</span>(x) =&gt; { },
+    <span class="typ">None</span> =&gt; { },
+}
+v[<span class="num">0</span>] += <span class="num">1</span>;                              <span class="cmt">// indeksowanie panikuje poza zakresem</span>
+
+<span class="kw">for</span> x <span class="kw">in</span> &amp;<span class="kw">mut</span> v { *x *= 2; }             <span class="cmt">// iteracja z pożyczką mutalną</span></pre>
+    <p>Wszystkie elementy muszą mieć ten sam typ; na mieszankę — enum w środku wektora.</p>
+
+    <h2>Tekst</h2>
+    <p>
+      <code>String</code> to bufor na stosie (właściciel), <code>&amp;str</code> — wycinek (pożyczka).
+      Tekst jest UTF-8, więc <strong>indeksowanie liczbowe bywa niedozwolone</strong> — <code>s[1]</code>
+      to bajt, nie znak; wielobajtowe znaki leżą na kilku indeksach.
+    </p>
+<pre><span class="kw">let mut</span> s = <span class="typ">String</span>::<span class="fn">from</span>(<span class="str">"tektur"</span>);
+s.<span class="fn">push_str</span>(<span class="str">"a"</span>);
+<span class="kw">let</span> polaczenie = <span class="kw">format!</span>(<span class="str">"{s} i {s}"</span>);   <span class="cmt">// nowa alokacja</span>
+
+<span class="kw">for</span> c <span class="kw">in</span> s.<span class="fn">chars</span>() { }                  <span class="cmt">// znaki (Unicode)</span>
+<span class="kw">for</span> b <span class="kw">in</span> s.<span class="fn">bytes</span>() { }                  <span class="cmt">// bajty</span></pre>
+
+    <h2>HashMap</h2>
+<pre><span class="kw">use</span> std::collections::<span class="typ">HashMap</span>;
+
+<span class="kw">let mut</span> licznik: <span class="typ">HashMap</span>&lt;<span class="typ">String</span>, <span class="typ">u32</span>&gt; = <span class="typ">HashMap</span>::<span class="fn">new</span>();
+licznik.<span class="fn">insert</span>(<span class="typ">String</span>::<span class="fn">from</span>(<span class="str">"ala"</span>), <span class="num">1</span>);
+
+<span class="kw">if let</span> <span class="typ">Some</span>(n) = licznik.<span class="fn">get</span>(<span class="str">"ala"</span>) {      <span class="cmt">// Option&lt;&amp;u32&gt;</span>
+    <span class="mac">println!</span>(<span class="str">"liczba: {n}"</span>);
+}
+
+<span class="kw">let</span> n = licznik.<span class="fn">entry</span>(<span class="typ">String</span>::<span class="fn">from</span>(<span class="str">"ma"</span>)).<span class="fn">or_insert</span>(<span class="num">0</span>);
+*n += <span class="num">1</span>;                                 <span class="cmt">// entry: wstaw tylko gdy brak klucza</span></pre>
+    <p>
+      <code>get</code> zwraca <code>Option</code> — brak klucza to normalna sytuacja, nie awaria.
+      <code>entry(...).or_insert(...)</code> to najkrótsza droga do liczników słów.
+      Mapa ma losową kolejność iteracji.
+    </p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        <code>Vec</code> z <code>get</code>/<code>push</code>, tekst jako para <code>String</code>/<code>&amp;str</code>
+        świadomy UTF-8, <code>HashMap</code> z <code>get</code> i <code>entry</code>. Brak wartości =
+        <code>Option</code>, brak cichych awarii przy indeksie z <code>get</code>.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego <code>s[1]</code> na tekście z emoji może być błędem?</summary>
+        <div class="answer"><p>Indeksowanie działa bajtami. Emoji zajmuje np. 4 bajty — "środek" znaku nie jest granicą i indeksowanie w środku sekwencji UTF-8 panikuje. Bezpieczniej: <code>get(1..)</code>, <code>chars()</code> albo wycinki po znalezionych granicach.</p></div>
+      </details>
+      <details>
+        <summary>2. Policz wystąpienia słów w zdaniu.</summary>
+        <div class="answer"><p><code>zdanie.split_whitespace().fold(HashMap::new(), |mut m, slowo| { *m.entry(slowo).or_insert(0) += 1; m })</code> — wzorzec <code>entry().or_insert()</code> działa też na pożyczonych kluczach <code>&amp;str</code>.</p></div>
+      </details>
+      <details>
+        <summary>3. Kiedy użyć <code>vec!["x"; 3]</code>, a kiedy pętli z <code>push</code>?</summary>
+        <div class="answer"><p><code>vec![x; n]</code> tworzy n kopiów <em>tej samej</em> wartości (element musi być <code>Clone</code>). Gdy elementy mają się różnić albo powstają kosztownie — pusty <code>Vec::new()</code> i <code>push</code> w pętli.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

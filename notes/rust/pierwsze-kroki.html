@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pierwsze kroki — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Pierwsze kroki
+    </nav>
+
+    <h1>Pierwsze kroki</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Instalacja, narzędzia i pierwszy samodzielny program.</p>
+
+    <h2>Narzędzia</h2>
+    <p>
+      Rust instaluje się przez <code>rustup</code> — menedżer wersji, który zarządza kompilatorem
+      (<code>rustc</code>), menedżerem pakietów (<code>cargo</code>) i dokumentacją lokalną
+      (<code>rustup doc</code>). Aktualizacja to <code>rustup update</code>.
+    </p>
+    <p>Dwa poziomy pracy z kodem:</p>
+    <ul>
+      <li><code>rustc main.rs</code> — ręczna kompilacja pojedynczego pliku</li>
+      <li><code>cargo new nazwa</code> — pełny szkielet projektu z manifestem <code>Cargo.toml</code>, katalogiem <code>src/</code> i drzewem zależności</li>
+    </ul>
+    <p>
+      Cargo pilnuje konwencji: kod w <code>src/</code>, binarka startowa w <code>src/main.rs</code>,
+      biblioteka w <code>src/lib.rs</code>. Build developerski (<code>cargo run</code>) jest szybki
+      w kompilacji, release (<code>cargo build --release</code>) — szybki w działaniu (pełna optymalizacja).
+    </p>
+
+    <h2>Struktura programu</h2>
+<pre><span class="kw">use</span> std::io;  <span class="cmt">// sprowadza moduł do zasięgu</span>
+
+<span class="kw">fn</span> <span class="fn">main</span>() {
+    <span class="mac">println!</span>(<span class="str">"Podaj liczbę:"</span>);
+
+    <span class="kw">let mut</span> input = <span class="typ">String</span>::<span class="fn">new</span>();          <span class="cmt">// domyślnie bindingi są niemutowalne</span>
+    io::<span class="fn">stdin</span>().<span class="fn">read_line</span>(&amp;<span class="kw">mut</span> input)
+        .<span class="fn">expect</span>(<span class="str">"odczyt z stdin nie powiódł się"</span>);
+
+    <span class="mac">println!</span>(<span class="str">"To było: {input}"</span>);             <span class="cmt">// placeholder {} lub nazwany {input}</span>
+}</pre>
+
+    <p>Kilka rzeczy naraz, które warto zapamiętać na start:</p>
+    <ul>
+      <li><code>let x = ...;</code> — wartość bez <code>mut</code> nie da się zmienić; kompilator odmówi.</li>
+      <li><code>read_line</code> zwraca <code>Result</code> — może się nie powieść, więc trzeba obsłużyć błąd (<code>expect</code> / <code>unwrap</code>).</li>
+      <li>Wyrażenia kończą się średnikiem; blok <code>{ ... }</code> bez średnika na końcu jest wartością zwrotną.</li>
+      <li>Dyrektywy kończące się <code>!</code> (np. <code>println!</code>) to makra, nie funkcje.</li>
+    </ul>
+
+    <h2>Zewnętrzne crate'y</h2>
+    <p>
+      Dodanie zależności do <code>Cargo.toml</code> i <code>use</code> w kodzie w zupełności wystarcza.
+      Np. generator losowy:
+    </p>
+<pre><span class="cmt">// Cargo.toml: [dependencies] rand = "0.8"</span>
+<span class="kw">use</span> rand::<span class="fn">Rng</span>;
+
+<span class="kw">fn</span> <span class="fn">main</span>() {
+    <span class="kw">let</span> secret = <span class="typ">rand</span>::::<span class="fn">thread_rng</span>().<span class="fn">gen_range</span>(<span class="num">1</span>..=<span class="num">100</span>);
+    <span class="mac">println!</span>(<span class="str">"Los: {secret}"</span>);
+}</pre>
+
+    <h2>Pętla do skutku</h2>
+    <p>
+      <code>loop</code> powtarza w nieskończoność i <em>coś</em> musi ją przerwać — zwykle
+      <code>break</code> (ewentualnie z wartością zwrotną). To czysty mechanizm sterowania,
+      bez warunków w nagłówku:
+    </p>
+<pre><span class="kw">loop</span> {
+    <span class="kw">match</span> odczytaj() {
+        <span class="typ">Ok</span>(g) =&gt; {
+            <span class="kw">if</span> g == poprawna { <span class="kw">break</span>; }
+        }
+        <span class="typ">Err</span>(_) =&gt; <span class="mac">println!</span>(<span class="str">"nie ta wartość, spróbuj ponownie"</span>),
+    }
+}</pre>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        <code>rustup</code> zarządza zestawem narzędzi, <code>cargo</code> wszystkim w projekcie.
+        Zmienne są domyślnie niemutowalne, błędy odczytu zwracane jako <code>Result</code>,
+        a zależności deklaruje się w manifeście. Tyle wystarczy, żeby pisać pierwszy program.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Czym różni się <code>cargo build</code> od <code>cargo build --release</code>?</summary>
+        <div class="answer"><p>Build domyślny (debug) kompiluje szybko i zostawia debugowanie, binarka działa wolniej. Wariant release włącza optymalizacje — dłuższa kompilacja, ale kod działa znacznie szybciej. Binarki lądują w <code>target/debug/</code> i <code>target/release/</code>.</p></div>
+      </details>
+      <details>
+        <summary>2. Co się stanie, jeśli spróbujesz przypisać nową wartość do zmiennej bez <code>mut</code>?</summary>
+        <div class="answer"><p>Kompilator zgłosi błąd: <em>cannot assign twice to immutable variable</em>. Napiętnowanie <code>mut</code> jest świadomą decyzją — bez niego kompilator gwarantuje, że wartość się nie zmieni.</p></div>
+      </details>
+      <details>
+        <summary>3. Dlaczego <code>read_line</code> wymaga <code>&amp;mut input</code>, a nie samego <code>input</code>?</summary>
+        <div class="answer"><p><code>read_line</code> dokleja odczytany tekst do istniejącego <code>String</code> i musi go modyfikować — bierze więc <em>pożyczkę mutalną</em> (<code>&amp;mut</code>). Pożyczka oddaje zmienną z powrotem po zakończeniu, bez przejęcia własności.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

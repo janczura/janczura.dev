@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obsługa błędów — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Obsługa błędów
+    </nav>
+
+    <h1>Obsługa błędów</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Dwa nurty: <code>panic!</code> i <code>Result</code>.</p>
+
+    <h2>panic!</h2>
+    <p>
+      Sytuacja bez wyjścia (indeks poza tablicą, nieudana asercja). Wywala program z komunikatem,
+      stack trace domyślnie zwija się — pełny obraz przez <code>RUST_BACKTRACE=1</code>.
+    </p>
+
+    <h2>Result i propagacja</h2>
+    <p>
+      Błąd <em>spodziewany</em> to wartość <code>Result&lt;T, E&gt;</code>. Najważniejszy nawyk —
+      operator <code>?</code>: zwraca błąd wyżej albo rozpakowuje sukces.
+    </p>
+<pre><span class="kw">use</span> std::{<span class="kw">fs</span>, io};
+
+<span class="kw">fn</span> <span class="fn">wczytaj_pierwsza_linia</span>(sciezka: &amp;<span class="typ">str</span>) -&gt; <span class="typ">Result</span>&lt;<span class="typ">String</span>, io::<span class="typ">Error</span>&gt; {
+    <span class="kw">let</span> tresc = <span class="kw">fs</span>::<span class="fn">read_to_string</span>(sciezka)?;       <span class="cmt">// Err? oddaj wyżej</span>
+    <span class="kw">let</span> linia = tresc.<span class="fn">lines</span>().<span class="fn">next</span>().<span class="fn">unwrap_or</span>(<span class="str">""</span>);
+    <span class="typ">Ok</span>(linia.<span class="fn">to_string</span>())
+}
+
+<span class="cmt">// main może zwracać Result — błędy trafią na stderr</span>
+<span class="kw">fn</span> <span class="fn">main</span>() -&gt; <span class="typ">Result</span>&lt;(), Box&lt;<span class="kw">dyn</span> <span class="typ">std::error::Error</span>&gt;&gt; {
+    <span class="mac">println!</span>(<span class="str">"{}"</span>, <span class="fn">wczytaj_pierwsza_linia</span>(<span class="str">"a.txt"</span>)?);
+    <span class="typ">Ok</span>(())
+}</pre>
+
+    <h2>panic! czy nie?</h2>
+    <ul>
+      <li>Przykład, prototyp, test — <code>unwrap</code>/<code>expect</code> dozwolone.</li>
+      <li>Biblioteka — zwracaj <code>Result</code>, nie decyduj za użytkownika.</li>
+      <li>Uszkodzenie stanu (naruszona niezmiennik) — panika ma rację bytu.</li>
+      <li>Rozpakowując <code>Option</code>/<code>Result</code>, <code>expect</code> z opisem mówi więcej niż goły <code>unwrap</code>.</li>
+    </ul>
+    <p>
+      Walidację warto wynosić do typów: konstruktor zwracający <code>Result</code> gwarantuje,
+      że uszkodzony obiekt w ogóle nie powstanie.
+    </p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Spodziewane błędy: <code>Result</code> + <code>?</code> (propagacja).
+        Awaryjne: <code>panic!</code>. <code>main</code> zwracający <code>Result</code> to wygodny
+        szablon programów. W bibliotekach nie panikujemy bez powodu.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Co dokładnie robi <code>?</code> wewnątrz funkcji zwracającej <code>Result</code>?</summary>
+        <div class="answer"><p>Jeśli wartość to <code>Err(e)</code> — natychmiast zwraca to <code>Err</code> z funkcji (po konwersji <code>From::from</code>, jeśli typy błędu się różnią). Przy <code>Ok(v)</code> — zwraca <code>v</code>. Rozwija się to w <code>match</code>.</p></div>
+      </details>
+      <details>
+        <summary>2. Napisz funkcję parsującą <code>u32</code> z tekstu, zwracającą własny komunikat błędu.</summary>
+        <div class="answer"><p><code>fn parses(s: &amp;str) -&gt; Result&lt;u32, String&gt; { s.parse::&lt;u32&gt;().map_err(|e| format!("błędna liczba: {s} ({e})")) }</code> — <code>map_err</code> przekształca obcy błąd w nasz typ.</p></div>
+      </details>
+      <details>
+        <summary>3. Kiedy <code>unwrap()</code> jest akceptowalny w produkcyjnym kodzie?</summary>
+        <div class="answer"><p>Gdy wiesz, że błąd nie może nastąpić i da się to obronić komentarzem/asercją (np. <code>Regex::new</code> na stałym wzorcu), w kodzie testowym, albo gdy konsekwencją i tak jest awaria procesu. W bibliotekach lepiej go unikać.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

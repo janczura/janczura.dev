@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Program CLI od kuchni — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Program CLI
+    </nav>
+
+    <h1>Program CLI od kuchni</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Od argumentów do biblioteki — typowa ewolucja projektu.</p>
+
+    <h2>Argumenty i plik</h2>
+<pre><span class="kw">use</span> std::{env, <span class="kw">fs</span>};
+
+<span class="kw">let</span> args: <span class="typ">Vec</span>&lt;<span class="typ">String</span>&gt; = env::<span class="fn">args</span>().<span class="fn">collect</span>();
+<span class="kw">let</span> (szukaj, plik) = (&amp;args[<span class="num">1</span>], &amp;args[<span class="num">2</span>]);
+<span class="kw">let</span> tresc = <span class="kw">fs</span>::<span class="fn">read_to_string</span>(plik)?;   <span class="cmt">// czyta cały plik do Stringa</span></pre>
+    <p>Argument 0 to nazwa programu — prawdziwe parametry zaczynają się od [1].</p>
+
+    <h2>Podział odpowiedzialności</h2>
+    <ol>
+      <li><strong><code>main</code></strong> — zbiera argumenty, wywołuje logikę, drukuje wynik. Mało kodu, dużo błędów dopuszczalnych.</li>
+      <li><strong>Logika w bibliotece</strong> (<code>src/lib.rs</code>) — przyjmuje <code>&amp;str</code>, zwraca <code>Result</code>, <em>nic nie drukuje</em>. Idealna pod testy.</li>
+    </ol>
+<pre><span class="kw">pub fn</span> <span class="fn">znajdz</span>&lt;'a&gt;(szukane: &amp;<span class="typ">str</span>, tresc: &amp;<span class="str">'a</span> <span class="typ">str</span>) -&gt; <span class="typ">Vec</span>&lt;&amp;<span class="str">'a</span> <span class="typ">str</span>&gt; {
+    tresc.<span class="fn">lines</span>().<span class="fn">filter</span>(|l| l.<span class="fn">contains</span>(szukane)).<span class="fn">collect</span>()
+}</pre>
+
+    <h2>Reszta ekosystemu CLI</h2>
+    <ul>
+      <li>Zmienne środowiskowe: <code>env::var("KLUCZ")</code> → <code>Result</code>; np. flaga wielkości liter.</li>
+      <li>Błędy na <code>stderr</code>: <code>eprintln!</code>; dane na <code>stdout</code> — wtedy <code>prog &gt; plik</code> nie łapie komunikatów.</li>
+      <li>TDD: najpierw test czerwony (asercja o oczekiwanym wyniku), potem kod go przechodzący.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        <code>env::args()</code>, <code>fs::read_to_string</code>, logika poza <code>main</code>
+        i jako biblioteka z <code>Result</code>. <code>eprintln!</code> dla błędów,
+        testy naprzód dla nowej funkcjonalności.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Jak poprawnie poinformować o złej liczbie argumentów?</summary>
+        <div class="answer"><p>Jeśli <code>args.len() &lt; 3</code> — wypisz użycie na <code>stderr</code> (<code>eprintln!</code>), zwróć <code>Err</code> albo zakończ z niezerowym kodem wyjścia. Dzięki temu <code>prog &gt; out</code> nie zapełnia pliku komunikatem błędu.</p></div>
+      </details>
+      <details>
+        <summary>2. Dlaczego logika wyszukiwania powinna przyjmować treść jako parametr, a nie czytać plik sama?</summary>
+        <div class="answer"><p>Czysta funkcja (<code>&amp;str</code> na wejściu) jest testowalna bez systemu plików i łatwa do złożenia w większy potok. Wejścia/wyjścia zostają przy <code>main</code>.</p></div>
+      </details>
+      <details>
+        <summary>3. Dodaj wyszukiwanie nieczułe na wielkość liter (z testem).</summary>
+        <div class="answer"><p>Test: <code>assert_eq!(znajdz_case_insensitive("aLa", "Ala ma ALA").len(), 2)</code>. Implementacja: porównuj <code>l.to_lowercase().contains(&amp;szukane.to_lowercase())</code>.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

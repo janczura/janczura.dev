@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Podstawy składni — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Podstawy składni
+    </nav>
+
+    <h1>Podstawy składni</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Zmienne, typy, funkcje i sterowanie przepływem.</p>
+
+    <h2>Zmienne, stałe, cieniowanie</h2>
+    <ul>
+      <li><code>let x = 5;</code> — niemutowalne; <code>let mut y = 5;</code> — mutowalna.</li>
+      <li><code>const MAX: u32 = 100_000;</code> — stała: zawsze typowana, znana w czasie kompilacji, ważna w całym zasięgu.</li>
+      <li><strong>Cieniowanie (shadowing)</strong> — ponowne <code>let</code> z tą samą nazwą tworzy <em>nową</em> zmienną, może być innego typu:</li>
+    </ul>
+<pre><span class="kw">let</span> spaces = <span class="str">"   "</span>;          <span class="cmt">&amp;str</span>
+<span class="kw">let</span> spaces = spaces.<span class="fn">len</span>();    <span class="cmt">// u32 — nowa zmienna, nie zmiana wartości</span></pre>
+
+    <h2>Typy</h2>
+    <p>Skalarne: <code>i32</code>/<code>u64</code>/<code>f64</code>/<code>bool</code>/<code>char</code> (4 bajty, obejmuje Unicode). Złożone: krotka <code>(i32, f64)</code> i tablica <code>[i32; 3]</code> — oba o stałej długości. Destruktoracja:</p>
+<pre><span class="kw">let</span> (a, b) = (<span class="num">1</span>, <span class="num">2.5</span>);     <span class="cmt">// krotka</span>
+<span class="kw">let</span> ([first, .., last]) = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>];</pre>
+
+    <h2>Funkcje</h2>
+    <p>
+      Parametry <strong>zawsze</strong> wymagają adnotacji typu. Ostatnie wyrażenie bloku (bez średnika)
+      jest wartością zwracaną; jawne wyjście to <code>return</code>.
+      Kluczowa różnica: <em>instrukcje</em> (<code>let</code>, <code>println!</code>) nie zwracają wartości,
+      <em>wyrażenia</em> (<code>if</code>, <code>match</code>, blok) — zwracają. Dlatego <code>let x = if ... </code> działa,
+      a <code>let y = (let z = 3);</code> nie.
+    </p>
+<pre><span class="kw">fn</span> <span class="fn">pole</span>(szer: <span class="typ">u32</span>, wys: <span class="typ">u32</span>) -&gt; <span class="typ">u32</span> {
+    szer * wys          <span class="cmt">// bez średnika = zwróć</span>
+}
+
+<span class="kw">let</span> liczba = <span class="num">3</span>;
+<span class="kw">let</span> opis = <span class="kw">if</span> liczba % <span class="num">2</span> == <span class="num">0</span> { <span class="str">"parzysta"</span> } <span class="kw">else</span> { <span class="str">"nieparzysta"</span> };</pre>
+
+    <h2>Sterowanie</h2>
+    <ul>
+      <li><code>if</code>/<code>else if</code>/<code>else</code> — warunek musi być <code>bool</code> (bez "falsy" wartości).</li>
+      <li><code>loop</code> — nieskończona pętla, może zwracać wartość przez <code>break wartość;</code>; etykiety pozwalają przerywać zagnieżdżone pętle.</li>
+      <li><code>while</code> — powtarza dopóki warunek prawdziwy.</li>
+      <li><code>for</code> — nad iteratorem, najczęściej nad zakresem:</li>
+    </ul>
+<pre><span class="kw">for</span> i <span class="kw">in</span> <span class="num">1</span>..<span class="num">5</span> { <span class="mac">println!</span>(<span class="str">"{i}"</span>); }      <span class="cmt">// 1,2,3,4</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="num">1</span>..=<span class="num">5</span>.<span class="fn">rev</span>() { }                <span class="cmt">// wstecz: 5,4,3,2,1</span></pre>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Typy jawne lub wywodzone przez kompilator, ale adnotacja przy funkcjach obowiązkowa.
+        Wszystko jest wyrażeniem — <code>if</code> i bloki zwracają wartości.
+        Cieniowanie to nowa zmienna, nie mutacja. Warunki wyłącznie typu <code>bool</code>.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Czym różni się <code>let mut x = 5;</code> od ponownego <code>let x = 6;</code>?</summary>
+        <div class="answer"><p><code>mut</code> modyfikuje tę samą zmienną w miejscu — typ musi pozostać ten sam. Ponowne <code>let</code> (cieniowanie) tworzy zupełnie nową zmienną; może mieć inny typ i nie wymaga <code>mut</code>.</p></div>
+      </details>
+      <details>
+        <summary>2. Jak odwrócić kolejność tablicy <code>[1, 2, 3]</code> i zwrócić sumę?</summary>
+        <div class="answer"><p>Przejść pętlą <code>for</code> wstecz (<code>(0..arr.len()).rev()</code>) i sklejać wartości, albo użyć iteratora: <code>arr.iter().rev().sum()</code>. Suma wynosi 6.</p></div>
+      </details>
+      <details>
+        <summary>3. Dlaczego <code>let x = if true { 3 };</code> jest błędne?</summary>
+        <div class="answer"><p><code>if</code> użyty jako wyrażenie musi zwracać wartość z każdej gałęzi — brak <code>else</code> oznacza gałąź zwracającą <code>()</code> (unit), czyli typy gałęzi się nie zgadzają (<code>i32</code> vs <code>()</code>).</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

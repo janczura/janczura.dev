@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Async i await — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Async i await
+    </nav>
+
+    <h1>Async i await</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Wiele zadań na jednym wątku — bez blokowania, ale z własnym runtime'em.</p>
+
+    <h2>Po co async, skoro są wątki</h2>
+    <p>
+      Wątek blokowany na oczekiwaniu (sieć, dysk, timer) marnuje zasób. Task (futur) oddaje
+      sterowanie runtime'owi i „budzi się", gdy dane są gotowe. Tysiące oczekujących operacji
+      kosztują wtedy tyle, co pętla zdarzeń — nie tysiące wątków.
+    </p>
+
+    <h2>Futury, async fn, await</h2>
+    <pre><code><span class="kw">async fn</span> <span class="fn">pobierz</span>() -&gt; <span class="typ">String</span> {
+    <span class="kw">let</span> naglowki = <span class="fn">odczytaj_naglowki</span>().<span class="kw">await</span>;
+    <span class="fn">przetworz</span>(naglowki)
+}
+
+<span class="cmt">// sama futura nic nie robi — trzeba ją "poczekać" przez runtime</span>
+<span class="kw">let</span> wynik = runtime::<span class="fn">blokuje_na</span>(<span class="fn">pobierz</span>());</code></pre>
+    <ul>
+      <li><code>async fn</code> zwraca <code>Future</code> — maszynę stanową, nie uruchomiony kod. Wywołanie bez <code>await</code> (lub bez wrzucenia do runtime'u) nie zrobi nic.</li>
+      <li><code>await</code> może pojawić się tylko w ciele <code>async</code>; zawiesza task, a nie cały wątek.</li>
+      <li>Sam standard nie ma planisty — potrzebny jest zewnętrzny runtime (tokio, smol, async-std): jego zadaniem jest budzenie futur i pchanie ich do przodu.</li>
+    </ul>
+
+    <h2>Współbieżność bez równoległości</h2>
+    <pre><code><span class="cmt">// sekwencyjnie: a + b</span>
+<span class="kw">let</span> a = <span class="fn">pobierz_a</span>().<span class="kw">await</span>;
+<span class="kw">let</span> b = <span class="fn">pobierz_b</span>().<span class="kw">await</span>;
+
+<span class="cmt">// równolegle na jednym wątku: max(a, b)</span>
+<span class="kw">let</span> (a, b) = futures_lite::<span class="fn">zip</span>(<span class="fn">pobierz_a</span>(), <span class="fn">pobierz_b</span>()).<span class="kw">await</span>;</code></pre>
+    <p>
+      Kluczowa różnica: wywołanie przyszłości <em>przed</em> <code>await</code> już ją „uruchamia"
+      (tworzy task). Dopiero oczekiwanie na obie naraz daje nakładanie się czasów. W
+      runtime'ach znajdziesz gotowe narzędzia (<code>join!</code>, <code>select!</code>,
+      <code>zip</code>) — dobór zależy od biblioteki, zasada jest ta sama.
+    </p>
+
+    <h2>Async i wątki razem</h2>
+    <ul>
+      <li>W runtime'ach wielowątkowych taski skaczą po wątkach — planista równoważy je między rdzeniami.</li>
+      <li>Na taskach obowiązują te same reguły własności: współdzielony stan między zadaniami znowu opakowujemy w <code>Arc&lt;Mutex&lt;T&gt;&gt;</code>.</li>
+      <li>Blokowanie wewnątrz taska (<code>sleep</code> ze standardu, długa pętla CPU) zatruwa cały wątek i sąsiednie taski — czekać trzeba przez <code>await</code>, nie przez <code>thread::sleep</code>.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Async zamienia czekanie na warkocze: wiele zadań, mało wątków, jawne punkty
+        zawieszenia. Koszt to wymóg runtime'u, „zaraźliwość" funkcji async i konieczność
+        nieblokowania planisty.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Wywołałeś <code>async fn</code> bez <code>await</code> — co się wydarzyło?</summary>
+        <div class="answer"><p>Nic. Zwrócona futura jest leniwa: bez czekania na nią (ani wrzucenia do runtime'u) ciało funkcji nigdy nie ruszyło. Compiler nawet ostrzeże: „unused future".</p></div>
+      </details>
+      <details>
+        <summary>2. Dlaczego <code>thread::sleep</code> wewnątrz taska to zły pomysł?</summary>
+        <div class="answer"><p>Blokuje cały wątek wykonawczy, a razem z nim wszystkie taski przypięte do niego. Task powinien oddawać sterowanie — dlatego istnieją wersje <code>sleep</code> zwracające futury, na które się czeka przez <code>await</code>.</p></div>
+      </details>
+      <details>
+        <summary>3. Jak zrównoleglić dwa niezależne oczekiwania na jednym wątku?</summary>
+        <div class="answer"><p>Obie futury stworzyć przed czekaniem i poczekać na nie naraz (zip / join). Czekanie kolejne sumuje czasy; wspólne oczekiwanie pozwala planiście przemielać je naprzemiennie, więc łączny czas to maksimum z obu.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>
