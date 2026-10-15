@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REST, GraphQL, OAuth — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> REST, GraphQL, OAuth
+    </nav>
+
+    <h1>REST, GraphQL, OAuth</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Interfejs publikowany to kontrakt: wersjonowanie, paginacja kursorowa, limity GraphQL i PKCE.</p>
+
+    <h2>Kontrakt przeżywa kod</h2>
+    <p>
+      Własny frontend zniesie zmianę, bo deployujecie się razem; mobilka albo partner
+      — nie. Zmiana zgodna to tylko <em>addytywna</em>: nowe opcjonalne pola, nowe endpointy,
+      nowe warianty enuma do zignorowania. Usunięcie, zmiana nazwy, zmiany typu czy nowy
+      wymagany parametr łamią kogoś i trafiają do nowej wersji (<code>.nest("/api/v1", ...)</code>).
+    </p>
+    <ul>
+      <li>Typ odpowiedzi żyje w warstwie WWW, nie w domenowym — model domenowy serializowany wprost staje się kontraktem przez wypadek i każdy refactor go zagraża.</li>
+      <li><code>#[serde(skip_serializing_if = "Option::is_none")]</code> — pola obecne tylko gdy mają wartość; klient nie widzi szumu.</li>
+    </ul>
+
+    <h2>Paginacja kursorowa</h2>
+    <p>
+      Limit bez kursora zmusza klienta do zgadywania, czy coś jeszcze zostało.
+      Licznik total kosztuje drugie zapytanie — sprytniej: <strong>fetch limit+1</strong>.
+      Nadwyżkowy wiersz = „są następni", po czym go wycinasz.
+    </p>
+<pre><code>#[derive(<span class="typ">Serialize</span>)]
+<span class="kw">pub struct</span> <span class="typ">Page</span>&lt;<span class="typ">T</span>&gt; {
+    <span class="kw">pub</span> items: <span class="typ">Vec</span>&lt;<span class="typ">T</span>&gt;,
+    <span class="kw">pub</span> next_cursor: <span class="typ">Option</span>&lt;<span class="typ">String</span>&gt;,
+    <span class="kw">pub</span> has_more: <span class="typ">bool</span>,
+}
+
+<span class="cmt">// limit+1, has_more = len &gt; limit, truncate(limit)</span></code></pre>
+    <p>
+      Kursor zachowuje poprawność przy równoległych wstawkach — offset przy każdym
+      nowym wpisie przesuwa się o jeden i klient zobaczy duplikat albo coś ominie.
+      Kotwicą jest ostatni zwrócony element (np. sortowanie po tytule).
+    </p>
+
+    <h2>ETag i RFC 9457</h2>
+    <p>
+      Katalog zmienia się rzadko, klienci odpytują często: odpowiedź niesie walidator
+      (hash znacznika czasu rekordu — nie serializowanego ciała, bo zmiana typu
+      odpowiedzi nie powinna unieważniać wszystkich cache'y), klient odsyła go
+      w <code>If-None-Match</code>, a Ty oddajesz puste 304. Oszczędzasz transfer
+      i parsowanie, nie samo zapytanie — na to dopiero cache w Redisie.
+    </p>
+    <p>
+      Błędy interfejsu publicznego w formacie RFC 9457 (<code>application/problem+json</code>):
+      <code>type</code> (trwały identyfikator przeżywający każdą redakcję tytułu),
+      <code>title</code>, <code>status</code>, plus członki rozszerzeń z danymi
+      maszynowo czytalnymi (np. <code>available: 3</code> zamiast liczby w zdaniu).
+      Klient reaguje programowo, nie parząc angielski.
+    </p>
+
+    <h2>GraphQL: async-graphql</h2>
+    <p>
+      Klient bierze dokładnie te pola, których potrzebuje. Typy GraphQL to <em>opakowania</em>
+      modeli domenowych (jak w warstwie trwałej — domena bez derivów infrastrukturalnych),
+      co dodatkowo pozwala wystawiać pola obliczane i chować te, które nie powinny
+      ujrzeć świata (stan magazynowy wie konkurencja, klient nie musi):
+    </p>
+<pre><code><span class="kw">pub struct</span> <span class="typ">BookNode</span>(<span class="kw">pub</span> <span class="typ">Book</span>);
+
+#[<span class="typ">Object</span>]
+<span class="kw">impl</span> <span class="typ">BookNode</span> {
+    <span class="kw">async fn</span> <span class="fn">price</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">String</span> {   <span class="cmt">// pole tylko w schemacie: formatowanie centów</span>
+        <span class="fn">format!</span>(<span class="str">"{}.{:02}"</span>, <span class="kw">self</span>.0.price_cents / <span class="num">100</span>, <span class="kw">self</span>.0.price_cents % <span class="num">100</span>)
+    }
+    <span class="kw">async fn</span> <span class="fn">in_stock</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">bool</span> { <span class="kw">self</span>.0.stock &gt; <span class="num">0</span> }  <span class="cmt">// liczba ukryta, boolean widoczny</span>
+}
+
+<span class="cmt">// korzeń złożony z kawałków po areach usług:</span>
+#[derive(<span class="typ">MergedObject</span>, <span class="typ">Default</span>)]
+<span class="kw">pub struct</span> <span class="typ">Query</span>(<span class="typ">BookQuery</span>, <span class="typ">OrderQuery</span>);</code></pre>
+    <ul>
+      <li><strong>Limity obowiązkowe</strong> na publicznym schemacie: <code>limit_depth(10)</code> + <code>limit_complexity(200)</code>. GraphQL pozwala jednemu żądaniu zażądać wykładniczej pracy przez zagnieżdżenie, które wygląda niewinnie — odrzucić taniej niż wykonać.</li>
+      <li><strong>DataLoader</strong> na N+1: dziesięć zamówień po trzy wiersze to 30 lookupów książki; loader zbiera identyfikatory z jednej ścieżki wykonania i pyta raz (deduplikacja + <code>WHERE id = ANY($1)</code> = jeden prepared statement na dowolny rozmiar partii).</li>
+      <li>Eksplorator GraphiQL tylko w dev — wystawiony na produkcji reklamuje cały schemat każdemu.</li>
+      <li>Oba backendy montują schemat identycznym handlerem — <code>schema.execute(req).await</code>.</li>
+    </ul>
+
+    <h2>OAuth2 z GitHubem: PKCE + stan</h2>
+    <p>
+      Delegowanie logowania: nie widzisz hasła, dostajesz kod do wymiany na token.
+      Builder <code>oauth2</code> v5 pilnuje kompletności typami — exchange przed
+      ustawieniem <code>set_token_uri</code> nie kompiluje się (v4 meldował to dopiero
+      przy pierwszym logowaniu).
+    </p>
+<pre><code><span class="kw">let</span> (challenge, verifier) = <span class="typ">PkceCodeChallenge::new_random_sha256</span>();
+<span class="kw">let</span> (auth_url, csrf) = client
+    .<span class="fn">authorize_url</span>(<span class="typ">CsrfToken::new_random</span>)
+    .<span class="fn">add_scope</span>(<span class="typ">Scope::new</span>(<span class="str">"read:user"</span>.<span class="fn">to_owned</span>()))
+    .<span class="fn">set_pkce_challenge</span>(challenge)
+    .<span class="fn">url</span>();
+
+<span class="cmt">// verifier do Redis, klucz = stan, TTL 10 min — nie do klienta</span>
+redis.<span class="fn">set_ex</span>(<span class="fn">format!</span>(<span class="str">"oauth:{csrf}"</span>), verifier.<span class="fn">secret</span>(), <span class="num">600</span>).<span class="kw">await</span>?;</code></pre>
+    <ul>
+      <li><strong>PKCE</strong>: przechwycony kod bez weryfikatora nic nie daje. <strong>Stan</strong>: callback z nieznaną wartością odrzucasz (CSRF). Oba świeże przy każdym logowaniu.</li>
+      <li><code>get_del</code> przy odbiorze = jednokrotny odczyt atomowo: replay z historii przeglądarki nie wymieni kodu drugi raz.</li>
+      <li>Client wymieniający token: <code>Policy::none()</code> dla redirects (kredencja nie może powędrować za przekierowaniem w nieznane) i jawny timeout.</li>
+      <li>Prosisz o minimalne scope — tożsamość i e-mail. Szerokie zgody to straszak na consent screenie i większa odpowiedzialność przy wycieku.</li>
+      <li>Wydajesz <em>własny</em> JWT, token dostawcy nie wędruje dalej (daje dostęp poza Twoją aplikacją).</li>
+      <li><code>ON CONFLICT (email) DO UPDATE</code> = upsert bez wyścigu dwóch równoległych pierwszych logowań; pusty <code>password_hash</code> odcina ścieżkę hasłową takiemu kontu (Argon2 nigdy nie zwraca pustego haszu).</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Publikujesz kontrakt: wersja w ścieżce, zmiany tylko addytywne, typy odpowiedzi
+        oddzielone od domeny. Kursor z trikiem limit+1, ETag ze znacznika czasu,
+        błędy w problem+json z maszynowymi rozszerzeniami. GraphQL: opakowania, limity
+        głębokości i złożoności, DataLoader na N+1. OAuth: PKCE + jednorazowy stan,
+        minimalne scope'y, własny token na końcu.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Klient paginuje offsetem i skarży się na duplikaty. Co się stało?</summary>
+        <div class="answer"><p>W trakcie przechodzenia katalogu ktoś wstawił rekord — wszystkie kolejne offsety przesunęły się o jedno. Kursor kotwiczony do ostatnio zwróconego elementu jest na wstawki odporny.</p></div>
+      </details>
+      <details>
+        <summary>2. Dlaczego ETag liczysz od <code>updated_at</code>, a nie od ciała odpowiedzi?</summary>
+        <div class="answer"><p>Hash ciała zmienia się też przy przebudowie odpowiedzi (nowe pole, inna kolejność) i unieważnia cache przy premierze, która danych nie ruszyła. Znacznik czasu rekordu zmienia się dokładnie wtedy, kiedy klient ma prawo zobaczyć coś nowego.</p></div>
+      </details>
+      <details>
+        <summary>3. Co by było, gdyby callback OAuth odczytywał stan zwykłym GET-em, a potem usuwał go osobno?</summary>
+        <div class="answer"><p>Okno między odczytem a kasowaniem pozwala na replay: dwa szybkie żądania z tym samym kodem przeszłyby oba. get_del wykonuje odczyt+usuwanie atomowo, więc drugi klient dostaje pusto i odmowę.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

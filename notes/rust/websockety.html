@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> WebSocket
+    </nav>
+
+    <h1>WebSocket i aktualizacje na żywo</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Serwer odzywa się pierwszy: eventy domenowe, broadcast, tickety do handshake i backoff.</p>
+
+    <h2>Zdarzenia domenowe</h2>
+    <p>
+      Event opisuje <em>co się stało</em>, nie co zrobić. Typ mieszka w domenie razem
+      z modelami (zero infrastruktury) i musi być identycznie rozumiany po obu stronach —
+      wewnętrznie tagowany serde daje dyskryminator w JSON-ie:
+    </p>
+<pre><code>#[derive(<span class="typ">Debug</span>, <span class="typ">Clone</span>, <span class="typ">Serialize</span>, <span class="typ">Deserialize</span>)]
+#[serde(tag = <span class="str">"event"</span>, rename_all = <span class="str">"snake_case"</span>)]
+<span class="kw">pub enum</span> <span class="typ">StoreEvent</span> {
+    <span class="fn">StockChanged</span> { book_id: <span class="typ">Uuid</span>, remaining: <span class="typ">i32</span> },
+    <span class="fn">OrderAdvanced</span> { order_id: <span class="typ">Uuid</span>, status: <span class="typ">OrderStatus</span> },
+}</code></pre>
+    <p>
+      Nowy wariant = zmiana addytywna: starszy klient rozpozna i pominie to, czego nie zna.
+      Fanout przez <code>tokio::sync::broadcast</code> — każdy odbiorca dostaje każdą
+      wiadomość, publikujący pisze raz niezależnie od liczby nasłuchujących.
+    </p>
+    <ul>
+      <li><code>send()</code> błęduje tylko gdy zero subskrybentów (nikt nie ma otwartego sklepu) — to normalność, log na <code>trace</code>, bez alarmu.</li>
+      <li><strong>Publikuj po <code>commit</code></strong>, nie przed: rollback unieważniłby zmianę, o której przeglądarki już by usłyszały.</li>
+    </ul>
+
+    <h2>Upgrade połączenia</h2>
+    <p>
+      WebSocket zaczyna się jako zwykły HTTP z nagłówkiem upgrade. Handler Axum zwraca
+      odpowiedź <em>zanim</em> popłynie pierwszy event — dalsza rozmowa dzieje się poza
+      cyklem requestu, poza timeoutami requestów.
+    </p>
+<pre><code><span class="kw">pub async fn</span> <span class="fn">ws_handler</span>(ws: <span class="typ">WebSocketUpgrade</span>, <span class="fn">State</span>(state): <span class="fn">State</span>&lt;<span class="typ">AppState</span>&gt;) -&gt; <span class="typ">Response</span> {
+    ws.<span class="fn">on_upgrade</span>(<span class="kw">move</span> |socket| <span class="fn">pump_events</span>(socket, state))
+}
+
+<span class="kw">async fn</span> <span class="fn">pump_events</span>(<span class="kw">mut</span> socket: <span class="typ">WebSocket</span>, state: <span class="typ">AppState</span>) {
+    <span class="kw">let mut</span> events = state.events.<span class="fn">subscribe</span>();
+    <span class="kw">loop</span> {
+        <span class="mac">tokio::select!</span> {
+            incoming = socket.<span class="fn">recv</span>() =&gt; { <span class="cmt">// czytamy nawet bez treści — zamknięcie klienta widać dopiero tu</span>
+                <span class="kw">if</span> <span class="fn">koniec</span>(incoming) { <span class="kw">break</span>; } }
+            event = events.<span class="fn">recv</span>() =&gt; <span class="kw">match</span> event {
+                <span class="typ">Ok</span>(e)  =&gt; { <span class="kw">if</span> socket.<span class="fn">send</span>(<span class="typ">Message::Text</span>(e.<span class="fn">to_text</span>())).<span class="kw">await</span>.<span class="fn">is_err</span>() { <span class="kw">break</span>; } }
+                <span class="typ">Err</span>(<span class="typ">RecvError::Lagged</span>(n)) =&gt; { <span class="cmt">// klient odbiega — nie odrabiamy, każemy odświeżyć</span>
+                    socket.<span class="fn">send</span>(resync_msg()).<span class="kw">await</span>; }
+                <span class="typ">Err</span>(<span class="typ">RecvError::Closed</span>) =&gt; <span class="kw">break</span>,
+            },
+        }
+    }
+}</code></pre>
+    <ul>
+      <li>Axum 0.8: ramka tekstowa przyjmuje <code>Utf8Bytes</code>, nie <code>String</code> — potknięcie przy przenoszeniu starszych przykładów, mniej kopiowania w zamian.</li>
+      <li>Aktywny ping odpowiadania: Axum robi pong wewnętrznie; w Actix trzeba odpisać samodzielnie, bo zniecierpliwiony proxy rozerwie milczący koniec.</li>
+    </ul>
+
+    <h2>Actix: sesja jako osobny task</h2>
+    <p>
+      <code>actix_ws::handle</code> zwraca trzy rzeczy naraz: odpowiedź (do natychmiastowego
+      zwrotu), uchwyt sesji do pisania i strumień ramek wejściowych. Pętlę odpala się jako
+      task na tym samym workerze — zgodnie z modelem arbitera sesja nigdy nie zmienia
+      wątku, więc jej stan nie musi być współdzielalny (zero blokad).
+    </p>
+
+    <h2>Strona przeglądarki</h2>
+    <p>
+      Socket przez <code>web-sys</code>; hook zamyka najnowszy event w sygnale, który
+      czytają komponenty. Rzeczywistość mobilna wymaga polityki reconnectu:
+      <strong>backoff wykładniczy + jitter</strong> — bez losowości wszyscy rozłączeni
+      tym samym incydentem wróciliby w tej samej sekundzie i położyły odradzający się
+      serwer powtórnie. Licznik prób resetuje się po dłuższej stabilności (chwilowy zanik
+      sieci ≠ problem trwały).
+    </p>
+<pre><code><span class="kw">fn</span> <span class="fn">next_delay</span>(attempt: <span class="typ">u32</span>) -&gt; <span class="typ">Duration</span> {
+    <span class="kw">let</span> base = <span class="num">500u64</span>.<span class="fn">saturating_mul</span>(<span class="num">1</span> &lt;&lt; attempt.<span class="fn">min</span>(<span class="num">6</span>));
+    <span class="kw">let</span> capped = base.<span class="fn">min</span>(<span class="num">30_000</span>);
+    <span class="kw">let</span> jitter = (<span class="typ">js_sys::Math::random</span>() * capped <span class="kw">as</span> <span class="typ">f64</span> * <span class="num">0.3</span>) <span class="kw">as</span> <span class="typ">u64</span>;
+    <span class="typ">Duration::from_millis</span>(capped - jitter)
+}</code></pre>
+
+    <h2>Handshake: bilet zamiast tokenu</h2>
+    <p>
+      Konstruktor WebSocketu w przeglądarce przyjmie URL i nic więcej — nagłówka
+      <code>Authorization</code> nie da się dołożyć. Long token w query ląduje w logach
+      proxy i historii. Wyjście: <strong>krótki, jednorazowy bilet</strong> — REST-owy
+      endpoint z logowaniem wrzuca UUID do Redis z TTL 30 s, handshake konsumuje go
+      przez <code>get_del</code>.
+    </p>
+    <p>
+      Zasada: kredyt długoterminowy należy do nagłówka, który nie trafia do URL-a;
+      wartość jednorazowa może wędrować gdzie wygodnie.
+    </p>
+
+    <h2>Backpressure i SSE vs WebSocket</h2>
+    <ul>
+      <li>Broadcast ma bufor ograniczony: wolny odbiorca gubi nadwyżki (zamiast rosnąć w pamięć bez limitu), a Ty dostajesz <code>Lagged(n)</code>. Odpowiedź: instrukcja resynchronizacji (jedno odświeżenie = poprawny stan), nie odtwarzanie zagubionego (per-klientowa historia = z powrotem nieograniczona pamięć).</li>
+      <li>Rozmiar bufora to realna regulacja: za mały gubi przy drobnym zastoju, za duży je pamięć (pojemność × rozmiar × subskrybenci). Ustalać pomiarem.</li>
+      <li><strong>Uczciwe pytanie: czy w ogóle WebSocket?</strong> Ruch jednokierunkowy (serwer → przeglądarka) to także Server-Sent Events: auto-reconnect bez Twojego backoffu, ciasteczka bez biletów, multipleksacja HTTP/2, przyjaźniejszy dla proxy. Socket wygrywa dla ruchu dwustronnego, binarnego i bardzo szybkiego. Wybieraj mechanizm od kształtu ruchu, nie od efektowności.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Event = dane z dyskryminatorem w domenie; broadcast fan-out, publikacja po
+        commicie. select! na obu kierunkach zamknięcia; Lagged → resync. Actix: sesja
+        jako task per worker, pongi ręcznie. Reconnect z jitterem, handshake przez
+        jednorazowy bilet, a przy ruchu w jedną stronę rozważ SSE.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego po rollbacku transakcji nie wolno było opublikować eventu przed nią?</summary>
+        <div class="answer"><p>Przeglądarki dostałyby informację o zmianie, która nigdy nie nastąpiła — rollback kasuje wszystko w transakcji, a event wysłany wcześniej już żyje własnym życiem. Fakt, który broadcastuje, musi być trwały: publikujemy po commit.</p></div>
+      </details>
+      <details>
+        <summary>2. Co odczytujesz z socketu, skoro i tak ignorujesz treść?</summary>
+        <div class="answer"><p>Informację o zamknięciu. Wynik z recv() (None / błąd / ramka Close) to jedyny sygnał, że klient zniknął — bez czekania na recv pętla pracowałaby wiecznie dla martwego połączenia.</p></div>
+      </details>
+      <details>
+        <summary>3. Twoja aplikacja tylko wypycha statusy do przeglądarki. Wybierz mechanizm i uzasadnij.</summary>
+        <div class="answer"><p>SSE: jedyny kierunek ruchu, więc dwustronność socketu jest płatna, a nie użyta. Dostajesz reconnect, ciasteczka i HTTP/2 gratis. Socket zostaw na moment, gdy klient zacznie realnie nadawać.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

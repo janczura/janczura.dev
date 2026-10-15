@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architektura aplikacji — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Architektura aplikacji
+    </nav>
+
+    <h1>Architektura aplikacji</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Crate domenowy, cechy usług, jeden typ błędu — reguły biznesowe z dala od frameworka.</p>
+
+    <h2>Crate domenowy</h2>
+    <p>
+      Serce architektury: crate <code>domain</code> z modelami, cechami usług i typem błędu,
+      który <strong>nie zależy</strong> od frameworka WWW, sterownika bazy ani runtime'u
+      async. Dzięki temu kompiluje się zarówno na natywny serwer, jak i do WebAssembly
+      dla przeglądarki. Strzałki zależności wskazują do wewnątrz: wszystko zna domenę,
+      domena nie zna niczego.
+    </p>
+    <ul>
+      <li><strong>Wspólny rdzeń</strong>: te same typy (Order, User) trafiają do binarki serwera i do bundla WASM — zmiana nazwy pola psuje obie strony w czasie kompilacji, nie w produkcji.</li>
+      <li>Pieniądze jako <code>price_cents: i64</code> — zmiennoprzecinkowe zaokrąglenia sumują się na wierszach zamówienia.</li>
+      <li>Filtry zapytań jako struktura (<code>BookFilter</code>) — sygnatura cechy zostaje stabilna przy dodawaniu kolejnych kryteriów.</li>
+      <li>Reguły cyklu życia (np. dozwolone przejścia statusów zamówienia) mieszkają w domenowej funkcji, nie w handlerze — oba backendy dostają je w gratisie.</li>
+    </ul>
+
+    <h2>Asynchroniczne cechy usług</h2>
+    <p>
+      Asynchi w cechach działają bezpośrednio, ale bez <code>async fn</code> w nagłówku —
+      trzeba napisać jawny zwracany <code>impl Future</code> z granicą <code>Send</code>,
+      bo futura musi móc przejść na inny wątek (Axum właśnie tego wymaga od handlerów).
+      W <code>impl</code> można już pisać zwykłe <code>async fn</code> — compiler zna
+      granicę z cechy.
+    </p>
+<pre><code><span class="kw">pub trait</span> <span class="typ">InventoryService</span>: <span class="typ">Send</span> + <span class="typ">Sync</span> + <span class="str">'static</span> {
+    <span class="kw">fn</span> <span class="fn">list_books</span>(&amp;<span class="kw">self</span>, filter: <span class="typ">BookFilter</span>)
+        -&gt; <span class="kw">impl</span> <span class="typ">Future</span>&lt;<span class="typ">Output</span> = <span class="typ">Result</span>&lt;<span class="typ">Vec</span>&lt;<span class="typ">Book</span>&gt;, <span class="typ">DomainError</span>&gt;&gt; + <span class="typ">Send</span>;
+    <span class="kw">fn</span> <span class="fn">find_book</span>(&amp;<span class="kw">self</span>, id: <span class="typ">Uuid</span>)
+        -&gt; <span class="kw">impl</span> <span class="typ">Future</span>&lt;<span class="typ">Output</span> = <span class="typ">Result</span>&lt;<span class="typ">Book</span>, <span class="typ">DomainError</span>&gt;&gt; + <span class="typ">Send</span>;
+}</code></pre>
+    <p>
+      Implementacje są podmienialne: in-memory <code>RwLock&lt;HashMap&gt;</code> na czas
+      developmentu, potem PostgreSQL — handler ani linijki wyżej się nie zmieniają.
+      Testy contra fałszywka w pamięci bez podstawiania bazy.
+    </p>
+
+    <h2>Jeden typ błędu na całą aplikację</h2>
+    <p>
+      Wszystkie metody zwracają ten sam <code>DomainError</code> (generowany przez
+      <code>thiserror</code> — czysto compile'owo, zero kosztu runtime). Warianty niosą
+      dane potrzebne do reakcji; bazy nie wyciekają do domeny, tylko siedzą w opakowanym
+      źródle. Nowy wariant = wymuszona obsługa u każdego wołającego — nic nie prześliźnie
+      się niezauważone.
+    </p>
+<pre><code>#[derive(<span class="typ">Debug</span>, thiserror::<span class="typ">Error</span>)]
+<span class="kw">pub enum</span> <span class="typ">DomainError</span> {
+    #[error(<span class="str">"book {0} was not found"</span>)]
+    <span class="fn">BookNotFound</span>(<span class="typ">Uuid</span>),
+    #[error(<span class="str">"only {available} copies remain"</span>)]
+    <span class="fn">InsufficientStock</span> { id: <span class="typ">Uuid</span>, available: <span class="typ">i32</span> },
+    #[error(<span class="str">"credentials rejected"</span>)]
+    <span class="fn">InvalidCredentials</span>,
+    #[error(<span class="str">"storage failure"</span>)]
+    <span class="fn">Storage</span>(#[source] <span class="typ">Box</span>&lt;<span class="kw">dyn</span> <span class="typ">std::error::Error</span> + <span class="typ">Send</span> + <span class="typ">Sync</span>&gt;),
+}</code></pre>
+    <p>
+      Warstwa WWW tłumaczy błędy na kody odpowiedzi w <em>jednym</em> miejscu (match na
+      wariancie), a błąd domenowy wraca znad bazy nietknięty przez całą drogę w górę.
+      Czystość ścieżki błędu jest taka sama jak ścieżki sukcesu.
+    </p>
+
+    <h2>Feature flags i kompilacja warunkowa</h2>
+    <p>
+      Współdzielony crate <code>app</code> musi wiedzieć, pod którą integrację się kompiluje.
+      Prefiks <code>dep:</code> włącza opcjonalną zależność; nazwa bez prefiksu — inną
+      feature własnego crate'u. Featuresy się komponują, nie gryzą.
+    </p>
+<pre><code><span class="cmt"># Cargo.toml crate'u app</span>
+[features]
+hydrate = [<span class="str">"leptos/hydrate"</span>]
+ssr = [<span class="str">"leptos/ssr"</span>, <span class="str">"dep:domain"</span>]
+backend-axum = [<span class="str">"ssr"</span>, <span class="str">"dep:leptos_axum"</span>]
+backend-actix = [<span class="str">"ssr"</span>, <span class="str">"dep:leptos_actix"</span>]
+
+<span class="cmt">// w kodzie:</span>
+#[<span class="kw">cfg</span>(feature = <span class="str">"backend-axum"</span>)]
+<span class="kw">pub mod</span> axum_integration;</code></pre>
+    <p>
+      Moduł wyłączony feature znika z builda całkowicie — bundl przeglądarki nie niesie
+      kodu serwera, a błąd w integracji Actix nie potrafi zepsuć builda Axum (compiler
+      w ogóle nie widzi tamtego modułu).
+    </p>
+
+    <h2>Observability od pierwszego dnia</h2>
+    <ul>
+      <li><code>tracing</code> rozdziela rejestrowanie od przetwarzania: kod wysyła ustrukturyzowane zdarzenia, subskrybent decyduje. Filtry z <code>RUST_LOG</code> bez przebudowy.</li>
+      <li>Format przez flagę: pretty lokalnie, JSON w produkcji — ten sam binarny plik, decyzja w konfiguracji.</li>
+      <li><code>#[instrument(skip(self))]</code> owija metodę w span (argumenty, czas, wynik); <code>fields(...)</code> rezerwuje pole wypełniane później; spagny zagnieżdżają się same — korelacja przez warstwy bez przekazywania identyfikatora.</li>
+      <li><code>%wartość</code> loguje przez Display, <code>?wartość</code> przez Debug.</li>
+      <li>Oczekiwane porażki na <code>warn</code>, nieoczekiwane na <code>error</code> — mieszanie obu rodzi zmęczenie alarmami i ginie prawdziwy incydent.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Domena to crate bez frameworka, bazy i runtime'u — kompiluje się wszędzie, a typy
+        współdzielone z frontendem psują się razem przy rozjechaniu. Cechy z jawnym
+        <code>impl Future + Send</code> opisują co serwis umie; implementacje są wymienialne.
+        Jeden <code>DomainError</code> + mapowanie na HTTP w jednym miejscu. Featuresy
+        z <code>dep:</code> izolują integracje, tracing towarzyszy od startu.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Dlaczego dziedziczenie implementacji przez derive cechy SQL nie może trafić na typ domenowy?</summary>
+        <div class="answer"><p>Domena kompiluje się też do WASM, gdzie sterownik PostgreSQL nie ma sensu — zależność od sterownika zepsułaby przenośność. Rozwiązanie: osobny crate warstwy trwałej z typem lustrzanym i wyczerpującymi konwersjami.</p></div>
+      </details>
+      <details>
+        <summary>2. Co zyskujesz, a co tracisz płacąc jawne <code>impl Future + Send</code> w cesze?</summary>
+        <div class="answer"><p>Tracisz zwięzłość (<code>async fn</code> byłby czystszy), zyskujesz granicę <code>Send</code> wymaganą przez frameworki przenoszące futury między wątkami — bez niej wołanie generyczne nie dowie kompilatorowi, że futura może zmienić wątek.</p></div>
+      </details>
+      <details>
+        <summary>3. Kto decyduje, że błąd "duplikat e-maila" to 409, a nie 500 — i gdzie?</summary>
+        <div class="answer"><p>Warstwa trwałej odczytuje kod sterownika i podnosi go do sensownego wariantu domenowego; warstwa WWW mapuje wariant na status. Handler zna tylko domenę — bazy nie widzi, więc nie musi nic tłumaczyć.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

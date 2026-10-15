@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axum — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Axum
+    </nav>
+
+    <h1>Serwer WWW: Axum</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Routing, ekstraktory, stan aplikacji, warstwy — handler tylko tłumaczy HTTP na domenę.</p>
+
+    <h2>Routing i start serwera</h2>
+    <p>
+      Axum 0.8: parametry ścieżki w <em>klamerkach</em> — <code>/books/{id}</code>,
+      wildcard <code>/assets/{*path}</code>. Stara składnia <code>:id</code> panikuje
+      przy starcie (hałaśliwie i wcześnie). Serwer startuje przez własny listener Tokio —
+      stare <code>axum::Server::bind</code> zniknęło, a bezpośredni kontrol nad gniazdem
+      przydaje się przy TLS i w kontenerze.
+    </p>
+<pre><code><span class="kw">use</span> axum::routing::{get, post};
+<span class="kw">use</span> tokio::net::<span class="typ">TcpListener</span>;
+
+<span class="kw">let</span> app = <span class="fn">Router</span>::<span class="fn">new</span>()
+    .<span class="fn">route</span>(<span class="str">"/api/books"</span>, <span class="fn">get</span>(list_books))
+    .<span class="fn">route</span>(<span class="str">"/api/books/{id}"</span>, <span class="fn">get</span>(find_book))
+    .<span class="fn">route</span>(<span class="str">"/api/orders"</span>, <span class="fn">post</span>(place_order))
+    .<span class="fn">with_state</span>(state);
+
+<span class="kw">let</span> listener = <span class="typ">TcpListener</span>::<span class="fn">bind</span>(<span class="str">"0.0.0.0:3000"</span>).<span class="kw">await</span>?;
+axum::<span class="fn">serve</span>(listener, app).<span class="kw">await</span>?;</code></pre>
+    <p>
+      <code>#[tokio::main]</code> rozkręca runtime work-stealing (worker na rdzeń, wielowątkowy):
+      handler czekający na bazę oddaje wątek innym żądaniom. <code>Router&lt;AppState&gt;</code>
+      to router <em>jeszcze bez stanu</em> — typ pilnuje, żebyś nie serwował go przez pomyłką
+      przed <code>with_state</code>.
+    </p>
+
+    <h2>Stan aplikacji</h2>
+    <p>
+      Jedna klonowalna struktura z serwisami za <code>Arc</code> — Klon stanu to kopiowanie
+      wskaźnika, nie głęboka duplikacja. <code>FromRef</code> pozwala węższemu konsumentowi
+      (np. integracji Leptos) wyciągnąć swoją część stanu, gdy handler chce całości:
+    </p>
+<pre><code>#[derive(<span class="typ">Clone</span>)]
+<span class="kw">pub struct</span> <span class="typ">AppState</span> {
+    <span class="kw">pub</span> leptos_options: <span class="typ">LeptosOptions</span>,
+    <span class="kw">pub</span> inventory: <span class="typ">Arc</span>&lt;<span class="typ">InMemoryInventory</span>&gt;,
+    <span class="kw">pub</span> jwt_secret: <span class="typ">Arc</span>&lt;<span class="typ">String</span>&gt;,
+}
+
+<span class="kw">impl</span> <span class="typ">FromRef</span>&lt;<span class="typ">AppState</span>&gt; <span class="kw">for</span> <span class="typ">LeptosOptions</span> {
+    <span class="kw">fn</span> <span class="fn">from_ref</span>(state: &amp;<span class="typ">AppState</span>) -&gt; <span class="kw">Self</span> { state.leptos_options.<span class="fn">clone</span>() }
+}</code></pre>
+
+    <h2>Handler to tylko tłumacz</h2>
+    <p>
+      Handler wyciąga, deleguje, opakowuje — zero logiki biznesowej. Ekstraktory
+      (<code>State</code>, <code>Query</code>, <code>Path</code>, <code>Json</code>)
+      robią parsowanie i <em>walidację</em>: <code>Path::&lt;Uuid&gt;</code> sam odeśle 400
+      gdy segment nie jest UUID-em, domena dostaje zawsze wartości poprawne.
+    </p>
+<pre><code><span class="kw">pub async fn</span> <span class="fn">list_books</span>(
+    <span class="fn">State</span>(state): <span class="fn">State</span>&lt;<span class="typ">AppState</span>&gt;,
+    <span class="fn">Query</span>(filter): <span class="fn">Query</span>&lt;<span class="typ">BookFilter</span>&gt;,
+) -&gt; <span class="typ">Result</span>&lt;<span class="fn">Json</span>&lt;<span class="typ">Vec</span>&lt;<span class="typ">Book</span>&gt;&gt;, <span class="typ">ApiError</span>&gt; {
+    <span class="kw">let</span> books = state.inventory.<span class="fn">list_books</span>(filter).<span class="kw">await</span>?;
+    <span class="fn">Ok</span>(<span class="fn">Json</span>(books))
+}
+
+<span class="cmt">// 201 Created: status jako część zwracanej krotki</span>
+<span class="kw">pub async fn</span> <span class="fn">place_order</span>(
+    <span class="fn">State</span>(state): <span class="fn">State</span>&lt;<span class="typ">AppState</span>&gt;,
+    <span class="fn">Extension</span>(claims): <span class="fn">Extension</span>&lt;<span class="typ">Claims</span>&gt;,   <span class="cmt">// z middleware</span>
+    <span class="fn">Json</span>(body): <span class="fn">Json</span>&lt;<span class="typ">PlaceOrderRequest</span>&gt;,    <span class="cmt">// ciało KONIECZY listę parametrów</span>
+) -&gt; <span class="typ">Result</span>&lt;(<span class="typ">StatusCode</span>, <span class="fn">Json</span>&lt;<span class="typ">Order</span>&gt;), <span class="typ">ApiError</span>&gt; {
+    <span class="kw">let</span> order = state.orders.<span class="fn">place_order</span>(claims.sub, body.lines).<span class="kw">await</span>?;
+    <span class="fn">Ok</span>((<span class="typ">StatusCode</span>::<span class="fn">CREATED</span>, <span class="fn">Json</span>(order)))
+}</code></pre>
+    <p>
+      Ekstraktor zjadający ciało (<code>Json</code>) musi być <strong>ostatni</strong> —
+      reszta tylko zagląda do requesta przed nim. Reguła egzekwowana na etapie kompilacji
+      (dwa różne cechy: <code>FromRequestParts</code> vs <code>FromRequest</code>).
+    </p>
+
+    <h2>Błędy: jedno mapowanie na wszystko</h2>
+    <p>
+      Typ opakowujący <code>DomainError</code> implementuje <code>IntoResponse</code>;
+      operator <code>?</code> w handlerach konwertuje sam (przez <code>From</code>).
+      Żaden handler nie widzi kodu statusu — zmiana mapowania dociera do wszystkich
+      endpointów naraz.
+    </p>
+<pre><code><span class="kw">impl</span> <span class="typ">IntoResponse</span> <span class="kw">for</span> <span class="typ">ApiError</span> {
+    <span class="kw">fn</span> <span class="fn">into_response</span>(<span class="kw">self</span>) -&gt; <span class="typ">Response</span> {
+        <span class="kw">let</span> (status, msg) = <span class="kw">match</span> &amp;<span class="kw">self</span>.0 {
+            <span class="typ">DomainError</span>::<span class="fn">BookNotFound</span>(_)          =&gt; (<span class="typ">StatusCode</span>::<span class="fn">NOT_FOUND</span>,  <span class="kw">self</span>.0.<span class="fn">to_string</span>()),
+            <span class="typ">DomainError</span>::<span class="fn">InsufficientStock</span>{..}    =&gt; (<span class="typ">StatusCode</span>::<span class="fn">CONFLICT</span>,    <span class="kw">self</span>.0.<span class="fn">to_string</span>()),
+            <span class="typ">DomainError</span>::<span class="fn">InvalidCredentials</span>       =&gt; (<span class="typ">StatusCode</span>::<span class="fn">UNAUTHORIZED</span>, <span class="str">"authentication failed"</span>),
+            <span class="typ">DomainError</span>::<span class="fn">Storage</span>(_)               =&gt; (<span class="typ">StatusCode</span>::<span class="fn">INTERNAL_SERVER_ERROR</span>, <span class="str">"internal error"</span>),
+            <span class="cmt">// ...</span>
+        };
+        (status, <span class="fn">Json</span>(<span class="mac">json!</span>({ <span class="str">"error"</span>: msg }))).<span class="fn">into_response</span>()
+    }
+}</code></pre>
+    <p>
+      Błąd storage oddaje klientowi generyczne zdanie, nie treść spod kaptura — komunikat
+      bazy potrafi zdradzić nazwy tabel i kawałki zapytania. Pełną przyczynę zapisuje
+      log; klient dostaje tylko to, co może naprawić.
+    </p>
+
+    <h2>Wywołania wychodzące</h2>
+    <ul>
+      <li><code>reqwest::Client</code> budujemy <strong>raz</strong> i trzymamy w stanie — posiada pulę połączeń; nowy klient na żądanie wyrzuca pulę i dokłada handshake TLS do każdego wywołania.</li>
+      <li>Timeout na kliencie (nie na pojedynczych wywołaniach) — wychodzące wołanie bez limitu wisi dopóki pozwala OS, a kilka takich wyczerpuje pulę i kładzie serwis.</li>
+      <li>Błahy brak danych (okładka z OpenLibrary) → zwracamy <code>Option</code>, nie <code>Result</code>: niedostępny zewnętrzny serwis nie może zepsuć strony książki. Ostrzeżenie idzie do loga, widok renderuje się dalej.</li>
+    </ul>
+
+    <h2>Middleware: JWT przed handlerem</h2>
+    <p>
+      Middleware w Axum to zwykła async funkcja <code>(State, Request, Next)</code>;
+      zweryfikowane roszczenia wstrzykuje do extensions requesta, skąd bierze je
+      <code>Extension&lt;Claims&gt;</code>. Ochrona na routerze, nie w handlerze —
+      nowy endpoint nie prześlizgnie się bez zabezpieczenia.
+    </p>
+<pre><code><span class="kw">let</span> protected = <span class="fn">Router</span>::<span class="fn">new</span>()
+    .<span class="fn">route</span>(<span class="str">"/api/orders"</span>, <span class="fn">post</span>(place_order))
+    .<span class="fn">route_layer</span>(middleware::<span class="fn">from_fn_with_state</span>(state, require_auth));</code></pre>
+    <ul>
+      <li><code>route_layer</code> chroni tylko zarejestrowane trasy; zwykły <code>layer</code> owinąłby też fallback i oddawał 401 zamiast 404 dla nieistniejących ścieżek.</li>
+      <li>Login zostaje poza chronioną grupą — klient nie ma jeszcze tokenu.</li>
+      <li><code>Validation::default()</code> sam sprawdza przedawnienie tokenu.</li>
+      <li>Loguj <em>ścieżkę</em>, nie pełne URI — query string bywa pełen e-maili i przypadkowych tokenów.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Axum = routing w klamerkach + <code>serve(listener, router)</code> + state z
+        <code>Arc</code> i <code>FromRef</code>. Handery cienkie: ekstraktory walidują,
+        ciało ostatnie, status w krotce. Błędy mapowane w jednym <code>IntoResponse</code>.
+        Client HTTP jeden na proces z timeoutem. Autoryzacja w <code>route_layer</code>,
+        roszczenia przez extensions.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Przeniosłeś <code>Json</code> przed <code>Path</code> — co mówi kompilator i dlaczego?</summary>
+        <div class="answer"><p>Błąd wspominający FromRequestParts: Json zjada ciało requesta, a ekstraktory po nim musiałyby czytać „po trupie". Reguła „ciało na końcu” jest wymuszana typami, więc pomyłka wychodzi przy budowie, nie w runtime'cie.</p></div>
+      </details>
+      <details>
+        <summary>2. Czemu stanu nie da się przez pomyłkę serwować bez stanu?</summary>
+        <div class="answer"><p>Router&lt;AppState&gt; to typ informujący o braku stanu; serwowanie wymaga Router&lt;()&gt; po with_state. Handler oczekujący innego stanu niż dostarczony nie skompiluje się — gwarancja statyczna zamiast runtime'owej niespodzianki.</p></div>
+      </details>
+      <details>
+        <summary>3. Klient z błędnym id w ścieżce dociera do Twojego handlera?</summary>
+        <div class="answer"><p>Nie. Path&lt;Uuid&gt; nie przeparsuje segmentu, Axum sam odpowie 400 i ciało handlera nigdy nie ruszy — stąd metoda domenowa dostaje wyłącznie wartości poprawne.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

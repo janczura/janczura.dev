@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="img/icon change">
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="rust notes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -328,6 +328,7 @@
     <MESSAGE value="w3champions new icon" />
     <MESSAGE value="projects update" />
     <MESSAGE value="img/icon change" />
-    <option name="LAST_COMMIT_MESSAGE" value="img/icon change" />
+    <MESSAGE value="rust notes" />
+    <option name="LAST_COMMIT_MESSAGE" value="rust notes" />
   </component>
 </project>

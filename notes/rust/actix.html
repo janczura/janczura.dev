@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actix Web — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Actix Web
+    </nav>
+
+    <h1>Serwer WWW: Actix Web</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Runtime per worker, guardy, ResponseError — drugi framework na tej samej domenie.</p>
+
+    <h2>Model wykonania: arbiter na worker</h2>
+    <p>
+      Tokio (Axum) ma jedną wielowątkową pulę work-stealing i taski migrują między wątkami.
+      Actix uruchamia kilka niezależnych jednowątkowych runtime'ów (arbiter) — po jednym
+      na workera — a połączenie przyjęte przez workera żyje na nim do końca. Futura
+      nigdy nie zmienia wątku, więc Actix <strong>nie wymaga granicy <code>Send</code></strong>
+      od handlerów.
+    </p>
+    <ul>
+      <li>Bezcenne przy bibliotekach <code>!Send</code> (bufory wewnętrzne, parsery): pod Axum Mutex albo konstruowanie od nowa przy każdym żądaniu; pod Actix — jedna instancja per worker, bez blokady.</li>
+      <li>Cechy domenowe z <code>Send</code> Actix akceptuje bez problemu (surowszą granicę łyka bezboleśnie).</li>
+      <li>Liczbę workerów ustawia <code>HttpServer::workers()</code>; w kontenerze z limitem CPU warto jawnie.</li>
+    </ul>
+
+    <h2>Stan: fabryka liczy się per worker</h2>
+    <p>
+      Domknięcie fabryki <code>App</code> wykonuje się <strong>raz na workera</strong> —
+      najczęstszy defekt w Actix to stan zbudowany w środku (pula połączeń mnoży się
+      przez liczbę workerów, licznik sumuje tylko część ruchu). Stan dzielony buduje się
+      <em>przed</em> fabryką i klonuje przez <code>web::Data</code> (w środku <code>Arc</code>):
+    </p>
+<pre><code><span class="kw">let</span> state = <span class="fn">web::Data::new</span>(<span class="typ">AppState::new</span>().<span class="kw">await</span>); <span class="cmt">// jedno miejsce, shared</span>
+
+<span class="typ">HttpServer</span>::<span class="fn">new</span>(<span class="kw">move</span> || {   <span class="cmt">// wywołanie per worker!</span>
+    <span class="typ">App</span>::<span class="fn">new</span>()
+        .<span class="fn">app_data</span>(state.<span class="fn">clone</span>())                                <span class="cmt">// ten sam Arc</span>
+        .<span class="fn">app_data</span>(<span class="typ">PerWorkerCache</span> { recent: <span class="typ">RefCell::new</span>(<span class="typ">Vec::new</span>()) }) <span class="cmt">// kopia na workera</span>
+        .<span class="fn">wrap</span>(<span class="typ">Logger::default</span>())
+        .<span class="fn">configure</span>(register_api)
+})
+.<span class="fn">bind</span>((<span class="str">"0.0.0.0"</span>, <span class="num">3000</span>))?
+.<span class="fn">run</span>().<span class="kw">await</span></code></pre>
+    <p>
+      Ekstraktory Actix (<code>web::Data</code>, <code>web::Query</code>,
+      <code>web::Path</code>, <code>web::Json</code>) rozwiązuje jedna cecha
+      <code>FromRequest</code> — kolejność parametrów jest dowolna (nawet ciało w środku),
+      w przeciwieństwie do Axum.
+    </p>
+
+    <h2>Routing: scope, resource, route</h2>
+    <p>
+      Trzy zagnieżdżone poziomy: <strong>scope</strong> (prefiks + własne middleware),
+      <strong>resource</strong> (wzorzec ścieżki, wiele metod), <strong>route</strong>
+      (metoda + handler). Nazwane zasoby dają generowanie URL-i wstecz — linki nie są
+      duplikowane, więc zmiana ścieżki nie zostawia martwych odwołań.
+    </p>
+<pre><code><span class="kw">pub fn</span> <span class="fn">register_api</span>(cfg: &amp;<span class="kw">mut</span> <span class="typ">ServiceConfig</span>) {
+    cfg.<span class="fn">service</span>(
+        <span class="fn">web::scope</span>(<span class="str">"/api"</span>)
+            .<span class="fn">service</span>(<span class="fn">web::resource</span>(<span class="str">"/books/{id}"</span>)
+                .<span class="fn">name</span>(<span class="str">"book_detail"</span>)
+                .<span class="fn">route</span>(<span class="fn">web::get().to</span>(find_book))),
+    );
+}
+
+<span class="cmt">// URL generowany z definicji, nie z stringa:</span>
+req.<span class="fn">url_for</span>(<span class="str">"book_detail"</span>, [id.<span class="fn">to_string</span>()])</code></pre>
+    <p>
+      <code>ServiceConfig</code> jako osobna funkcja rejestracji skraca fabrykę i pozwala
+      testować routing niezależnie.
+    </p>
+
+    <h2>Guardy: decyzja przed handlerem</h2>
+    <p>
+      Guard odrzuca lub przyjmuje request na poziomie tabeli tras (nagłówek, host,
+      parametr), łączony przez <code>guard::Any</code> / <code>guard::All</code>. Dwa
+      zasoby o tej samej ścieżce obsługują różne klienty — negocjacja treści nie siedzi
+      w handlerze:
+    </p>
+<pre><code><span class="fn">web::resource</span>(<span class="str">"/books"</span>)
+    .<span class="fn">guard</span>(guard::<span class="fn">Header</span>(<span class="str">"accept"</span>, <span class="str">"application/json"</span>))
+    .<span class="fn">route</span>(<span class="fn">web::get().to</span>(list_books)),          <span class="cmt">// API</span>
+<span class="fn">web::resource</span>(<span class="str">"/books"</span>)
+    .<span class="fn">route</span>(<span class="fn">web::get().to</span>(render_book_list_html)), <span class="cmt">// przeglądarka — trafi tu bez guarda</span></code></pre>
+    <p>
+      Własny guard to jedna metoda — wersjonowanie po nagłówku
+      <code>x-api-version: 2</code> już współistnieje pod jedną ścieżką, dopóki migracja
+      nie dobiegnie końca.
+    </p>
+
+    <h2>Błędy: ResponseError zamiast IntoResponse</h2>
+    <p>
+      Actix rozdziela kod statusu od ciała: cecha <code>ResponseError</code>
+      (wymaga <code>Display + Debug</code>) ma <code>status_code()</code> i
+      <code>error_response()</code>. Status można odpytać bez budowania odpowiedzi;
+      domyślna implementacja ciała bywa wystarczająca.
+    </p>
+<pre><code>#[derive(<span class="typ">Debug</span>)]
+<span class="kw">pub struct</span> <span class="typ">ApiError</span>(<span class="kw">pub</span> <span class="typ">DomainError</span>);
+
+<span class="kw">impl</span> <span class="typ">ResponseError</span> <span class="kw">for</span> <span class="typ">ApiError</span> {
+    <span class="kw">fn</span> <span class="fn">status_code</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">StatusCode</span> {
+        <span class="kw">match</span> &amp;<span class="kw">self</span>.0 { <span class="cmt">/* te same warianty co w Axum */</span> }
+    }
+    <span class="kw">fn</span> <span class="fn">error_response</span>(&amp;<span class="kw">self</span>) -&gt; <span class="typ">HttpResponse</span> {
+        <span class="typ">HttpResponse::build</span>(<span class="kw">self</span>.<span class="fn">status_code</span>()).<span class="fn">json</span>(<span class="mac">json!</span>({ <span class="str">"error"</span>: msg }))
+    }
+}</code></pre>
+    <p>
+      Praktyczna różnica: wiele crate'ów ekosystemu implementuje <code>ResponseError</code>
+      samodzielnie, więc cudzy błąd często konwertuje się bez naszego opakowania;
+      uniwersalny <code>actix_web::Error</code> pozwala miksować rodziny błędów
+      w jednej sygnaturze. Reguła osieroconej implementacji zostaje w obu frameworkach —
+      własnego wrapperka i tak trzeba napisać.
+    </p>
+
+    <h2>Middleware i porównanie frameworków</h2>
+    <ul>
+      <li><code>from_fn(require_auth)</code> — middleware z funkcji; stan przez <code>req.app_data()</code> (ekstraktory jeszcze nie działają). <code>scope(...).wrap(...)</code> chroni całą gałąź drzewa tras, a fallback poza scope dostaje normalne 404.</li>
+      <li>Stan w środku? Para cech <code>Transform</code> (konfiguracja raz per worker) + <code>Service</code> (per request) — np. licznik żądań bez blokady, bo każdy worker ma własną kopię.</li>
+      <li>Gotowa paczka: <code>Compress</code>, <code>NormalizePath</code>, <code>DefaultHeaders</code>, <code>Logger</code> — wszystko jednym <code>wrap</code>.</li>
+    </ul>
+    <p>
+      Wybór: <strong>Axum</strong>, gdy żyjesz w ekosystemie tower (middleware od
+      load-sheddingu po retry, wspólne z gRPC) i chcesz jednolity stan;
+      <strong>Actix</strong>, gdy potrzebujesz guardów, generowania URL-i lub trzymasz
+      zależności <code>!Send</code>. Domena nie zależy od wyboru — cały ten rozdział
+      to tylko druga translacja HTTP na te same cechy.
+    </p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Actix = arbiter per worker, więc bez <code>Send</code> i z instancjami per worker
+        (<code>RefCell</code> dozwolony). Fabryka <code>App</code> liczy się per worker —
+        dzielony stan tylko sprzed fabryki przez <code>web::Data</code>. Routing
+        scope/resource/route + nazwy + guardy. Błędy przez <code>ResponseError</code>
+        ze statusem oddzielonym od ciała.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Zbudowałeś <code>PgPool</code> wewnątrz domknięcia fabryki Actix. Ile pul masz przy 8 workerach i czego to dowód?</summary>
+        <div class="answer"><p>Osiem — fabryka wykonuje się per worker, więc pool otwiera się osiem razy, a licznik „żądań obsłużonych" widzi tylko 1/8 ruchu. Compiler obu pomyłek nie widzi; dzielony stan buduje się przed fabryką.</p></div>
+      </details>
+      <details>
+        <summary>2. Dlaczego handler Actix może trzymać <code>RefCell</code>, a handler Axum nie?</summary>
+        <div class="answer"><p>Bo futura Actix nigdy nie zmienia wątku (arbiter jednowątkowy) — <code>RefCell</code> (!Send) jest bezpieczny. W Tokio task może migrować, więc compiler zażąda Send, a RefCell go nie spełnia.</p></div>
+      </details>
+      <details>
+        <summary>3. Jak zmiana ścieżki <code>/books/{id}</code> nie zostawia martwych linków w szablonach?</summary>
+        <div class="answer"><p>Zasobowi nadano nazwę, a linki generuje <code>url_for("book_detail", [id])</code> — jedna definicja, wszystkie odwołania wywodzą się z niej. Przy Axum trzeba by zaktualizować każdy string z osobna.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

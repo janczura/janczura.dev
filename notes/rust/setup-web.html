@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projekt WWW — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Projekt WWW
+    </nav>
+
+    <h1>Projekt aplikacji WWW</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Wersja a edycja, pinowanie narzędzi, workspace i usługodawcy w Dockerze — fundament powtarzalnego buildu.</p>
+
+    <h2>Wersja a edycja</h2>
+    <p>
+      Dwie rzeczy, które się myli: <strong>wersja</strong> (kompilator — nowe wydanie co 6 tygodni,
+      wstecznie zgodne) i <strong>edycja</strong> (dialekt języka deklarowany per crate w
+      <code>Cargo.toml</code> — pozwala języku łamać zgodność bez dzielenia ekosystemu).
+      Crate na jednej edycji linkuje z crate'em na drugiej bez tarcia, więc edycja nigdy nie
+      ogranicza doboru zależności. Edycja 2024 (stabilna od 1.85) m.in.: ostrzejsze czasy życia
+      wyrażeń końcowych, <code>#[unsafe(no_mangle)]</code>, <code>std::env::set_var</code> jako
+      <code>unsafe</code>, oraz <code>impl Trait</code> w zwracanej wartości przechwytujący
+      domyślnie wszystkie lifetime'y w zasięgu.
+    </p>
+
+    <h2>Pinowanie: rust-toolchain.toml</h2>
+    <p>
+      Zamiast „najnowszego Rusta" — plik przy korzeniu projektu, który rustup czyta
+      automatycznie. Klonowanie repozytorium daje wtedy identyczny kompilator, linter i cele
+      kompilacji bez żadnej ręcznej konfiguracji. To najtańsza eliminacja błędów „u mnie działa".
+    </p>
+<pre><code><span class="cmt"># rust-toolchain.toml — rustup sam pobierze to, co tu wpisano</span>
+[toolchain]
+channel = <span class="str">"1.85.0"</span>
+components = [<span class="str">"rustfmt"</span>, <span class="str">"clippy"</span>, <span class="str">"rust-analyzer"</span>]
+targets = [<span class="str">"wasm32-unknown-unknown"</span>]  <span class="cmt">// cel dla przeglądarki</span></code></pre>
+    <ul>
+      <li><code>wasm32-unknown-unknown</code> — 32-bitowy WebAssembly bez vendor OS; potrzebny, gdy frontend kompiluje się do WASM.</li>
+      <li><code>rustup target list --installed</code> — kontrolka, co faktycznie jest zainstalowane.</li>
+      <li>Prezentery binarek: <code>cargo-binstall</code> (ściąga gotowe binarki zamiast godzinnej kompilacji), przez niego <code>cargo-leptos</code>, <code>cargo-nextest</code>, <code>sqlx-cli</code>, <code>cargo-audit</code>, <code>cargo-deny</code>.</li>
+    </ul>
+
+    <h2>Manifest workspace</h2>
+    <p>
+      Wersje zależności deklaruje się <em>raz</em> w sekcji workspace, a członkowie je
+      dziedziczą — dwa crate'y nigdy nie różnią się o wersję wspólnego package'u.
+      Kluczowa para pól: <code>rust-version</code> + <code>resolver = "3"</code> (włączany
+      przez edycję 2024) — Cargo nie wybierze zależności wymagającej nowszego kompilatora niż nasz,
+      tylko cofnie się do kompatybilnego wydania. Projekt buduje się dalej, gdy ekosystem
+      podnosi wymagania.
+    </p>
+<pre><code>[workspace]
+members = [<span class="str">"app"</span>, <span class="str">"domain"</span>, <span class="str">"frontend"</span>, <span class="str">"server-axum"</span>]
+resolver = <span class="str">"3"</span>
+
+[workspace.package]
+edition = <span class="str">"2024"</span>
+rust-version = <span class="str">"1.85"</span>
+
+[workspace.dependencies]
+axum = <span class="str">"0.8"</span>
+tokio = { version = <span class="str">"1"</span>, features = [<span class="str">"full"</span>] }
+sqlx = { version = <span class="str">"0.8"</span>, features = [<span class="str">"runtime-tokio-rustls"</span>, <span class="str">"postgres"</span>, <span class="str">"macros"</span>] }
+
+<span class="cmt">// w crate'cie członkowskim:</span>
+[dependencies]
+axum = { workspace = <span class="kw">true</span> }</code></pre>
+    <ul>
+      <li><code>Cargo.lock</code> <strong>commitujemy</strong> — zamienia „cokolwiek Cargo dziś dobierze" w „dokładnie te wersje". Dokładnie tak samo jak pin narzędzia, tylko dla zależności.</li>
+      <li>Nazwy binarek i paczek rozwiązują się po nazwie package'u, nie po katalogu — zmiana nazwy crate'u wymaga aktualizacji wszystkich odwołań.</li>
+    </ul>
+
+    <h2>Usługodawcy w kontenerach</h2>
+    <p>
+      PostgreSQL i Redis startują przez <code>docker compose up -d</code> — wersja obrazu pinuje
+      baza tak samo mocno, jak <code>rust-toolchain.toml</code> pinuje kompilator. Aplikacja czyta
+      adresy ze zmiennych środowiska (<code>.env</code>: <code>DATABASE_URL</code>,
+      <code>REDIS_URL</code>, <code>RUST_LOG</code>), nigdy z zaszytych stringów.
+      Wolumeny nazwane przeżywają restarty; <code>docker compose down -v</code> czysci dane
+      w sekundy.
+    </p>
+
+    <h2>Bramka jakości</h2>
+    <p>
+      Ten sam zestaw komend lokalnie (jako taski edytora) i w CI — dzięki temu błędy
+      wychodzą przed pushem, a nie po nim:
+    </p>
+<pre><code>cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo nextest run</code></pre>
+    <p>
+      W edytorze warto ustawić <code>check.command = clippy</code> (linter na bieżąco, nie
+      tylko <code>cargo check</code>) oraz <code>allFeatures = true</code>, gdy kod bywa
+      strzeżony feature flags — inaczej edytor analizuje tylko włączoną gałąź.
+    </p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Pinujemy wszystko, co się da: kompilator (rust-toolchain.toml), zależności
+        (commitnięty Cargo.lock + resolver 3 z rust-version), wersje baz (obrazy Dockera).
+        Edycja to dialekt, wersja to kompilator — i jedno, i drugie zapisane w repo.
+        Narzędzia instalowane przez cargo-binstall, bramka fmt/clippy/nextest jednakowa
+        lokalnie i w CI.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Czy crate na edycji 2021 może zależeć od crate'u na edycji 2024?</summary>
+        <div class="answer"><p>Tak. Edycja to sprawa wewnętrzna danego crate'u (wpis w jego Cargo.toml); linkowanie między edycjami działa bez tarcia. Wybór edycji nie ogranicza listy zależności.</p></div>
+      </details>
+      <details>
+        <summary>2. Co robi combination <code>rust-version</code> + <code>resolver = "3"</code>, której nie ma resolver 2?</summary>
+        <div class="answer"><p>Szuka wersji zależności kompatybilnych z zadeklarowanym minimalnym kompilatorem. Jeśli nowy release package'u podnosi wymagania ponad nasz kompilator, Cargo wybierze starszy, działający release — zamiast zbudować projekt, który się nie kompiluje.</p></div>
+      </details>
+      <details>
+        <summary>3. Dlaczego brak commitniętego <code>Cargo.lock</code> to problem w aplikacji (nie w bibliotece)?</summary>
+        <div class="answer"><p>Aplikacja ma jedno drzewo zależności i jeden artefakt — bez locka każdy build (i każdy kontener) może dostać inne wersje przejściowe i inne zachowanie. Biblioteka odwrotnie: lock ignorują jej konsumenci, tam liczy się zakres z manifestu.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baza danych — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Baza danych
+    </nav>
+
+    <h1>Baza danych: SQLx i PostgreSQL</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Migracje, pool, zapytania sprawdzane przy kompilacji, transakcje i Argon2.</p>
+
+    <h2>Migracje odwracalne</h2>
+    <p>
+      <code>sqlx migrate add -r nazwa</code> tworzy parę plików: w górę i w dół.
+      Pół „w dół" uzupełniamy odwracając kolejność operacji (najpierw znika to, co
+      zależne). Migracja nieodwracalna cicho odbiera jedyną bezpieczną drogę powrotu
+      przy wpadce na produkcji.
+    </p>
+    <ul>
+      <li>Reguły w schemacie przeżywają każdy refactor wyżej: <code>CHECK (stock &gt;= 0)</code> i <code>UNIQUE</code> powstrzymają nawet wadliwe zapytanie.</li>
+      <li><code>sqlx::migrate!()</code> wkompilowuje pliki migracji w binarkę — kontener jedzie z własną historią schematu, bez plików obok. Migrator bierze blokadę doradczą, więc kilka replik startujących naraz nie wyściga się.</li>
+    </ul>
+
+    <h2>Zapytania sprawdzane przy kompilacji</h2>
+    <p>
+      Makra <code>sqlx::query!</code> / <code>query_as!</code> / <code>query_scalar!</code>
+      łączą się z żywą bazą <em>w trakcie budowania</em> i weryfikują SQL wobec realnego
+      schematu: literówka w kolumnie, zły typ albo zła liczba parametrów to błąd kompilacji,
+      nie niespodzianka dla odwiedzającego. Budowa po zmianie schematu bez migracji
+      failuje — i słusznie, to mechanizm działa, nie usterka.
+    </p>
+    <p>
+      Build bez bazy (CI, kontener): <code>cargo sqlx prepare --workspace</code> zapisuje
+      metadane do katalogu <code>.sqlx</code>, który commitujemy; budowanie
+      z <code>SQLX_OFFLINE=true</code> sprawdza wobec cache'u. Nawyk: zmieniłeś zapytanie
+      — regeneruj metadane, inaczej dziwny błąd budowy.
+    </p>
+<pre><code><span class="kw">let</span> books = <span class="mac">sqlx::query_as!</span>(
+    <span class="typ">Book</span>,
+    <span class="str">r#"
+    SELECT id, isbn, title FROM books
+    WHERE ($1::TEXT IS NULL OR author = $1)        <span class="cmt">// opcjonalny filtr: NULL = „dowolny"</span>
+      AND (NOT $2::BOOLEAN OR stock &gt; 0)
+    ORDER BY title LIMIT $3 OFFSET $4
+    "#</span>,
+    filter.author, filter.in_stock_only,
+    filter.limit.<span class="fn">clamp</span>(<span class="num">1</span>, <span class="num">100</span>), filter.offset.<span class="fn">max</span>(<span class="num">0</span>),
+).<span class="fn">fetch_all</span>(&amp;<span class="kw">self</span>.pool).<span class="kw">await</span>.<span class="fn">map_err</span>(storage)?;</code></pre>
+    <ul>
+      <li>One prepared statement na wszystkie kombinacje filtrów, plan wykonania w bazie się reuse'uje; parametr wiązany nigdy nie jest interpretowany jako SQL (brak injection).</li>
+      <li><code>clamp</code> na limicie — klient prosi o cały katalog w jednej odpowiedzi i dostaje sufit; format walidują ekstraktory, wielkość tu.</li>
+    </ul>
+
+    <h2>Pool: granice ważniejsze niż rozmiar</h2>
+<pre><code><span class="typ">PgPoolOptions</span>::<span class="fn">new</span>()
+    .<span class="fn">max_connections</span>(<span class="num">20</span>)
+    .<span class="fn">acquire_timeout</span>(<span class="typ">Duration::from_secs</span>(<span class="num">5</span>))  <span class="cmt">// kluczowe!</span>
+    .<span class="fn">idle_timeout</span>(<span class="typ">Duration::from_secs</span>(<span class="num">600</span>))
+    .<span class="fn">connect</span>(database_url).<span class="kw">await</span>?</code></pre>
+    <p>
+      Bez <code>acquire_timeout</code> żądanie przy wyczerpanej puli czeka w nieskończoność
+      i kolejka rośnie, aż aplikacja padnie wszystkim naraz; limit zamienia to w szybki
+      błąd, który mapowanie błędów już obsługuje. „Więcej" nie znaczy „lepiej": każde
+      połączenie to proces backendowy w PostgreSQL — przegrany pool przenosi kolejkę
+      z aplikacji do serwera. Klony <code>PgPool</code> są darmowe (wskaźnik do wspólnego
+      zestawu) — wiele serwisów, jedna pula.
+    </p>
+
+    <h2>Transakcje i wyścigi</h2>
+    <p>
+      Zarezerwuj magazyn i zapisz zamówienie — albo oba, albo żaden. Najważniejszy
+      wzorzec rozdziału: <em>warunkowy UPDATE</em> wykonuje decrement i sprawdzenie
+      dostępności w jednej operacji, więc rząd jest blokowany na czas trwania i drugi
+      klient widzi już zmniejszony stan:
+    </p>
+<pre><code><span class="kw">let mut</span> tx = <span class="kw">self</span>.pool.<span class="fn">begin</span>().<span class="kw">await</span>?;
+
+<span class="kw">let</span> remaining: <span class="typ">Option</span>&lt;<span class="typ">i32</span>&gt; = <span class="mac">sqlx::query_scalar!</span>(
+    <span class="str">"UPDATE books SET stock = stock - $1 WHERE id = $2 AND stock &gt;= $1 RETURNING stock"</span>,
+    quantity, book_id,
+).<span class="fn">fetch_optional</span>(&amp;<span class="kw">mut</span> *tx).<span class="kw">await</span>?;   <span class="cmt">// None = brak magazynu, zwracamy błąd</span></code></pre>
+    <ul>
+      <li>Osobne „przeczytaj, potem zdecyduj" otwiera okno, w którym dwa zamówienia widzą ten sam stan i oba przechodzą — sprzedaż na minusie gotowy.</li>
+      <li><code>?</code> albo panic porzuca uchwyt transakcji bez commitu — SQLx robi rollback przy dropie, żadna ścieżka nie zostawia otwartej transakcji.</li>
+      <li>Sprawdzenie reguły cyklu życia (status: <code>Paid → Packed</code>) z <code>SELECT ... FOR UPDATE</code>: zablokuj rząd, potem oceń — blokada i reguła razem, bo żadna z osobna nie zatrzyma podwójnego przejścia.</li>
+      <li>Adnotacje makr przy własnych typach: <code>AS "status: DbOrderStatus"</code> w SELECT, <code>DbOrderStatus::from(x) as DbOrderStatus</code> w parametrze.</li>
+    </ul>
+
+    <h2>Enum domenowy vs enum bazodanowy</h2>
+    <p>
+      Kuszące: przykleić <code>#[derive(sqlx::Type)]</code> do typu domenowego.
+      Odrzucamy — domena kompiluje się do WASM, gdzie sterownik bazy nie ma sensu.
+      Osobny crate warstwy trwałej z typem lustrzanym i konwersjami <code>From</code>
+      w obie strony; wyczerpujący match oznacza, że nowy wariant po którejkolwiek
+      stronie psuje build i wymusza migrację, zamiast ciszej rozjechać się w runtime'cie.
+      Analogicznie konwersja <code>sqlx::Error → DomainError</code> to zwykła funkcja
+      helper (nie <code>impl From</code> — reguła osieroconej zaciągnęłaby sqlx do domeny):
+    </p>
+<pre><code><span class="kw">pub(crate) fn</span> <span class="fn">account_error</span>(err: <span class="typ">sqlx::Error</span>) -&gt; <span class="typ">DomainError</span> {
+    <span class="kw">if let</span> <span class="typ">sqlx::Error::Database</span>(db) = &amp;err {
+        <span class="kw">if</span> db.<span class="fn">code</span>().<span class="fn">as_deref</span>() == <span class="typ">Some</span>(<span class="str">"23505"</span>) {   <span class="cmt">// naruszenie UNIQUE</span>
+            <span class="kw">return</span> <span class="typ">DomainError::DuplicateEmail</span>;
+        }
+    }
+    <span class="fn">storage</span>(err)
+}</code></pre>
+
+    <h2>Argon2 i spawn_blocking</h2>
+    <p>
+      Hasło w bazie nigdy nie występuje w formie odwracalnej. Argon2 celowo jest wolny
+      i pożera pamięć — a to pułapka na runtime'cie async: zajmuje wątek dziesiątki
+      milisekund bez oddawania sterowania, kilka jednoczesnych logowania zatrymuje
+      niepowiązane żądania. Ratunek:
+    </p>
+<pre><code><span class="kw">let</span> valid = <span class="typ">tokio::task::spawn_blocking</span>(<span class="kw">move</span> || {
+    <span class="typ">Argon2::default</span>().<span class="fn">verify_password</span>(&amp;password, &amp;parsed).<span class="fn">is_ok</span>()
+}).<span class="kw">await</span>?;</code></pre>
+    <ul>
+      <li>Reguła kciuka: nieprzerywana praca CPU ponad ~100 mikrosekund (haszowanie, kompresja, parsowanie obrazu) — na pulę blokującą.</li>
+      <li>Sól generowana dla każdego hasła i zapisana w wyniku razem z parametrami — te same hasła dają różne rekordy, a parametry można zaostrzać bez unieważniania starych.</li>
+      <li>Brak konta i złe hasło zwracają <em>ten sam</em> błąd — endpoint logowania nie jest katalogiem użytkowników.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Migracje odwracalne i reguły w schemacie; SQL sprawdzany przy kompilacji
+        (offline przez commitnięte <code>.sqlx</code>). Pool z jawnym acquire_timeout,
+        klony darmowe. Warunkowy UPDATE i FOR UPDATE zamykają wyścigi; rollback
+        przy dropie. Enumy i błędy sterownika tłumaczy crate warstwy trwałej, nie domena.
+        Argon2 przez spawn_blocking.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Zmieniłeś zapytanie i CI melduje błąd o braku zapytania w cache'u. Co robisz i dlaczego tak?</summary>
+        <div class="answer"><p><code>cargo sqlx prepare</code> i commit nowego <code>.sqlx</code>. Build offline weryfikuje makra wobec zapisanych metadanych — po zmianie SQL cache jest nieaktualny i trzeba go odświeżyć, bo budowanie nie ma dostępu do żywej bazy.</p></div>
+      </details>
+      <details>
+        <summary>2. Dlaczego sam warunek <code>WHERE stock &gt;= $1</code> w UPDATE załatwia wyścig?</summary>
+        <div class="answer"><p>Ponieważ odczyt, porównanie i zapis dzieją się w jednej operacji na zablokowanym rzędzie. Druga transakcja nie widzi stanu z przed decrementu — dopasowuje mniej wierszy albo czeka na zwolnienie blokady, i po odblokowaniu dostaje None.</p></div>
+      </details>
+      <details>
+        <summary>3. Co grozi pulowi o 200 połączeniach przy dwóch replikach?</summary>
+        <div class="answer"><p>PostgreSQL ma domyślnie ~100 połączeń i płaci procesem backendowym za każde. 2×200 przekracza sufit — kolejkowanie przenosi się do bazy, a administracyjne sesje mogą się nie zmieścić. Rozmiar puli liczy się z iloczynu RPS × czas trzymania, nie „na oko".</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

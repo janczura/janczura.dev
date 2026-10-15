@@ -14,7 +14,7 @@
     </nav>
 
     <h1>Rust</h1>
-    <p style="color:#8a7a6c; margin-bottom:2rem;">Notatki z nauki Rusta — od instalacji po wielowątkowy serwer. Esencja, przykłady i ćwiczenia.</p>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Notatki z nauki Rusta — od instalacji po wdrożenie aplikacji WWW. Esencja, przykłady i ćwiczenia.</p>
 
     <h2>Podstawy</h2>
     <div class="toc-grid">
@@ -117,6 +117,50 @@
       <a href="webserver.html" class="toc-card">
         <h3>Miniserver HTTP</h3>
         <p>Własny serwer WWW: gniazda, pula workerów, kolejkowanie zadań — domknięcie kursu.</p>
+      </a>
+    </div>
+
+    <h2>Aplikacje WWW w praktyce</h2>
+    <div class="toc-grid">
+      <a href="setup-web.html" class="toc-card">
+        <h3>Projekt aplikacji WWW</h3>
+        <p>Wersja a edycja, rust-toolchain.toml, resolver 3, workspace i usługodawcy w Dockerze.</p>
+      </a>
+      <a href="architektura.html" class="toc-card">
+        <h3>Architektura aplikacji</h3>
+        <p>Crate domenowy bez frameworka, cechy usług, jeden DomainError, tracing od startu.</p>
+      </a>
+      <a href="axum.html" class="toc-card">
+        <h3>Serwer: Axum</h3>
+        <p>Routing w klamerkach, stan z FromRef, cienkie handlery, mapowanie błędów w jednym miejscu.</p>
+      </a>
+      <a href="actix.html" class="toc-card">
+        <h3>Serwer: Actix Web</h3>
+        <p>Arbiter per worker bez Send, scope/resource/guardy, ResponseError, pułapka fabryki.</p>
+      </a>
+      <a href="baza-danych.html" class="toc-card">
+        <h3>Baza danych: SQLx</h3>
+        <p>Migracje odwracalne, zapytania sprawdzane przy kompilacji, transakcje, Argon2.</p>
+      </a>
+      <a href="api.html" class="toc-card">
+        <h3>REST, GraphQL, OAuth</h3>
+        <p>Kontrakt i wersjonowanie, kursor z limitem+1, ETag, limity GraphQL, PKCE.</p>
+      </a>
+      <a href="frontend-wasm.html" class="toc-card">
+        <h3>Frontend: Leptos i WASM</h3>
+        <p>Sygnały i memo, Resource z Suspense, routing, formy bez JavaScriptu, rozmiar bundla.</p>
+      </a>
+      <a href="websockety.html" class="toc-card">
+        <h3>WebSocket na żywo</h3>
+        <p>Eventy domenowe, broadcast po commitcie, bilet do handshake, backoff, SSE vs WS.</p>
+      </a>
+      <a href="bezpieczenstwo.html" class="toc-card">
+        <h3>Bezpieczeństwo i tuning</h3>
+        <p>rustls i provider, nagłówki, sesje w Redisie, rozmiar runtime'u z arytmetyki, metryki.</p>
+      </a>
+      <a href="wdrozenia.html" class="toc-card">
+        <h3>Kontener i CI/CD</h3>
+        <p>Obraz wieloetapowy z cargo-chef, probe'y liveness/readiness, graceful shutdown, tagi.</p>
       </a>
     </div>
   </div>

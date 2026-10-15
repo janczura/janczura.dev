@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bezpieczeństwo i tuning — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Bezpieczeństwo i tuning
+    </nav>
+
+    <h1>Bezpieczeństwo, wydajność, tuning</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Nagłówki, sesje, rozmiar runtime'u i puli z arytmetyki, load shedding, audyt zależności, metryki.</p>
+
+    <h2>TLS: rustls i provider</h2>
+    <p>
+      Aplikacja może terminować TLS sama albo dostawać odszyfrowany ruch od proxy
+      (ingress w klastrze). rustls 0.23 wymaga jednej linijki, której brak jest
+      najpodstępniejszą awarią tego rozdziału: crate wspiera kilka backendów
+      kryptograficznych i nie wybiera za Ciebie. Bez zainstalowanego providera
+      program <strong> kompiluje się idealnie i panikuje przy pierwszym połączeniu</strong>.
+    </p>
+<pre><code><span class="kw">fn</span> <span class="fn">main</span>() {
+    <span class="typ">rustls::crypto::ring::default_provider</span>()
+        .<span class="fn">install_default</span>()
+        .<span class="fn">expect</span>(<span class="str">"brak providera krypto"</span>);  <span class="cmt">// absolutny poczatek main</span>
+}</code></pre>
+    <p>
+      <code>ring</code> trzyma build bez toolchaina C. W CSP frontendu WASM potrzebny
+      jest <code>'wasm-unsafe-eval'</code> — instantiatecja modułu WASM liczy się jako
+      dynamiczna ewaluacja kodu i domyślna polityka blokuje cały frontend.
+    </p>
+
+    <h2>Nagłówki i sesje</h2>
+    <p>
+      Nagłówki bezpieczeństwa ustawia się raz na routerze (nie w handlerach):
+      HSTS, <code>nosniff</code>, referrer-policy, permissions-policy, CSP
+      (z <code>connect-src</code> zawierającym <code>wss://</code> — socket ma inny
+      scheme niż dokument; <code>frame-ancestors 'none'</code> przeciw clickjackingowi).
+    </p>
+    <p>
+      Token (API publiczne) i sesja (własny frontend) współistnieją — różnią się
+      klientem. Ciasteczko sesji: cztery atrybuty, cztery różne ataki zamknięte —
+      <code>HttpOnly</code> (JS nie przeczyta = kradzież przez XSS trudniejsza),
+      <code>Secure</code> (nie poleci plain), <code>SameSite=Lax</code>, <code>Max-Age</code>
+      (skradzione nie wiecznie).
+    </p>
+    <p>
+      <strong>Dlaczego Lax, nie Strict?</strong> Strict blokuje każdą request
+      cross-site, łącznie z top-level nawigacją — callback z GitHuba wróciłby bez
+      sesji i zobaczył anonimowego gościa. Lax przepuszcza nawigację, blokuje
+      osadzenia, na których polega CSRF. Ustawienie dobrane bez znajomości
+      przerywanych flow kiedyś zostanie zdjęte pod presją. Odrodzenie TTL przy każdym
+      odczycie = okno przesuwane; kasowalny zapis po stronie serwera = realny logout
+      (signed token ważny do wygaśnięcia, nie da się cofnąć).
+    </p>
+
+    <h2>Runtime i pulę z arytmetyki</h2>
+    <ul>
+      <li><code>available_parallelism()</code> w kontenerze czyta rdzenie hosta, nie przydział: 64-rdzeniowy węzeł z limitem 2 CPU → 64 workery walczące o 2 rdzenie. Stała <code>TOKIO_WORKER_THREADS</code> w manifeście obok limitu — obie liczby zmieniają się razem.</li>
+      <li>Pula blokująca domyślnie przyjmuje ~512 wątków; Argon2 pożera ~19 MB na hash. 500 jednoczesnych logowań ≈ 10 GB. Cap (np. 16) zamyka ekspozycję — nagły przypływ logowań nie wywraca heapu.</li>
+      <li>Pula bazodanowa: współbieżność = RPS × czas trzymania połączenia; szczyt ×3 zapasu; iloczyn × liczba replik ≤ sufit PostgreSQL (domyślnie ~100 procesów backendowych). Powyżej: PgBouncer. Nadmiar wątków to nie tylko pamięć — to kontekst-switching i presja na cache bez przyrostu przepustowości.</li>
+      <li>Zbiór 50 tysięcy wierszy: <code>fetch_all</code> materializuje wszystko w pamięci; <code>fetch</code> daje strumień wierszy.</li>
+    </ul>
+
+    <h2>Load shedding</h2>
+    <p>
+      Nasycony serwis, który przyjmuje dalej, degraduje wszystkich; który odbija
+      nadmiar wcześnie, zostaje responsywny dla obsługiwanych. Kolejkuje bez granic
+      i ogranicza współbieżność — request ponad limit dostaje odmowę, nie kolejkę:
+    </p>
+<pre><code><span class="kw">let</span> app = <span class="fn">build_router</span>(state).<span class="fn">layer</span>(
+    <span class="typ">ServiceBuilder::new</span>()
+        .<span class="fn">layer</span>(<span class="typ">TimeoutLayer::new</span>(<span class="typ">Duration::from_secs</span>(<span class="num">15</span>)))
+        .<span class="fn">load_shed</span>()                 <span class="cmt">// przepełnienie = szybkie 503 od razu</span>
+        .<span class="fn">concurrency_limit</span>(<span class="num">256</span>),
+);</code></pre>
+    <p>
+      Kolejność nieprzypadkowa (shed przed limitem) znaczy: przepełnienie kolejki widać
+      natychmiast zamiast po 15 s czekania. Klient z backoffem (patrz sockety)
+      takie 503 zamienia na zdrowe ponowienia. Logowanie throttle'uje Redis
+      (<code>INCR</code> + <code>EXPIRE</code>); klucz po e-mailie chroni konto przed
+      zgadywaniem, ale atak rozłożony po kontach z jednego IP umknie — w produkcji
+      pilnuje się obu wymiarów.
+    </p>
+
+    <h2>Supply chain: audit i deny</h2>
+    <p>
+      Setki crate'ów przejściowych, a nowa podatność może pojawić się po Twoim
+      shipie. <code>cargo audit</code> porównuje lockfile z bazą RustSec — na każdym
+      buildzie, nie „przed releasem": świeża porada przewraca następną kompilację,
+      nie czeka na czyjąś pamięć.
+    </p>
+<pre><code><span class="cmt"># deny.toml — polityka poza podatnościami</span>
+[licenses]
+allow = [<span class="str">"MIT"</span>, <span class="str">"Apache-2.0"</span>]
+
+[bans]
+multiple-versions = <span class="str">"warn"</span>          <span class="cmt">// dwa wydania tego samego = grubszy binarny</span>
+wildcards = <span class="str">"deny"</span>                  <span class="cmt">// zależność bez wersji = dryf, którego lock pilnuje</span>
+deny = [{ name = <span class="str">"openssl-sys"</span>, reason = <span class="str">"wybraliśmy rustls"</span> }]
+
+[sources]
+unknown-registry = <span class="str">"deny"</span></code></pre>
+    <p>
+      Ban <code>openssl-sys</code> warte zapożyczenia: przejściowa zależność mogłaby
+      cicho wciągnąć systemowy OpenSSL i podważyć decyzję o czysto-Rustowym krypto
+      bez żadnego widocznego znaku — ban zamienia to na błąd builda z nazwą winowajcy.
+    </p>
+
+    <h2>Metryki: trzy liczby i kardinalność</h2>
+    <ul>
+      <li>Wystarcza: liczba żądań, odsetek błędów, rozkład czasów. Tracing mówi co stało się w jednym requeście, metryki — jak układ zachowuje się w agregacie.</li>
+      <li>Każda unikalna kombinacja etykiet = nowa seria: etykieta z id książki albo id odwiedzającego rośnie bez granic i wywraca monitoring. Etykieta = szablon trasy i status, nie surowa ścieżka.</li>
+      <li>Gauge idle puli tłumaczy spowolnienie, którego czasy requestów nie pokażą: idle = 0 przy rosnących czasach = wyczerpanie puli, nie wolny handler.</li>
+      <li>Prometheus scrapuje, aplikacja wystawia stan na żądanie; bucket'y dobierz pod swój rozkład (Rust z milisekundami nie skorzysta z kubełka 10 s, a straci rozdzielczość tam, gdzie regresja się objawi). Ścieżka <code>/metrics</code> na osobnym wewnętrznym porcie — liczby pokazują strukturę wewnętrzną, nie rozrywkę gości.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Provider krypto na starcie, inaczej panika przy pierwszym połączeniu. Nagłówki
+        na routerze, CSP z wasm-unsafe-eval. Sesja: Lax chroni callback, zapis
+        serwerowy pozwala wylogować. Runtime z kwoty CPU, pulę z RPS × czas trzymania.
+        Shed + limit + timeout = szybkie 503. Audit i deny na każdym buildzie.
+        Metryki z dyscypliną etykiet.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Kontener z limitem 2 CPU startuje 64 workerów Tokio. Skąd i jaki to ma koszt?</summary>
+        <div class="answer"><p>Domyślna liczba workerów czytana z równoległości hosta, a cgroup kwota nic nie zmienia. Koszt: wątki przełączają się zamiast pracować — kontekst, cache i scheduler bez przyrostu przepustowości. Ustaw TOKIO_WORKER_THREADS z manifestu.</p></div>
+      </details>
+      <details>
+        <summary>2. Awaria bazy: dlaczego readiness sprawdza połączenie, a liveness nie?</summary>
+        <div class="answer"><p>Liveness z pytaniem do bazy padłby na wszystkich replikach naraz, Kubernetes pozabijałby pody, a restart nic by nie naprawił — sklep leży zamiast być degradowanym. Readiness wycofuje ruch z niedołężnej instancji i natychmiast go zwraca po zdrowiu.</p></div>
+      </details>
+      <details>
+        <summary>3. Metryka czasu odpowiedzi z etykietą pełnej ścieżki (/book/1, /book/2...). W czym problem?</summary>
+        <div class="answer"><p>Każde id mnoży serie czasowych — kardinalność rośnie z katalogiem i monitoring pęka pierwszy. Użyj szablonu trasy (/book/{id}) i statusu: wartości z góry ograniczone.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wdrożenia — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Wdrożenia
+    </nav>
+
+    <h1>Kontener i CI/CD</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Obraz wieloetapowy z cache'em zależności, probe'y, które nie mylą degradacji z awarią, pipeline na tagach.</p>
+
+    <h2>Obraz wieloetapowy</h2>
+    <p>
+      Build potrzebuje całego toolchaina (~1,5 GB), runtime prawie niczego (&lt;100 MB).
+      Etap kompiluje, do końcowego obrazu jedzie tylko binarka i assety:
+    </p>
+<pre><code>FROM rust:slim AS builder
+WORKDIR /app
+COPY . .
+ENV SQLX_OFFLINE=<span class="kw">true</span>          <span class="cmt"># weryfikacja zapytań z .sqlx, baza niepotrzebna</span>
+RUN cargo leptos build --release
+
+FROM debian:bookworm-slim AS runtime
+RUN apt-get install -y ca-certificates \
+    &amp;&amp; useradd --system --uid <span class="num">10001</span> libro   <span class="cmt"># outbound TLS wymaga korzeni!</span>
+COPY --from=builder /app/target/release/server /usr/local/bin/
+USER <span class="num">10001</span>
+CMD [<span class="str">"/usr/local/bin/server"</span>]</code></pre>
+    <ul>
+      <li><code>ca-certificates</code> — bez nich każde wychodzące HTTPS (GitHub, OpenLibrary) pada dopiero w produkcji.</li>
+      <li>Numeryczny uid: Kubernetes egzekwuje <code>runAsNonRoot</code> tylko gdy zna id z góry. Skompromitowany proces bez przywilejów to mniejszy łup po ucieczce z kontenera.</li>
+      <li><code>readOnlyRootFilesystem</code> — aplikacja nic nie pisze na dysk (logi na stdout, stan w bazie/Redis), więc blokada zapisu nic nie kosztuje, a zamyka jedno wejście atakującemu.</li>
+      <li><code>rust-toolchain.toml</code> działa też w budującym obrazie — rustup honoruje plik ze skopiowanego źródła.</li>
+    </ul>
+
+    <h2>Cache zależności: cargo-chef</h2>
+    <p>
+      Warstwa z <code>COPY . .</code> unieważnia cache przy każdej zmianie w kodzie —
+      a zależności kompilują się minuty i zmieniają się raz na tydzień. Chef rozcina
+      to na pół: planner zapisuje <em>przepis</em> (same zależności) do <code>recipe.json</code>,
+      etap <code>cook</code> kompiluje zależności z przepisu zanim pozna źródła.
+      Docker cache'uje drogą warstwę względem manifestu, nie kodu. Efekt w książce:
+      ~4 min → ~40 s przy zmianie tylko aplikacji.
+    </p>
+
+    <h2>Deployment i probe'y</h2>
+<pre><code>strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: <span class="num">1</span>            <span class="cmt">// startuje nowy, czeka na gotowość, potem zdejmuje stary</span>
+    maxUnavailable: <span class="num">0</span>       <span class="cmt">// = rollout niewidoczny dla ruchu</span></code></pre>
+    <p>
+      Dwa endpointy, dwa różne pytania — mylenie ich płaci katastrofą:
+    </p>
+    <ul>
+      <li><code>/livez</code> (liveness): process odpowiada i basta. Gdyby sprawdzał bazę, awaria bazy zbiłaby probe na <em>wszystkich</em> replikach, Kubernetes pozabijałby wszystkie pody, restarty nic by nie naprawiły — sklep leży zamiast być degradowany.</li>
+      <li><code>/readyz</code> (readiness): pyta o pulę (z timeoutem) — niedołężna instancja przestaje dostawać ruch i wraca w sekundę po zdrowiu bazy.</li>
+      <li><code>startupProbe</code> kupuje czas na start (np. migracje), nim liveness zacznie sądzić proces wciąż przygotowujący się.</li>
+    </ul>
+
+    <h2>Zamykanie bez gubienia żądań</h2>
+    <p>
+      Sygnał terminacji ma dokończyć otwarte requesty, nie przesiec je w połowie zapisu:
+    </p>
+<pre><code>axum::<span class="fn">serve</span>(listener, app)
+    .<span class="fn">with_graceful_shutdown</span>(<span class="fn">shutdown_signal</span>())  <span class="cmt">// SIGTERM / ctrl-c</span>
+    .<span class="kw">await</span>?;</code></pre>
+    <p>
+      Subtelność, która gubi niejedno staranne wdrożenie: klaster wysyła sygnał i usuwa
+      instancję z endpointów <em>jednocześnie</em>, a propagacja usunięcia przez węzły
+      jest asynchroniczna — proces przestaje słuchać, gdy część proxy jeszcze w niego
+      pisze. Łata: <code>preStop sleep 5</code>. Okres łaski musi przekraczać pauzę
+      plus najdłuższy legalny request (timeout layer) — za krótki tnie robotę w trakcie.
+    </p>
+
+    <h2>Pipeline na tagach</h2>
+    <p>
+      Release wyzwalany tagiem <code>v*.*.*</code>, nie commitem: nikt nie wydaje
+      przez wypadek, a obraz nosi tag = commit, więc każda uruchomiona instancja jest
+      trace'owalna. Zmienne <code>latest</code> tę własność niszczy — dwie instancje
+      ściągnięte w różnych momentach mogą biec różnym kodem pod tą samą etykietą.
+    </p>
+<pre><code><span class="cmt"># bramka — każdy krok przewraca build, obraz nie powstaje</span>
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+sqlx migrate run &amp;&amp; cargo sqlx prepare --workspace --check   <span class="cmt"># dryf metadanych zapytań</span>
+cargo nextest run
+cargo audit &amp;&amp; cargo deny check</code></pre>
+    <ul>
+      <li>Te same komendy co taski w edytorze — fail lokalny = fail pipeline'owy, bez „u mnie działa".</li>
+      <li>Deploy = <code>kubectl set image</code> + <code>rollout status --timeout=5m</code>: czekamy na gotowość zamiast zakładać sukces; rollout, który nie wstaje, świeci czerwienią, a nie „udaje, że poszedł".</li>
+      <li>Rollback: <code>kubectl rollout undo</code> — ale wraca <em>kod</em>, schemat zostaje gdzie stał. Dlatego migracje odwracalne i zmiany addektywne wdrażane przed kodem, który ich używa.</li>
+    </ul>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Dwa etapy obrazu, chef za cache zależności, SQLX_OFFLINE i non-root z numerem.
+        Liveness = process, readiness = baza; startup na migracje. Graceful shutdown
+        plus preStop sleep na propagację endpointów. Pipeline na tagu, bramka fmt/clippy/
+        sqlx-check/nextest/audit, deploy czekający na readiness, rollback przez undo
+        przy odwracalnych migracjach.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Build w kontenerie failuje na makrach sqlx, choć baza działa lokalnie. Czego brakuje?</summary>
+        <div class="answer"><p>SQLX_OFFLINE=true plus commitnięty katalog .sqlx — w obrazie nie ma bazy do weryfikacji na żywo, więc makra muszą czytać zapisane metadane. To ten sam mechanizm, który obiecał rozdział o bazie.</p></div>
+      </details>
+      <details>
+        <summary>2. Awaria bazy, wszystkie readyz padają. Co robi klaster i dlaczego to lepsze niż liveness z pytaniem do bazy?</summary>
+        <div class="answer"><p>Instancje zostają żywe, tylko wypinane z ruchu; po powrocie bazy są od razu gotowe. Liveness z bazą pozabijałby wszystkie pody jednocześnie, restart nic by nie naprawił, a degradacja zamieniłaby się w przerwę.</p></div>
+      </details>
+      <details>
+        <summary>3. Dlaczego grace period 45 s, skoro „wystarczy 15"?</summary>
+        <div class="answer"><p>Okres łaski musi pomieścić preStop sleep (5 s, na propagację usunięcia endpointów) plus najdłuższy legalny request (15 s, timeout layer) z zapasem — za krótka wartość obcina pracę już rozpoczętą dokładnie wtedy, gdy najbardziej szkodzi.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>

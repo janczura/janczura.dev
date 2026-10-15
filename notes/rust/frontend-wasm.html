@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frontend WASM — Rust</title>
+  <link rel="stylesheet" href="../css/rust.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="../index.html">Notatki</a>
+      <span>›</span>
+      <a href="index.html">Rust</a>
+      <span>›</span> Frontend WASM
+    </nav>
+
+    <h1>Frontend w Rust: Leptos i WebAssembly</h1>
+    <p style="color:#8a7a6c; margin-bottom:2rem;">Reaktywność bez wirtualnego DOM, resourcy z Suspense, routing i formy działające bez JavaScriptu.</p>
+
+    <h2>Cztery prymitywy reaktywne</h2>
+    <p>
+      Leptos nie diffuje drzewa — aktualizuje dokładnie te węzły DOM, które czytały
+      dany sygnał. Wybór prymitywu to decyzja o kosztach:
+    </p>
+<pre><code><span class="kw">let</span> (query, set_query) = <span class="fn">signal</span>(<span class="typ">String::new</span>());  <span class="cmt">// getter + setter oddzielnie</span>
+<span class="kw">let</span> filters = <span class="typ">RwSignal::new</span>(<span class="typ">BookFilter::default</span>()); <span class="cmt">// oba w jednym, do przekazywania</span>
+<span class="kw">let</span> trimmed = <span class="typ">Memo::new</span>(<span class="kw">move</span> |_| query.<span class="fn">get</span>().<span class="fn">trim</span>().<span class="fn">to_lowercase</span>()); <span class="cmt">// cache z wynikami</span>
+<span class="kw">let</span> is_searching = <span class="kw">move</span> || !trimmed.<span class="fn">get</span>().<span class="fn">is_empty</span>(); <span class="cmt">// zwykłe domknięcie też jest reaktywne</span></code></pre>
+    <ul>
+      <li><code>signal</code> — rozdzielone getter/setter: dziecku dajesz getter bez uprawnienia do zapisu.</li>
+      <li><code>RwSignal</code> — obie połówki w jednej wartości, wygodne w obrębie komponentu.</li>
+      <li><code>Memo</code> — cache'uje obliczenie i powiadamia tylko gdy wynik faktycznie się zmienił; dla drogich obliczeń lub wielu odbiorców. Tani pochodny = zwykłe domknięcie, memo płaci własną administracją.</li>
+    </ul>
+
+    <h2>Resource, Suspense, Transition</h2>
+    <p>
+      <code>Resource</code> wiąże signal (lub krotkę sygnałów) z asynchronicznym ładowaczem:
+      zmiana źródła = auto-odświeżenie, brak zmiany = żądanie w ogóle nie leci.
+      Granice widoku opisują stany ładowania i błędu:
+    </p>
+<pre><code><span class="kw">let</span> books = <span class="typ">Resource::new</span>(
+    <span class="kw">move</span> || (trimmed.<span class="fn">get</span>(), filters.<span class="fn">get</span>()),        <span class="cmt">// źródło: krotka = każde pole liczy się</span>
+    |(search, filters)| <span class="kw">async move</span> {
+        <span class="fn">list_books</span>(<span class="typ">BookFilter</span> { search: <span class="typ">Some</span>(search), ..filters }).<span class="kw">await</span>
+    },
+);
+
+<span class="mac">view!</span> {
+    &lt;<span class="typ">Suspense</span> fallback=move || <span class="mac">view!</span> { &lt;<span class="typ">CatalogueSkeleton</span>/&gt; }&gt;
+        &lt;<span class="typ">ErrorBoundary</span> fallback=|errors| <span class="mac">view!</span> { &lt;p class=<span class="str">"error"</span>&gt;<span class="str">"Nie da rady pobrać."</span>&gt; }&gt;
+            {move || books.<span class="fn">get</span>().<span class="fn">map</span>(|r| r.<span class="fn">map</span>(|list| <span class="mac">view!</span> { &lt;<span class="typ">BookGrid</span> books=list/&gt; }))}
+        &lt;/<span class="typ">ErrorBoundary</span>&gt;
+    &lt;/<span class="typ">Suspense</span>&gt;
+}</code></pre>
+    <ul>
+      <li><strong>Suspense</strong> pokazuje fallback gdy resource wisi; zagnieżdżone granice napełniają się niezależnie.</li>
+      <li><strong>Transition</strong> — przy ciągłym edytowaniu (pole wyszukiwania) zachowuje starą treść zamiast mrugać szkieletem przy każdej literze. Wyszukiwarka należy do transition, nie do suspense.</li>
+      <li><strong>ErrorBoundary</strong> łapie Resulty, które wyszły błędem — para z Suspense obejmuje każdy wynik zdalnego wywołania.</li>
+      <li>Warianty resource: <code>blocking</code> (SSR czeka — treść dla search engine w pierwszym HTML) i <code>local</code> (tylko przeglądarka, przyjmuje futury bez <code>Send</code>).</li>
+    </ul>
+
+    <h2>Routing</h2>
+    <p>
+      Drzewo tras deklaruje się <em>raz</em> — serwer renderuje z niego pierwszy HTML,
+      router w przeglądarce przejmuje nawigację; dwa światy nie mogą się rozjechać.
+      <code>fallback</code> jest obowiązkowy — compiler każe zdecydować, co wyświetla
+      nieznany adres.
+    </p>
+    <ul>
+      <li>Wszystko poza <code>&lt;Routes&gt;</code> (nawigacja, stopka) przeżywa nawigację bez re-renderu.</li>
+      <li><code>ParentRoute</code> — layout z outlet, dziecko zmienia tylko region.</li>
+      <li>Parametry przez typowaną strukturę <code>#[derive(Params)]</code>; identyfikator jako <code>Option&lt;Uuid&gt;</code> — adres edytuje człowiek, parsowanie nieudane to stan zwykły, nie panic. Param karmi źródło resource'a, więc zmiana id = auto-pobranie, synchronizacja „przez konstrukcję".</li>
+      <li><code>&lt;A&gt;</code> renderuje prawdziwy <code>&lt;a&gt;</code> (środkowy przycisk, crawlery działają), <code>use_navigate()</code> — sterowanie z kodu po sukcesie operacji.</li>
+    </ul>
+
+    <h2>Komponenty i formy</h2>
+<pre><code>#[component]
+<span class="kw">pub fn</span> <span class="fn">BookCard</span>(
+    #[prop(into)] title: <span class="typ">String</span>,      <span class="cmt">// przyjmie też &amp;str</span>
+    #[prop(optional)] cover_url: <span class="typ">Option</span>&lt;<span class="typ">String</span>&gt;, <span class="cmt">// można pominąć</span>
+    #[prop(default = <span class="kw">true</span>)] show_price: <span class="typ">bool</span>,
+    price_cents: <span class="typ">i64</span>,
+) -&gt; <span class="kw">impl</span> <span class="typ">IntoView</span> {
+    <span class="mac">view!</span> {
+        &lt;<span class="typ">Show</span> when=move || show_price&gt;   <span class="cmt">// reaktywny warunek; zwykłe if = statyczny</span>
+            &lt;p class=<span class="str">"price"</span>&gt;{<span class="fn">format_money</span>(price_cents)}&lt;/p&gt;
+        &lt;/<span class="typ">Show</span>&gt;
+    }
+}</code></pre>
+    <ul>
+      <li><code>Children</code> — wołany raz (layout); <code>ChildrenFn</code> — klonowalny, gdy renderujesz dzieci wielokrotnie. Typ mówi o intencji.</li>
+      <li><strong>Server functions</strong>: <code>#[server]</code> kompiluje jedną funkcję do endpointu na serwerze i typowanego zdalnego wołania w WASM — trasa, kodowanie i dekodowanie generowane; zmiana typu sygnatury psuje obie strony przy kompilacji. Nie dla API publicznego — tam kontrakt projektuje się świadomie.</li>
+      <li><strong>Actions</strong>: <code>ServerAction</code> + <code>ActionForm</code> = formularz HTML, który normalnie POST-uje gdy WASM nie wstał (progresywne ulepszenie) i przez JS gdy wstał. Sygnał <code>pending</code> blokuje przycisk (podwójne kliknięcia), a warunkowy UPDATE w bazie łapie resztę — dwie warstwy, dwie różne przyczyny duplikatów.</li>
+    </ul>
+
+    <h2>Interakcja z przeglądarką</h2>
+    <p>
+      Bezpośrednie API przeglądarki: <code>wasm-bindgen</code> + <code>web-sys</code>
+      z feature'ami na <code>WebSocket</code> itd. Dwie pułapki własne dla WASM:
+    </p>
+    <ul>
+      <li>Domknięcie przekazane do JS musi przeżyć rejestrację — <code>forget()</code> wycieka je na zawsze; trzymaj je w <code>StoredValue</code>, a zwolnij w <code>on_cleanup</code>.</li>
+      <li>Router podmienia komponenty bez przeładowania strony — każdy nabyty zasób (socket, timer, subskrypcja) wymaga pariującego zwolnienia w cleanupie, inaczej nawigacje akumulują połączenia.</li>
+      <li><code>Effect</code> wykonuje się tylko w przeglądarce — bezpieczne na stronie renderowanej wcześniej przez serwer.</li>
+    </ul>
+
+    <h2>Rozmiar bundla</h2>
+    <pre><code><span class="cmt"># Cargo.toml — profil tylko dla builda przeglądarkowego</span>
+[profile.wasm-release]
+inherits = <span class="str">"release"</span>
+opt-level = <span class="str">"z"</span>   <span class="cmt">// rozmiar ponad prędkość — bundl jest na ścieżce krytycznej</span>
+lto = <span class="kw">true</span>
+codegen-units = <span class="num">1</span>
+panic = <span class="str">"abort"</span>    <span class="cmt">// bez maszynerii unwinding; przeglądarka i tak przeładuje</span></code></pre>
+    <p>
+      Mierz na <code>build --release</code> — dev bundle z debuginfo zawyża obraz kilka razy.
+      Trzymanie szacunku: framework dotyka zwykle mniejszości crate'ów projektu
+      (w książkowym przykładzie 2 z 6) — reszta przeżyłaby wymianę frontendu,
+      co jest ceną i zabezpieczeniem architektury z rozdziału o architekturze.
+    </p>
+
+    <div class="summary-box">
+      <h3>Podsumowanie</h3>
+      <p>
+        Sygnały/memo tworzą graf zależności aktualizujący konkretne węzły DOM.
+        Resource = asynchroniczne ładowanie przypięte do źródła; Suspense/Transition/
+        ErrorBoundary opisują czekanie i porażkę. Trasy raz, parametry typowane,
+        komponenty przez props z <code>into/optional/default</code>. Server functions
+        i ActionForm dają typed RPC z fallbackiem bez JS. Profil <code>z</code> + LTO na bundle.
+      </p>
+    </div>
+
+    <h2>Ćwiczenia</h2>
+    <div class="exercises">
+      <details>
+        <summary>1. Pole wyszukiwania umieszczone w zwykłym Suspence mruga szkieletem przy każdym znaku. Czemu i jak to naprawić?</summary>
+        <div class="answer"><p>Suspense przy każdym odświeżeniu zasobu cofa się do fallbacku. Transition pokazuje starą treść w trakcie ładowania nowej — dla ciągle edytowanego pola to właściwa granica.</p></div>
+      </details>
+      <details>
+        <summary>2. Czym <code>Show</code> różni się od <code>if</code> w widoku i kiedy co?</summary>
+        <div class="answer"><p>if liczy się raz i produkuje statyczny markup; Show re-ewaluuje warunek reaktywnie i podmienia treść po zmianie sygnału. Warunek zależny od sygnału w if = widok poprawny na pierwszym renderze i głuchy na wszystko potem.</p></div>
+      </details>
+      <details>
+        <summary>3. Co się stanie z WebSocketem otwartym w komponencie, jeśli nie zarejestrujesz cleanupu?</summary>
+        <div class="answer"><p>Nawigacja odejmie komponent, ale socket zostanie otwarty. Po kilku powrotach do strony przeglądarka dobije do limitu połączeń i nowe nie wystartują. Zasób nabyty = zasób zwolniony w on_cleanup.</p></div>
+      </details>
+    </div>
+
+    <hr>
+    <p class="page-nav"><a href="index.html">← Wróć do Rust</a></p>
+  </div>
+</body>
+</html>
