@@ -1,0 +1,101 @@
+:root {
+    --bg: #0d1116;
+    --card: rgba(18, 24, 31, 0.92);
+    --line: #2a343f;
+    --text: #e6ebf0;
+    --muted: #8a97a5;
+    --accent: #c9a24b;
+    color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+}
+.home-link { color: var(--muted); text-decoration: none; }
+.home-link:hover { color: var(--text); }
+.sep { color: var(--line); }
+.title { font-weight: 600; }
+
+.maps { margin-left: auto; display: flex; gap: 4px; }
+.maps a {
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--muted);
+    text-decoration: none;
+}
+.maps a:hover { color: var(--text); }
+.maps a[aria-current] { color: #111; background: var(--accent); border-color: var(--accent); }
+
+.stage { position: relative; min-height: 0; }
+#map { height: 100%; background: var(--bg); }
+
+.panel {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 1000;
+    min-width: 230px;
+    padding: 10px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+.panel summary { cursor: pointer; font-weight: 600; }
+.panel label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    cursor: pointer;
+}
+.panel label:first-child { margin-top: 8px; }
+.panel i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #000; }
+.panel i.txt { width: auto; height: auto; border: 0; font: 600 10px system-ui, sans-serif; color: var(--muted); }
+.panel small { margin-left: auto; color: var(--muted); }
+
+/* Nazwy miejsc na mapie: środek napisu w punkcie, biała obwódka dla czytelności na terenie. */
+.place span {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    font: italic 11px system-ui, sans-serif;
+    color: #3b3530;
+    text-shadow: 0 0 2px #fff, 0 0 3px #fff, 0 0 4px #fff;
+}
+.place-capital span, .place-city span { font: 700 13px system-ui, sans-serif; color: #1f1b18; }
+.place-capital span { font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; }
+.place-village span { font: 600 12px system-ui, sans-serif; }
+.place-marine span { color: #1d5f99; }
+.panel .note { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+
+.coords {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    z-index: 1000;
+    padding: 2px 8px;
+    background: var(--card);
+    border-radius: 4px;
+    font: 12px ui-monospace, monospace;
+    color: var(--muted);
+    pointer-events: none;
+}
+.coords:empty { display: none; }
