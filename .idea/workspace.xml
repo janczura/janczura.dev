@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="rust notes part2">
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="dayz">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dayz/build_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/dayz/build_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dayz/data.js" beforeDir="false" afterPath="$PROJECT_DIR$/dayz/data.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dayz/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/dayz/script.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,6 +42,65 @@
     &quot;accountId&quot;: &quot;78fc6e2b-825a-4e78-8628-e4a57ccf4c0f&quot;
   }
 }</component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.030440503481716" />
+      <entry key="MS500" value="1.6905971678574852" />
+      <entry key="S2" value="3.617646215653017" />
+      <entry key="S5" value="5.149621963645326" />
+      <entry key="S10" value="5.9569993292668135" />
+      <entry key="S30" value="6.621596341853409" />
+      <entry key="S60" value="6.80662746657731" />
+      <entry key="M2" value="6.902244549632671" />
+      <entry key="M5" value="6.960637800025521" />
+      <entry key="M10" value="6.980520907418599" />
+      <entry key="M15" value="6.990763059815245" />
+      <entry key="M30" value="7.05604622365059" />
+      <entry key="H1" value="7.2469680657352304" />
+      <entry key="H2" value="7.49861446365036" />
+      <entry key="H4" value="7.706468079181128" />
+      <entry key="D1" value="7.9437781665944245" />
+      <entry key="W1" value="7.991768762831394" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9616334247471379" />
+      <entry key="MS500" value="1.6686994565223747" />
+      <entry key="S2" value="3.605075044156494" />
+      <entry key="S5" value="5.141789138626254" />
+      <entry key="S10" value="5.952295369674262" />
+      <entry key="S30" value="6.61980667830866" />
+      <entry key="S60" value="6.805701405148546" />
+      <entry key="M2" value="6.901773421132257" />
+      <entry key="M5" value="6.960447366781706" />
+      <entry key="M10" value="6.980425331140193" />
+      <entry key="M15" value="6.99069900740953" />
+      <entry key="M30" value="7.056012080350949" />
+      <entry key="H1" value="7.246947661136692" />
+      <entry key="H2" value="7.498602044799527" />
+      <entry key="H4" value="7.706460952348977" />
+      <entry key="D1" value="7.943776804061463" />
+      <entry key="W1" value="7.991768563134136" />
+    </decayedShown>
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -80,8 +142,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-a203e0a19954-intellij.indexing.shared.core-IU-262.10968.63" />
-        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.10968.63" />
+        <option value="bundled-jdk-30f59d01ecdd-2df11533d9fe-intellij.indexing.shared.core-IU-262.11879.100" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.11879.100" />
       </set>
     </attachedChunks>
   </component>
@@ -330,6 +392,7 @@
     <MESSAGE value="img/icon change" />
     <MESSAGE value="rust notes" />
     <MESSAGE value="rust notes part2" />
-    <option name="LAST_COMMIT_MESSAGE" value="rust notes part2" />
+    <MESSAGE value="dayz" />
+    <option name="LAST_COMMIT_MESSAGE" value="dayz" />
   </component>
 </project>

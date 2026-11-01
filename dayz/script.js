@@ -7,6 +7,7 @@ const CATS = {
     hospital:   { label: 'Szpitale',                    name: 'Szpital',                r: 9, color: '#ff4d4d' },
     clinic:     { label: 'Przychodnie',                 name: 'Przychodnia',            r: 6, color: '#ff9f43' },
     medtent:    { label: 'Namioty i kontenery medyczne', name: 'Punkt medyczny',        r: 5, color: '#f78fb3' },
+    police:     { label: 'Posterunki policji',          name: 'Posterunek policji',     r: 7, color: '#f8f9fa', note: 'łup policyjny' },
     mil:        { label: 'Obiekty wojskowe',            name: 'Obiekt wojskowy',        r: 4, color: '#5c7a29', mpp: 12, note: 'łup wojskowy' },
     crash:      { label: 'Katastrofy lotnicze',         name: 'Katastrofa helikoptera / samolotu', r: 6, color: '#212529', note: 'event, losowo w części tych miejsc' },
     convoy:     { label: 'Konwoje i łodzie wojskowe',   name: 'Konwój / łódź wojskowa', r: 6, color: '#a61e4d', note: 'event, losowo w części tych miejsc' },
@@ -17,6 +18,9 @@ const CATS = {
     sink:       { label: 'Umywalki',                    name: 'Umywalka (kran)',        r: 5, color: '#a5d8ff' },
     spring:     { label: 'Źródła wody',                 name: 'Źródło wody',            r: 6, color: '#1098ad' },
     watertruck: { label: 'Cysterny z wodą',             name: 'Cysterna z wodą', r: 6, color: '#74c0fc', note: 'event, nie wszystkie stoją naraz' },
+    hotspring:  { label: 'Gorące źródła',               name: 'Gorące źródło',          r: 5, color: '#e8590c', note: 'parzy, gdy woda sięga powyżej 0,5 m; picie: zatrucie i metale ciężkie' },
+    volcano:    { label: 'Strefy wulkaniczne',          name: 'Strefa wulkaniczna',     r: 6, color: '#e03131', note: 'parzy cały czas, gdy w niej stoisz' },
+    geyser:     { label: 'Gejzery',                     name: 'Gejzer',                 r: 7, color: '#862e9c', note: 'wybucha co 50–120 min, erupcja zabija na miejscu' },
 };
 const PLACE = { capital: 'city', city: 'city', village: 'village' };  // typ z gry -> filtr, reszta: 'other'
 const KM = 1000;
@@ -149,9 +153,10 @@ function show(key) {
         }));
     }
     // Widoczność warstwy = zaznaczony filtr i (dla nazw) wystarczające przybliżenie.
+    // Kolejność z CATS: późniejsze kategorie rysują się na wierzchu (gejzer stoi w gorącym źródle).
     const sync = () => {
         const mpp = m.size / 256 / 2 ** map.getZoom();
-        for (const cat in layers) enabled.has(cat) && !(CATS[cat].mpp < mpp) ? layers[cat].addTo(map) : layers[cat].remove();
+        for (const cat in CATS) if (layers[cat]) enabled.has(cat) && !(CATS[cat].mpp < mpp) ? layers[cat].addTo(map) : layers[cat].remove();
     };
     map.on('zoomend', sync);
     sync();

@@ -28,6 +28,11 @@ BUILDINGS = {  # lowercase class name from mapgrouppos.xml -> marker category (S
     'land_medical_tent_big': 'medtent',
     'land_medical_tent_shower': 'medtent',
     'land_mil_containerhabitat_medical': 'medtent',
+    'land_policestation_large_takistan': 'police',  # Namalsk has no police stations
+    'land_policestation_small_takistan': 'police',
+    'land_city_policestation': 'police',
+    'land_village_policestation': 'police',
+    'land_village_policestation_east': 'police',
 }
 EVENTS = {  # cfgeventspawns.xml event -> marker category
     'StaticWaterTruck': 'watertruck',
@@ -35,6 +40,7 @@ EVENTS = {  # cfgeventspawns.xml event -> marker category
     'StaticMilitaryConvoy': 'convoy', 'StaticBoatMilitary': 'convoy',
     'StaticContaminatedArea': 'gas',  # possible spots of dynamic toxic zones
 }
+AREAS = {'GeyserArea': 'geyser', 'HotSpringArea': 'hotspring', 'VolcanicArea': 'volcano'}  # cfgeffectarea.json type -> marker category (Sakhal)
 MILITARY = {'military', 'militaryeast', 'militarywest'}  # mapgroupproto.xml usage (Namalsk uses a container tag instead)
 CLUSTERS = {  # class name prefix from mapgroupcluster*.xml -> terrain layer
     'figtree': 'orchard', 'appletree': 'orchard', 'peartree': 'orchard', 'plumtree': 'orchard',
@@ -119,15 +125,22 @@ def military_groups(base):
     return groups
 
 
-def static_gas(base):
-    """Static contaminated zones from cfgeffectarea.json as [x, z, radius]; the file name case differs per map."""
+def effect_areas(base):
+    """Markers from cfgeffectarea.json: static contaminated zones as ['gas', x, z, radius], geysers, hot springs and
+    volcanic vents as plain points; the file name case differs per map."""
     for name in ('cfgeffectarea.json', 'cfgEffectArea.json'):
         try:
             areas = json.loads(get(f'{base}/{name}')).get('Areas', [])
         except urllib.error.HTTPError:
             continue
-        return [[round(a['Data']['Pos'][0]), round(a['Data']['Pos'][2]), round(a['Data']['Radius'])]
-                for a in areas if a.get('Type') == 'ContaminatedArea_Static']
+        points = []
+        for a in areas:
+            x, _, z = (round(v) for v in a['Data']['Pos'])
+            if a.get('Type') == 'ContaminatedArea_Static':
+                points.append(['gas', x, z, round(a['Data']['Radius'])])
+            elif a.get('Type') in AREAS:
+                points.append([AREAS[a['Type']], x, z])
+        return points
     return []
 
 
@@ -158,7 +171,7 @@ def build(size, base):
         cat = EVENTS.get(e.get('name'))
         for p in e.iter('pos') if cat else ():
             points.append([cat, round(float(p.get('x'))), round(float(p.get('z')))])
-    points += [['gas', x, z, r] for x, z, r in static_gas(base)]  # 4th value = zone radius in m
+    points += effect_areas(base)
 
     for suffix in ('', '01', '02', '03', '04', '05'):
         try:
