@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="dayz">
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="dayz - livonia map">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dayz/build_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/dayz/build_data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dayz/data.js" beforeDir="false" afterPath="$PROJECT_DIR$/dayz/data.js" afterDir="false" />
@@ -44,23 +44,23 @@
 }</component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.030440503481716" />
-      <entry key="MS500" value="1.6905971678574852" />
-      <entry key="S2" value="3.617646215653017" />
-      <entry key="S5" value="5.149621963645326" />
-      <entry key="S10" value="5.9569993292668135" />
-      <entry key="S30" value="6.621596341853409" />
-      <entry key="S60" value="6.80662746657731" />
-      <entry key="M2" value="6.902244549632671" />
-      <entry key="M5" value="6.960637800025521" />
-      <entry key="M10" value="6.980520907418599" />
-      <entry key="M15" value="6.990763059815245" />
-      <entry key="M30" value="7.05604622365059" />
-      <entry key="H1" value="7.2469680657352304" />
-      <entry key="H2" value="7.49861446365036" />
-      <entry key="H4" value="7.706468079181128" />
-      <entry key="D1" value="7.9437781665944245" />
-      <entry key="W1" value="7.991768762831394" />
+      <entry key="MS100" value="1.7751771529695248" />
+      <entry key="MS500" value="2.3358297633222413" />
+      <entry key="S2" value="3.2928936040107897" />
+      <entry key="S5" value="3.679128827196365" />
+      <entry key="S10" value="3.83240112017095" />
+      <entry key="S30" value="3.9424563875566307" />
+      <entry key="S60" value="3.9710129415763697" />
+      <entry key="M2" value="3.9854522291394954" />
+      <entry key="M5" value="3.9941678183915856" />
+      <entry key="M10" value="3.997081753589276" />
+      <entry key="M15" value="3.9980716018985407" />
+      <entry key="M30" value="4.0102237309081765" />
+      <entry key="H1" value="4.288199492652797" />
+      <entry key="H2" value="5.496391462362497" />
+      <entry key="H4" value="7.442765514647328" />
+      <entry key="D1" value="10.94550360856431" />
+      <entry key="W1" value="11.839908977807474" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -82,23 +82,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.9616334247471379" />
-      <entry key="MS500" value="1.6686994565223747" />
-      <entry key="S2" value="3.605075044156494" />
-      <entry key="S5" value="5.141789138626254" />
-      <entry key="S10" value="5.952295369674262" />
-      <entry key="S30" value="6.61980667830866" />
-      <entry key="S60" value="6.805701405148546" />
-      <entry key="M2" value="6.901773421132257" />
-      <entry key="M5" value="6.960447366781706" />
-      <entry key="M10" value="6.980425331140193" />
-      <entry key="M15" value="6.99069900740953" />
-      <entry key="M30" value="7.056012080350949" />
-      <entry key="H1" value="7.246947661136692" />
-      <entry key="H2" value="7.498602044799527" />
-      <entry key="H4" value="7.706460952348977" />
-      <entry key="D1" value="7.943776804061463" />
-      <entry key="W1" value="7.991768563134136" />
+      <entry key="MS100" value="1.1062445941246912" />
+      <entry key="MS500" value="2.012081608143599" />
+      <entry key="S2" value="3.1793005702644432" />
+      <entry key="S5" value="3.6295333362861095" />
+      <entry key="S10" value="3.8068226181736073" />
+      <entry key="S30" value="3.933747603016211" />
+      <entry key="S60" value="3.96663512552486" />
+      <entry key="M2" value="3.983257419372509" />
+      <entry key="M5" value="3.993288472160216" />
+      <entry key="M10" value="3.996641842925011" />
+      <entry key="M15" value="3.9977782751361706" />
+      <entry key="M30" value="4.010076987005166" />
+      <entry key="H1" value="4.288125328358293" />
+      <entry key="H2" value="5.496352306320495" />
+      <entry key="H4" value="7.442743991608074" />
+      <entry key="D1" value="10.945499360678898" />
+      <entry key="W1" value="11.83990834524981" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -369,7 +369,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Arc Raiders - talent calculator" />
     <MESSAGE value="Poprawki favicon" />
     <MESSAGE value="Zmiana favicon" />
     <MESSAGE value="Dodanie img, edycja index.html" />
@@ -393,6 +392,8 @@
     <MESSAGE value="rust notes" />
     <MESSAGE value="rust notes part2" />
     <MESSAGE value="dayz" />
-    <option name="LAST_COMMIT_MESSAGE" value="dayz" />
+    <MESSAGE value="dayz - posterunki i gejzery" />
+    <MESSAGE value="dayz - livonia map" />
+    <option name="LAST_COMMIT_MESSAGE" value="dayz - livonia map" />
   </component>
 </project>

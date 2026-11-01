@@ -4,6 +4,7 @@ const CATS = {
     city:       { label: 'Miasta',                      place: true, mpp: 40 },
     village:    { label: 'Wioski',                      place: true, mpp: 12 },
     other:      { label: 'Inne miejsca',                place: true, mpp: 6 },
+    spawn:      { label: 'Spawny graczy',               name: 'Spawn gracza',           r: 6, color: '#94d82d', note: 'nowa postać pojawia się w pobliżu tego punktu' },
     hospital:   { label: 'Szpitale',                    name: 'Szpital',                r: 9, color: '#ff4d4d' },
     clinic:     { label: 'Przychodnie',                 name: 'Przychodnia',            r: 6, color: '#ff9f43' },
     medtent:    { label: 'Namioty i kontenery medyczne', name: 'Punkt medyczny',        r: 5, color: '#f78fb3' },

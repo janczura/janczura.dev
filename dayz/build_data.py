@@ -177,6 +177,8 @@ def build(size, base):
         for p in e.iter('pos') if cat else ():
             points.append([cat, round(float(p.get('x'))), round(float(p.get('z')))])
     points += effect_areas(base)
+    for p in fetch(base + '/cfgplayerspawnpoints.xml').find('fresh').iter('pos'):  # centres of new character spawn areas
+        points.append(['spawn', round(float(p.get('x'))), round(float(p.get('z')))])
 
     for suffix in ('', '01', '02', '03', '04', '05'):
         try:
