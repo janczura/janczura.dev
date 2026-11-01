@@ -17,6 +17,7 @@ MAPS = {
     'namalsk': ('Namalsk', 12800, 'https://raw.githubusercontent.com/SumrakDZN/Namalsk-Server/master/Mission%20Files/regular.namalsk'),
     'sakhal': ('Sakhal', 15360, 'https://raw.githubusercontent.com/BohemiaInteractive/DayZ-Central-Economy/master/dayzOffline.sakhal'),
     'chernarusplus': ('Chernarus+', 15360, 'https://raw.githubusercontent.com/BohemiaInteractive/DayZ-Central-Economy/master/dayzOffline.chernarusplus'),
+    'livonia': ('Livonia', 12800, 'https://raw.githubusercontent.com/BohemiaInteractive/DayZ-Central-Economy/master/dayzOffline.enoch'),
 }
 BUILDINGS = {  # lowercase class name from mapgrouppos.xml -> marker category (Sakhal _ghost variants duplicate _east)
     'land_hospital_takistan': 'hospital',
@@ -25,6 +26,7 @@ BUILDINGS = {  # lowercase class name from mapgrouppos.xml -> marker category (S
     'land_healthcare_takistan': 'clinic',
     'land_village_healthcare': 'clinic',
     'land_village_healthcare_east': 'clinic',
+    'land_village_healthcare_enoch': 'clinic',
     'land_medical_tent_big': 'medtent',
     'land_medical_tent_shower': 'medtent',
     'land_mil_containerhabitat_medical': 'medtent',
@@ -33,6 +35,8 @@ BUILDINGS = {  # lowercase class name from mapgrouppos.xml -> marker category (S
     'land_city_policestation': 'police',
     'land_village_policestation': 'police',
     'land_village_policestation_east': 'police',
+    'land_city_policestation_enoch': 'police',
+    'land_village_policestation_enoch': 'police',
 }
 EVENTS = {  # cfgeventspawns.xml event -> marker category
     'StaticWaterTruck': 'watertruck',
@@ -55,6 +59,7 @@ RELIEF = {  # height (m) -> colour stops for the relief image; heights <= 0 are 
     'namalsk': [(-60, '#8db6d4'), (-0.1, '#bdd8ea'), (0, '#dde5d3'), (150, '#d6dccb'), (400, '#d4d7d0'), (700, '#e6e9ec'), (1100, '#f6f8fa')],
     'sakhal': [(-90, '#86afcf'), (-0.1, '#b8d4e8'), (0, '#eef2f4'), (150, '#e6eaee'), (350, '#d9dde2'), (560, '#c9ccd2')],
     'chernarusplus': [(-60, '#86afcf'), (-0.1, '#b8d4e8'), (0, '#e6ecd3'), (150, '#dde6c8'), (350, '#d6dcbf'), (550, '#d4d1bb'), (800, '#d9d4c8')],
+    'livonia': [(150, '#e6ecd3'), (250, '#dde6c8'), (400, '#d6dcbf'), (520, '#d4d1bb'), (620, '#d9d4c8')],  # inland, lakes as ponds
 }
 POND = '#a9cbe3'
 RELIEF_PX = 2048
@@ -185,7 +190,7 @@ def build(size, base):
                 x, _, z = map(float, g.get('pos').split())
                 terrain.setdefault(layer, []).extend([round(x), round(z)])
 
-    assert any(p[0] == 'hospital' for p in points), 'no hospital found - upstream format changed?'
+    assert any(p[0] in ('hospital', 'clinic') for p in points), 'no medical building found - upstream format changed?'  # Livonia has no hospital
     assert all(0 <= p[1] <= size and 0 <= p[2] <= size for p in points), 'point outside map'
     assert terrain['house'], 'no buildings found'
     return points, terrain

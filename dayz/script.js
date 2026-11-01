@@ -24,7 +24,7 @@ const CATS = {
 };
 const PLACE = { capital: 'city', city: 'city', village: 'village' };  // typ z gry -> filtr, reszta: 'other'
 const KM = 1000;
-const BG = { nasdara: '#e9dfc6', namalsk: '#e4eaee', sakhal: '#e6ebef', chernarusplus: '#e4ead6' };
+const BG = { nasdara: '#e9dfc6', namalsk: '#e4eaee', sakhal: '#e6ebef', chernarusplus: '#e4ead6', livonia: '#e4ead6' };
 const PLANTS = { orchard: ['#a9b96e', 3], leafy: ['#7fa35a', 4], conifer: ['#577f4c', 4], rock: ['#a3a3a3', 3] };  // kolor, promień w m
 const ROADS = { dirt: ['#a5804f', 4, 0.8], grav: ['#b39468', 5, 1], asf: ['#5f5a55', 7, 1.6] };  // kolor, szerokość w m, min. px
 const TERRAIN = {};  // wypełniane przez terrain-<mapa>.js

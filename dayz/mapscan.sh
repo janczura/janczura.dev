@@ -2,15 +2,18 @@
 # Runs a local DayZ server with mapscan_init.c and saves the dump to scan/<map>.txt.gz (input for build_data.py).
 # Usage: ./mapscan.sh nasdara
 #        MISSION=regular.namalsk MODS='@namalsk_island;@namalsk_survival' ./mapscan.sh namalsk
+#        MISSION=dayzOffline.enoch ./mapscan.sh livonia
 # MISSION is a folder in <server>/mpmissions (default dayzOffline.<map>), SERVER defaults to ~/dayzserver.
 set -eu
 MAP=$1
+MISSION=${MISSION:-dayzOffline.$MAP}
+WORLD=${MISSION##*.}  # the engine loads the world named after the mission folder suffix
 SRV=${SERVER:-$HOME/dayzserver}
 HERE=$(cd "$(dirname "$0")" && pwd)
-SCAN="$SRV/mpmissions/mapscan.$MAP"
+SCAN="$SRV/mpmissions/mapscan.$WORLD"
 
 rm -rf "$SCAN" "$SRV/mapscan-profile"
-cp -r "$SRV/mpmissions/${MISSION:-dayzOffline.$MAP}" "$SCAN"
+cp -r "$SRV/mpmissions/$MISSION" "$SCAN"
 cp "$HERE/mapscan_init.c" "$SCAN/init.c"
 cat > "$SRV/mapscan.cfg" <<EOF
 hostname = "mapscan";
@@ -18,7 +21,7 @@ password = "$(head -c 12 /dev/urandom | base64 | tr -dc a-zA-Z0-9)";
 maxPlayers = 1;
 instanceId = 1;
 BattlEye = 0;
-class Missions { class DayZ { template = "mapscan.$MAP"; }; };
+class Missions { class DayZ { template = "mapscan.$WORLD"; }; };
 EOF
 
 cd "$SRV"
