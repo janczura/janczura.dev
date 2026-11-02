@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Builds data.js (markers, place names), terrain-<map>.js (base map) and relief-<map>.webp (terrain shading)
-from public DayZ mission files plus, when present, scan/<map>.txt.gz made by mapscan.sh.
+"""Builds data.js (markers, place names), terrain-<map>.js (base map), relief-<map>.webp (terrain shading) and
+tiers-<map>.webp (loot tier zones) from public DayZ mission files plus, when present, scan/<map>.txt.gz made by mapscan.sh.
 Run: python3 build_data.py"""
 import gzip
 import json
 import pathlib
+import struct
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -37,7 +38,21 @@ BUILDINGS = {  # lowercase class name from mapgrouppos.xml -> marker category (S
     'land_village_policestation_east': 'police',
     'land_city_policestation_enoch': 'police',
     'land_village_policestation_enoch': 'police',
+    'land_bunker_basement_storage': 'bunkerstorage',  # Nasdara: the 23 code-locked bunkers, same spots as cfgbunkerbroadcast.json
+    'land_bunker_shelter_storage': 'bunkerstorage',
+    'land_bunker_basement_medical': 'bunkermedical',
+    'land_bunker_shelter_medical': 'bunkermedical',
+    'land_bunker_basement_civilian': 'bunkercivil',
+    'land_bunker_shelter_office': 'bunkeroffice',
 }
+ANIMALS = {  # cfgenvironment.xml territory name -> marker category; zones become circles
+    'Deer': 'deer', 'RoeDeer': 'roedeer', 'Reindeer': 'reindeer', 'WildBoar': 'boar', 'Pig': 'pig', 'Cow': 'cow',
+    'Sheep': 'sheep', 'Goat': 'goat', 'Mouflon': 'mouflon', 'AmbientHen': 'hen', 'AmbientHare': 'hare',
+    'AmbientFox': 'fox', 'AmbientLizard': 'lizard', 'Wolf': 'wolf', 'Bear': 'bear', 'BrownBear': 'bear',
+    'PolarBear': 'bear', 'Dog': 'dog',
+}
+TIERS = ['#dc8a3c', '#c06a1f', '#9c4f12', '#7c3c0c', '#6250d6']  # Tier 1-4, Unique; same as TIERS in script.js
+TIER_PX = 1024
 EVENTS = {  # cfgeventspawns.xml event -> marker category
     'StaticWaterTruck': 'watertruck',
     'StaticHeliCrash': 'crash', 'StaticHeliCrashBig': 'crash', 'StaticAirplaneCrate': 'crash',
@@ -131,14 +146,63 @@ def fetch(url):
     return ET.fromstring(get(url))
 
 
-def military_groups(base):
-    """Building classes whose loot is military: usage flag, or a 'military' container tag on Namalsk."""
-    groups = set()
+def loot_groups(base):
+    """Building classes whose loot is military (usage flag, or a 'military' container tag on Namalsk) and classes that
+    can spawn food: a container taking the food category, in a building with a usage that some spawning food item has
+    or with no usage flags at all (all of Namalsk)."""
+    food_usage = {u.get('name') for t in fetch(base + '/db/types.xml').iter('type')
+                  if t.find('category') is not None and t.find('category').get('name') == 'food'
+                  and int(t.findtext('nominal') or 0) > 0 for u in t.iter('usage')}
+    military, food = set(), set()
     for g in fetch(base + '/mapgroupproto.xml').iter('group'):
+        name = g.get('name').lower()
         flags = {e.get('name', '').lower() for e in g.iter() if e.tag in ('usage', 'tag')}
         if flags & MILITARY:
-            groups.add(g.get('name').lower())
-    return groups
+            military.add(name)
+        usages = {u.get('name') for u in g.findall('usage')}
+        if (not usages or usages & food_usage) and any(c.get('name') == 'food' for c in g.iter('category')):
+            food.add(name)
+    return military, food
+
+
+def animals(base):
+    """Animal territory zones as [category, x, z, radius]. A species counts when its event in db/events.xml is active;
+    nominal is ignored (ambient hares and foxes have 0 and still spawn, bears use a custom limit). Zones that several
+    species share (sheep and goats use one file on most maps) get a joined category such as 'sheep/goat'."""
+    active = {e.get('name') for e in fetch(base + '/db/events.xml').iter('event') if e.findtext('active') == '1'}
+    zones = {}
+    for t in fetch(base + '/cfgenvironment.xml').iter('territory'):
+        name = t.get('name')
+        if (name if t.get('type') == 'Ambient' else 'Animal' + name) not in active:
+            continue  # also skips the zombie territory, which has no event
+        for f in t.iter('file'):
+            for z in fetch(f'{base}/env/{f.get("usable")}.xml').iter('zone'):
+                cats = zones.setdefault((round(float(z.get('x'))), round(float(z.get('z'))), round(float(z.get('r')))), [])
+                if ANIMALS[name] not in cats:
+                    cats.append(ANIMALS[name])
+    return [['/'.join(cats), x, z, r] for (x, z, r), cats in zones.items()]
+
+
+def tiers(base):
+    """Loot tier zones from areaflags.map as an RGBA image (north up): highest tier per cell, Unique over tiers.
+    Layout: header of 6 uint32 (cells x, cells z, world size x, z, usage bits per cell, ...), a usage flag layer (none
+    on Namalsk), then value flags (bit 0-3 = Tier1-4, bit 4 = Unique) at 8 bits per cell, or 4 bits with the low
+    nibble first on Livonia and Namalsk; rows run south -> north."""
+    raw = get(base + '/areaflags.map')
+    w, h, _, _, usage_bits = struct.unpack_from('<5I', raw)
+    flags = np.frombuffer(raw, np.uint8, offset=24 + usage_bits // 8 * w * h)
+    if flags.size * 2 == w * h:
+        flags = np.stack([flags & 15, flags >> 4], axis=1).ravel()
+    assert flags.size == w * h and h % TIER_PX == 0, 'unknown areaflags.map layout'
+    flags = flags.reshape(h, w)[::-1]
+    level = np.zeros(flags.shape, np.uint8)
+    for bit in range(5):  # later bits win: Tier 4 over Tier 1, Unique over all
+        level[(flags & (1 << bit)) > 0] = bit + 1
+    k = h // TIER_PX
+    level = level.reshape(TIER_PX, k, TIER_PX, k).max(axis=(1, 3))  # max keeps tiny zones (Nasdara's Tier 4: ~75x150 m)
+    # Higher tiers are also more opaque: Tier 1 often covers half a map and should only tint it.
+    rgba = np.array([[0, 0, 0, 0]] + [[int(c[i:i + 2], 16) for i in (1, 3, 5)] + [a] for c, a in zip(TIERS, (90, 130, 170, 210, 210))], np.uint8)
+    return Image.fromarray(rgba[level], 'RGBA')
 
 
 def effect_areas(base):
@@ -173,8 +237,8 @@ assert latin('Петропавловск-Сахалинский ОКБ-754, По
 
 
 def build(size, base):
-    points, terrain = [], {'house': []}
-    military = military_groups(base)
+    points, terrain = [], {'house': [], 'food': []}  # 'food': buildings that can spawn food, drawn as houses
+    military, food = loot_groups(base)
     for g in fetch(base + '/mapgrouppos.xml').iter('group'):
         name = g.get('name').lower()
         x, _, z = map(float, g.get('pos').split())
@@ -182,12 +246,12 @@ def build(size, base):
         if cat:
             points.append([cat, round(x), round(z)])
         if not any(w in name for w in NOT_BUILDINGS):
-            terrain['house'] += [round(x), round(z), round(float(g.get('a')))]
+            terrain['food' if name in food else 'house'] += [round(x), round(z), round(float(g.get('a')))]
     for e in fetch(base + '/cfgeventspawns.xml').iter('event'):
         cat = EVENTS.get(e.get('name'))
         for p in e.iter('pos') if cat else ():
             points.append([cat, round(float(p.get('x'))), round(float(p.get('z')))])
-    points += effect_areas(base)
+    points += effect_areas(base) + animals(base)
     for p in fetch(base + '/cfgplayerspawnpoints.xml').find('fresh').iter('pos'):  # centres of new character spawn areas
         points.append(['spawn', round(float(p.get('x'))), round(float(p.get('z')))])
 
@@ -205,7 +269,7 @@ def build(size, base):
 
     assert any(p[0] in ('hospital', 'clinic') for p in points), 'no medical building found - upstream format changed?'  # Livonia has no hospital
     assert all(0 <= p[1] <= size and 0 <= p[2] <= size for p in points), 'point outside map'
-    assert terrain['house'], 'no buildings found'
+    assert terrain['house'] and terrain['food'], 'no buildings found'
     return points, terrain
 
 
@@ -216,6 +280,7 @@ for key, (name, size, base) in MAPS.items():
     terrain.update(roads)
     if image:
         image.save(OUT / f'relief-{key}.webp', quality=80, method=6)
+    tiers(base).save(OUT / f'tiers-{key}.webp', lossless=True)
     markers[key] = {'name': name, 'size': size, 'relief': bool(image), 'points': points + water, 'names': names}
     (OUT / f'terrain-{key}.js').write_text(f'// Generated by build_data.py - do not edit.\nTERRAIN.{key} = ' + json.dumps(terrain, separators=(',', ':')) + ';\n')
     print(key, len(points) + len(water), 'markers,', len(names), 'names,', {k: len(v) for k, v in terrain.items()}, 'terrain values')

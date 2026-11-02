@@ -34,7 +34,7 @@ body {
 .title { font-weight: 600; }
 
 .search {
-    width: 200px;
+    width: 260px;
     max-width: 100%;
     padding: 5px 10px;
     border: 1px solid var(--line);
@@ -84,6 +84,9 @@ body {
 .panel i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #000; }
 .panel i.txt { width: auto; height: auto; border: 0; font: 600 10px system-ui, sans-serif; color: var(--muted); }
 .panel small { margin-left: auto; color: var(--muted); }
+/* Legenda stref łupu w miejscu licznika: kolor i numer tieru. */
+.panel .legend { margin-left: auto; display: flex; align-items: center; gap: 2px; font-size: 11px; color: var(--muted); }
+.panel .legend i { margin-left: 4px; }
 .bulk { display: flex; gap: 6px; margin-top: 8px; }
 .bulk button {
     flex: 1;
