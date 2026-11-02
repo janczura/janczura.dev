@@ -1,4 +1,4 @@
-// Mission script for mapscan.sh: dumps water sources, road pieces, place names and terrain heights
+// Mission script for mapscan.sh: dumps water sources, fuel pumps, road pieces, place names and terrain heights
 // to $profile:mapscan.txt using the official script API, then shuts the server down.
 // Note: Enforce forbids reusing a variable name anywhere in one function.
 const float OBJ_STEP = 100;   // object query grid (m); circle radius covers the whole cell
@@ -35,6 +35,11 @@ void main()
 						kind = shape;
 					vector p = o.GetPosition();
 					line = string.Format("water %1 %2 %3", kind, Math.Round(p[0]), Math.Round(p[2]));
+				}
+				else if (o.IsInherited(FuelStation))
+				{
+					vector pump = o.GetPosition();
+					line = string.Format("fuel %1 %2", Math.Round(pump[0]), Math.Round(pump[2]));
 				}
 				else if ((shape.Contains("\\roads\\parts\\") || shape.Contains("nst\\ns\\roads\\")) && !shape.Contains("centerline"))
 				{

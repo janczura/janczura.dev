@@ -43,6 +43,13 @@ EVENTS = {  # cfgeventspawns.xml event -> marker category
     'StaticHeliCrash': 'crash', 'StaticHeliCrashBig': 'crash', 'StaticAirplaneCrate': 'crash',
     'StaticMilitaryConvoy': 'convoy', 'StaticBoatMilitary': 'convoy',
     'StaticContaminatedArea': 'gas',  # possible spots of dynamic toxic zones
+    'StaticPoliceCar': 'policecar', 'StaticPoliceSituation': 'policecar',
+    'StaticContainerLocked': 'locked',  # Nasdara: green armory, Sakhal: blue/yellow shipping containers
+    'VehicleCivilianSedan': 'car', 'VehicleHatchback02': 'car', 'VehicleOffroadHatchback': 'car', 'VehicleSedan02': 'car',
+    'VehicleOffroad02': 'car', 'VehicleCivilianCars': 'car', 'VehicleMilitary': 'car',  # Namalsk: mixed cars, Offroad_02
+    'VehicleTruck01': 'truck', 'VehicleTrucks': 'truck',
+    'VehicleMotorbike': 'moto', 'VehicleMotorbikes': 'moto',
+    'VehicleBoat': 'boat', 'VehicleMilitaryBoat': 'boat', 'VehicleRubberBoats': 'boat',
 }
 AREAS = {'GeyserArea': 'geyser', 'HotSpringArea': 'hotspring', 'VolcanicArea': 'volcano'}  # cfgeffectarea.json type -> marker category (Sakhal)
 MILITARY = {'military', 'militaryeast', 'militarywest'}  # mapgroupproto.xml usage (Namalsk uses a container tag instead)
@@ -82,12 +89,12 @@ def relief(heights, ponds, size, stops):
 
 
 def read_scan(key, size):
-    """Water sources, place names, roads ({surface: [x1, z1, x2, z2, ...]}) and relief from mapscan.sh output,
-    or nothing if the map was not scanned."""
+    """Water sources and fuel stations, place names, roads ({surface: [x1, z1, x2, z2, ...]}) and relief from
+    mapscan.sh output, or nothing if the map was not scanned."""
     path = OUT / 'scan' / f'{key}.txt.gz'
     if not path.exists():
         return [], [], {}, None
-    water, names, roads, heights, ponds = [], [], {}, [], []
+    water, fuel, names, roads, heights, ponds = [], [], [], {}, [], []
     for line in gzip.open(path, 'rt', encoding='utf-8').read().splitlines():
         kind, _, rest = line.partition(' ')
         if kind == 'road':
@@ -99,6 +106,10 @@ def read_scan(key, size):
             if cls.endswith('_water.p3d'):  # water surface of a Sakhal spring, same spot as the spring model
                 continue
             water.append(['spring' if 'waterspring' in cls else WATER.get(cls, 'pump'), int(x), int(z)])
+        elif kind == 'fuel':
+            x, z = map(int, rest.split())
+            if not any(abs(x - f[1]) < 80 and abs(z - f[2]) < 80 for f in fuel):  # pumps of one station -> one marker
+                fuel.append(['fuel', x, z])
         elif kind == 'name':
             _, typ, x, z, text = (rest + ' ').split(' ', 4)
             if text.strip():  # Chernarus ViewPoint/LocalOffice/RailroadStation entries have no text
@@ -108,7 +119,7 @@ def read_scan(key, size):
         elif kind == 'p':
             ponds.append([c == '1' for c in rest])
     assert water and names and roads and len(heights) == len(heights[0]) == len(ponds), f'incomplete scan {path}'
-    return water, names, roads, relief(heights, ponds, size, RELIEF[key])
+    return water + fuel, names, roads, relief(heights, ponds, size, RELIEF[key])
 
 
 def get(url):

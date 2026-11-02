@@ -1,5 +1,7 @@
 // Kategorie w kolejności wyświetlania filtrów. Punkty i nazwy pochodzą z data.js (build_data.py).
 // Kategorie z `mpp` (nazwy miejsc, obiekty wojskowe) pokazują się, gdy na piksel mapy przypada mniej niż `mpp` metrów.
+// Kategoria z `filter` nie ma własnego filtra, jej punkty włącza filtr wskazanej kategorii.
+const VEHICLE = { filter: 'vehicle', r: 5, color: '#e599f7', note: 'event, pojazd stoi tylko w części tych miejsc' };
 const CATS = {
     city:       { label: 'Miasta',                      place: true, mpp: 40 },
     village:    { label: 'Wioski',                      place: true, mpp: 12 },
@@ -8,10 +10,18 @@ const CATS = {
     hospital:   { label: 'Szpitale',                    name: 'Szpital',                r: 9, color: '#ff4d4d' },
     clinic:     { label: 'Przychodnie',                 name: 'Przychodnia',            r: 6, color: '#ff9f43' },
     medtent:    { label: 'Namioty i kontenery medyczne', name: 'Punkt medyczny',        r: 5, color: '#f78fb3' },
-    police:     { label: 'Posterunki policji',          name: 'Posterunek policji',     r: 7, color: '#f8f9fa', note: 'łup policyjny' },
+    police:     { label: 'Policja: posterunki, radiowozy', name: 'Posterunek policji',  r: 7, color: '#f8f9fa', note: 'łup policyjny' },
+    policecar:  { filter: 'police',                     name: 'Radiowóz / interwencja policji', r: 4, color: '#f8f9fa', note: 'event, losowo w części tych miejsc' },
+    fuel:       { label: 'Stacje benzynowe',            name: 'Stacja benzynowa',       r: 6, color: '#7f5539', note: 'dystrybutory paliwa, tankowanie do kanistra' },
+    vehicle:    { label: 'Spawny pojazdów',             color: VEHICLE.color },
+    car:        { ...VEHICLE, name: 'Spawn samochodu' },
+    truck:      { ...VEHICLE, name: 'Spawn ciężarówki' },
+    moto:       { ...VEHICLE, name: 'Spawn motocykla' },
+    boat:       { ...VEHICLE, name: 'Spawn łodzi' },
     mil:        { label: 'Obiekty wojskowe',            name: 'Obiekt wojskowy',        r: 4, color: '#5c7a29', mpp: 12, note: 'łup wojskowy' },
     crash:      { label: 'Katastrofy lotnicze',         name: 'Katastrofa helikoptera / samolotu', r: 6, color: '#212529', note: 'event, losowo w części tych miejsc' },
     convoy:     { label: 'Konwoje i łodzie wojskowe',   name: 'Konwój / łódź wojskowa', r: 6, color: '#a61e4d', note: 'event, losowo w części tych miejsc' },
+    locked:     { label: 'Zamknięte kontenery',         name: 'Zamknięty kontener z łupem', r: 6, color: '#868e96', note: 'event, stoi tylko w części tych miejsc; otwiera klucz w kolorze kontenera, zły klucz się niszczy' },
     gas:        { label: 'Strefy skażone',              name: 'Strefa skażona',         r: 5, color: '#fab005', note: 'możliwe miejsce strefy dynamicznej (event)' },
     well:       { label: 'Studnie ceglane',             name: 'Studnia ceglana',        r: 7, color: '#1c3faa', note: 'działa po odbudowie dachu, pije się wiadrem' },
     trough:     { label: 'Koryta z wodą',               name: 'Koryto z wodą',          r: 6, color: '#12b886' },
@@ -32,7 +42,7 @@ const TERRAIN = {};  // wypełniane przez terrain-<mapa>.js
 const RELIEF = {};   // obraz rzeźby terenu relief-<mapa>.webp
 const enabled = new Set(Object.keys(CATS));
 const $ = id => document.getElementById(id);
-let map;
+let map, sync;
 
 // Własny podkład z plików misji: roślinność, drogi gruntowe, budynki i siatka co 1 km z podpisami "x · y" (km).
 const Terrain = L.GridLayer.extend({
@@ -140,7 +150,7 @@ function show(key) {
         const c = CATS[cat];
         // Punkt z promieniem (stała strefa skażona) rysujemy jako koło w metrach, resztę jako znacznik.
         const note = radius ? `stała, promień ${radius} m` : c.note;
-        (layers[cat] ||= L.layerGroup()).addLayer((radius
+        (layers[c.filter || cat] ||= L.layerGroup()).addLayer((radius
             ? L.circle([y, x], { radius, color: '#e67700', weight: 1.5, fillColor: c.color, fillOpacity: 0.35 })
             : L.circleMarker([y, x], { radius: c.r, color: '#000', weight: 1, fillColor: c.color, fillOpacity: 0.9 }))
             .bindTooltip(`<b>${c.name}</b>${note ? '<br>' + note : ''}<br>X ${x}  Y ${y}`));
@@ -155,7 +165,7 @@ function show(key) {
     }
     // Widoczność warstwy = zaznaczony filtr i (dla nazw) wystarczające przybliżenie.
     // Kolejność z CATS: późniejsze kategorie rysują się na wierzchu (gejzer stoi w gorącym źródle).
-    const sync = () => {
+    sync = () => {
         const mpp = m.size / 256 / 2 ** map.getZoom();
         for (const cat in CATS) if (layers[cat]) enabled.has(cat) && !(CATS[cat].mpp < mpp) ? layers[cat].addTo(map) : layers[cat].remove();
     };
@@ -170,11 +180,19 @@ function show(key) {
         box.onchange = () => { box.checked ? enabled.add(cat) : enabled.delete(cat); sync(); };
         return label;
     }));
-    $('note').hidden = m.names.length > 0;
     for (const a of $('maps').children) a.hash === '#' + key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current');
 }
 
-$('maps').innerHTML = Object.entries(MAPS).map(([key, m]) => `<a href="#${key}">${m.name}</a>`).join('');
+// Włącz/wyłącz wszystkie: dotyczy też kategorii, których nie ma na bieżącej mapie.
+const setAll = on => {
+    for (const cat in CATS) on ? enabled.add(cat) : enabled.delete(cat);
+    for (const box of $('filters').querySelectorAll('input')) box.checked = on;
+    sync();
+};
+$('all').onclick = () => setAll(true);
+$('none').onclick = () => setAll(false);
+
+$('maps').innerHTML =Object.entries(MAPS).map(([key, m]) => `<a href="#${key}">${m.name}</a>`).join('');
 if (innerWidth < 600) $('panel').open = false;
 const route = () => show(MAPS[location.hash.slice(1)] ? location.hash.slice(1) : Object.keys(MAPS)[0]);
 addEventListener('hashchange', route);
