@@ -36,6 +36,20 @@
         <div id="filters"></div>
     </details>
 
+    <details class="radio" id="radio" hidden>
+        <summary>📻 Nasłuch bunkrów</summary>
+        <p>Radio w grze na 80,0 MHz, nadaje nocą (17:45–06:00 czasu gry). Przycisz efekty i wyłącz muzykę w grze.
+            „Dźwięk z gry” działa w Chrome i Edge: wybierz okno DayZ i włącz udostępnianie dźwięku.</p>
+        <div class="bulk">
+            <button type="button" id="radio-game">Dźwięk z gry</button>
+            <button type="button" id="radio-mic">Mikrofon</button>
+            <button type="button" id="radio-stop">Stop</button>
+        </div>
+        <output id="radio-status">Nie słucham.</output> <meter id="radio-level" min="0" max="40" low="22" optimum="40"></meter>
+        <output id="radio-marks"></output>
+        <ol id="radio-heard"></ol>
+    </details>
+
     <output class="coords" id="coords"></output>
 </main>
 

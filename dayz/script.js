@@ -100,6 +100,91 @@ function digits(text) {
 }
 console.assert(digits('.---- ..---/...-- 45') === '12345' && digits('---- .') === '9' && digits('..-') === null, 'digits()');
 
+// Nasłuch komunikatu z kolejnych stanów tonu (jest/nie ma, czas w s). Długość piknięcia daje próbka z plików gry
+// (MorseCode_Short/Long.ogg): kropka ok. 0,1 s, kreska ok. 0,5 s, niezależnie od tempa nadawania ustawionego na serwerze.
+// Cisze w komunikacie (cfgbunkerbroadcast.json): w środku cyfry i między cyframi do ok. 1,4 s, między siatką a kodem
+// ok. 3–3,6 s, między bunkrami ponad 6 s. Znaki zbiera od tonu po ciszy > 5 s, więc nie zaczyna w połowie bunkra,
+// a gdy cisza > 2 s nie wypada dokładnie po 30 znakach (zgubione lub dodatkowe piknięcie), czeka na następny bunkier.
+// onMarks(znaki, false) po każdym znaku; onMarks(znaki, true), gdy po 30 znakach (siatka) albo 50 (siatka i kod)
+// zapadnie cisza > 2 s, więc dodatkowe piknięcie na końcu nie przejdzie jako błędna ostatnia cyfra.
+function reader(onMarks) {
+    let on = false, since = 0, marks = null, told = 0;  // marks null: czeka na długą ciszę; told: ile znaków potwierdzono
+    return (tone, t) => {
+        const d = t - since;
+        if (tone === on) {
+            if (!on && marks && d > 2 && (marks.length === 30 || marks.length === 50) && told < marks.length) {
+                told = marks.length;
+                onMarks(marks, true);
+                if (told === 50) marks = null;
+            }
+            return;
+        }
+        if (tone) {
+            if (d > 5) [marks, told] = ['', 0];
+            else if (marks !== null && (marks.length === 30) !== (d > 2)) marks = null;
+        } else if (marks !== null) {
+            if (d > 1.2) marks = null;  // za długi ton (zakłócenie): czekamy na ciszę
+            else if (d > 0.04) onMarks(marks += d < 0.3 ? '.' : '-', false);
+        }
+        on = tone;
+        since = t;
+    };
+}
+console.assert((() => {
+    let got = '', t = 6;
+    const read = reader((m, done) => done && (got = m));
+    for (const [i, m] of [...[...'0721064821'].map(d => MORSE[d]).join('')].entries()) {
+        if (i === 30) t += 3;  // przerwa między siatką a kodem
+        read(true, t); t += m === '.' ? 0.1 : 0.5; read(false, t); t += 0.9;
+    }
+    read(false, t + 3);
+    return digits(got) === '0721064821';
+})(), 'reader()');
+
+// Dźwięk do nasłuchu: analizę co ok. 20 ms wywołuje worklet audio, bo gdy gra zasłania przeglądarkę, karta jest w tle,
+// a zwykłe timery chodzą wtedy raz na sekundę. Ton 988 Hz wykrywa FFT: poziom w paśmie 975–1005 Hz względem mediany
+// szumu radia obok; dźwięk startowy komunikatu (933 Hz) jest poza pasmem.
+const TICK = URL.createObjectURL(new Blob([`registerProcessor('tick', class extends AudioWorkletProcessor {
+    n = 0;
+    process() { if (++this.n % 8 === 0) this.port.postMessage(currentTime); return true; }
+});`], { type: 'text/javascript' }));
+let radio = null;  // { ctx, stream } w trakcie nasłuchu
+
+async function listen(stream, onTone) {
+    if (!stream.getAudioTracks().length) {
+        stream.getTracks().forEach(t => t.stop());
+        throw new Error('Brak dźwięku: przy udostępnianiu okna włącz dźwięk (Chrome, Edge).');
+    }
+    const ctx = new AudioContext(), src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
+    radio = { ctx, stream };
+    an.fftSize = 4096;
+    an.smoothingTimeConstant = 0;
+    src.connect(an);
+    await ctx.audioWorklet.addModule(TICK);
+    const tick = new AudioWorkletNode(ctx, 'tick');
+    src.connect(tick).connect(ctx.destination);  // worklet oddaje ciszę; połączenie z wyjściem trzyma go w ruchu
+    const spec = new Float32Array(an.frequencyBinCount), bin = f => Math.round(f * an.fftSize / ctx.sampleRate);
+    let on = false;
+    tick.port.onmessage = e => {
+        an.getFloatFrequencyData(spec);
+        const tone = Math.max(...spec.subarray(bin(975), bin(1005) + 1));
+        const noise = [...spec.subarray(bin(600), bin(940)), ...spec.subarray(bin(1040), bin(1400))].sort((a, b) => a - b);
+        const snr = tone - noise[noise.length >> 1];
+        on = tone > -90 && snr > (on ? 12 : 22);  // szum radia sięga ok. 18 dB, piknięcia ok. 29 dB (próbki z gry)
+        onTone(on, e.data, snr);
+    };
+    stream.getTracks().forEach(t => t.addEventListener('ended', stopRadio));  // np. „Zatrzymaj udostępnianie”
+}
+
+function stopRadio() {
+    if (!radio) return;
+    radio.stream.getTracks().forEach(t => t.stop());
+    radio.ctx.close();
+    radio = null;
+    $('radio-status').value = 'Nie słucham.';
+    $('radio-level').value = 0;
+}
+
 // Narzędzia: własne znaczniki (zapisywane w przeglądarce, osobno dla każdej mapy) i linijka.
 // Czas przebycia odcinka: prędkości zmierzone przez graczy, bieg ok. 4,1 m/s (14,7 km/h), sprint ok. 6,5 m/s (23–24 km/h).
 // Pełna stamina starcza na ok. 25 s sprintu (gra zużywa 4 z 100 pkt na sekundę), więc dłuższy sprint to wartość teoretyczna.
@@ -311,6 +396,15 @@ function show(key) {
     const found = L.layerGroup().addTo(map), search = $('search');
     const bunkers = m.points.filter(p => CATS[p[0]]?.filter === 'bunker');
     const fail = msg => { search.setCustomValidity(msg); search.reportValidity(); };
+    const nearest = grid => {  // bunkier w kwadracie z komunikatu albo najbliższy mu
+        const sq = square(grid), c = sq.getCenter();
+        const b = bunkers.reduce((a, p) => map.distance(c, [p[2], p[1]]) < map.distance(c, [a[2], a[1]]) ? p : a);
+        const at = L.latLng(b[2], b[1]);
+        return { at, grid, name: CATS[b[0]].name, off: sq.contains(at) ? 0 : map.distance(c, at) };
+    };
+    const label = (b, code) => `<b>${code ? `kod ${code}` : 'kod: czekam na resztę komunikatu'}</b><br>${b.name}`
+        + (b.off ? `<br>najbliższy podanym współrzędnym (${dist(b.off)} od nich)` : '');
+    const tip = () => L.tooltip({ permanent: true, direction: 'top', offset: [0, -8] });
     $('places').replaceChildren(...[...new Set(m.names.map(n => n[3]))].sort((a, b) => a.localeCompare(b, 'pl')).map(t => new Option(t)));
     search.value = '';
     search.oninput = () => search.setCustomValidity('');
@@ -331,12 +425,9 @@ function show(key) {
                 : 'Wpisz 6 cyfr współrzędnych z gry, np. 072 106.');
             const hits = [];
             for (let i = 0; i < d.length; i += 10) {
-                const sq = square(d.slice(i, i + 6)), c = sq.getCenter();
-                const b = bunkers.reduce((a, p) => map.distance(c, [p[2], p[1]]) < map.distance(c, [a[2], a[1]]) ? p : a);
-                const at = L.latLng(b[2], b[1]);
-                found.addLayer(L.tooltip({ permanent: true, direction: 'top', offset: [0, -8] }).setLatLng(at).setContent(`<b>kod ${d.slice(i + 6, i + 10)}</b><br>${CATS[b[0]].name}`
-                    + (sq.contains(at) ? '' : `<br>najbliższy podanym współrzędnym (${dist(map.distance(c, at))} od nich)`)));
-                hits.push(at);
+                const b = nearest(d.slice(i, i + 6));
+                found.addLayer(tip().setLatLng(b.at).setContent(label(b, d.slice(i + 6, i + 10))));
+                hits.push(b.at);
             }
             return map.fitBounds(L.latLngBounds(hits), { padding: [60, 60], maxZoom: 5 });
         }
@@ -347,6 +438,53 @@ function show(key) {
         L.popup({ closeButton: false }).setLatLng([hit[2], hit[1]])
             .setContent(Object.assign(document.createElement('b'), { textContent: hit[3] })).openOn(map);
     };
+
+    // Nasłuch bunkrów: po 6 cyfrach bunkier pojawia się na mapie, po 10 dochodzi kod i krótki sygnał dźwiękowy.
+    // Komunikat w grze się powtarza, więc przy kodzie widać, ile razy go usłyszano. Zmiana mapy kończy nasłuch.
+    stopRadio();
+    $('radio').hidden = !bunkers.length;
+    $('radio-marks').value = '';
+    $('radio-heard').replaceChildren();
+    const heard = L.layerGroup().addTo(map), known = new Map();  // pozycja bunkra -> { b, tip, code, n }
+    const hear = (grid, code) => {
+        const b = nearest(grid), h = known.get(String(b.at)) || { b, tip: tip().setLatLng(b.at).addTo(heard), n: 0 };
+        known.set(String(b.at), h);
+        if (code) {
+            h.n = h.code === code ? h.n + 1 : 1;
+            h.code = code;
+            const o = radio.ctx.createOscillator(), g = radio.ctx.createGain();  // 1500 Hz: poza pasmem nasłuchu
+            g.gain.value = 0.2;
+            o.frequency.value = 1500;
+            o.connect(g).connect(radio.ctx.destination);
+            o.start();
+            o.stop(radio.ctx.currentTime + 0.15);
+        }
+        h.tip.setContent(label(b, h.code) + (h.code ? h.n > 1 ? `<br>usłyszany ${h.n}× ✓` : '<br>usłyszany raz, potwierdzi go powtórzenie' : ''));
+        $('radio-heard').replaceChildren(...[...known.values()].map(k => Object.assign(document.createElement('li'), {
+            textContent: `GPS ${k.b.grid.slice(0, 3)} ${k.b.grid.slice(3)} · ${k.code ? `kod ${k.code}${k.n > 1 ? ' ✓' : ''}` : 'kod …'} · ${k.b.name}`,
+            onclick: () => map.setView(k.b.at, Math.max(map.getZoom(), 5)),
+        })));
+    };
+    const progress = (marks, done) => {
+        const d = digits(marks.slice(0, marks.length - marks.length % 5));
+        $('radio-marks').value = marks.match(/.{1,5}/g).join(' ') + (d === null ? '  (błąd odczytu)' : d ? `  → ${d}` : '');
+        if (done && d) hear(d.slice(0, 6), d.slice(6));
+    };
+    const start = async source => {
+        stopRadio();
+        $('radio-status').value = 'Czekam na zgodę…';
+        try {
+            const read = reader(progress);
+            await listen(await source(), (on, t, snr) => { $('radio-level').value = Number.isFinite(snr) ? snr : 0; read(on, t); });
+            $('radio-status').value = 'Słucham…';
+        } catch (err) {
+            stopRadio();
+            $('radio-status').value = err.name === 'NotAllowedError' ? 'Brak zgody na dźwięk.' : err.message;
+        }
+    };
+    $('radio-game').onclick = () => start(() => navigator.mediaDevices.getDisplayMedia({ video: true, audio: true, systemAudio: 'include' }));
+    $('radio-mic').onclick = () => start(() => navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }));
+    $('radio-stop').onclick = stopRadio;
 
     const layers = {};
     for (const [cat, x, y, radius] of m.points) {
