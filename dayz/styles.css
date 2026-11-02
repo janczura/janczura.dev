@@ -33,6 +33,18 @@ body {
 .sep { color: var(--line); }
 .title { font-weight: 600; }
 
+.search {
+    width: 200px;
+    max-width: 100%;
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+}
+.search:focus { outline: none; border-color: var(--accent); }
+
 .maps { margin-left: auto; display: flex; gap: 4px; }
 .maps a {
     padding: 5px 12px;
@@ -98,6 +110,46 @@ body {
 .place-capital span { font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; }
 .place-village span { font: 600 12px system-ui, sans-serif; }
 .place-marine span { color: #1d5f99; }
+
+/* Narzędzia pod przyciskami +/−: znacznik i linijka. */
+.tools { overflow: hidden; }
+.tools button {
+    display: block;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+    background: #fff;
+    font-size: 15px;
+    cursor: pointer;
+}
+.tools button:last-child { border-bottom: 0; }
+.tools button:hover { background: #f4f4f4; }
+.tools button[aria-pressed="true"] { background: var(--accent); }
+#map.tool { cursor: crosshair; }
+
+/* Własny znacznik: pinezka z czubkiem w punkcie i nazwa obok. */
+.pin b {
+    position: absolute;
+    left: -9px;
+    top: -22px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    background: var(--accent);
+    border: 2px solid #1f1b18;
+}
+.pin span {
+    position: absolute;
+    left: 12px;
+    top: -22px;
+    white-space: nowrap;
+    font: 700 12px system-ui, sans-serif;
+    color: #1f1b18;
+    text-shadow: 0 0 2px #fff, 0 0 3px #fff, 0 0 4px #fff;
+}
 
 .coords {
     position: absolute;

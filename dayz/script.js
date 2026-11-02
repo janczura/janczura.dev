@@ -1,5 +1,5 @@
 // Kategorie w kolejności wyświetlania filtrów. Punkty i nazwy pochodzą z data.js (build_data.py).
-// Kategorie z `mpp` (nazwy miejsc, obiekty wojskowe) pokazują się, gdy na piksel mapy przypada mniej niż `mpp` metrów.
+// Kategorie z `mpp` (nazwy miejsc, obiekty wojskowe, spawny pojazdów) pokazują się, gdy na piksel mapy przypada mniej niż `mpp` metrów.
 // Kategoria z `filter` nie ma własnego filtra, jej punkty włącza filtr wskazanej kategorii.
 const VEHICLE = { filter: 'vehicle', r: 5, color: '#e599f7', note: 'event, pojazd stoi tylko w części tych miejsc' };
 const CATS = {
@@ -13,7 +13,7 @@ const CATS = {
     police:     { label: 'Policja: posterunki, radiowozy', name: 'Posterunek policji',  r: 7, color: '#f8f9fa', note: 'łup policyjny' },
     policecar:  { filter: 'police',                     name: 'Radiowóz / interwencja policji', r: 4, color: '#f8f9fa', note: 'event, losowo w części tych miejsc' },
     fuel:       { label: 'Stacje benzynowe',            name: 'Stacja benzynowa',       r: 6, color: '#7f5539', note: 'dystrybutory paliwa, tankowanie do kanistra' },
-    vehicle:    { label: 'Spawny pojazdów',             color: VEHICLE.color },
+    vehicle:    { label: 'Spawny pojazdów',             color: VEHICLE.color, mpp: 12 },
     car:        { ...VEHICLE, name: 'Spawn samochodu' },
     truck:      { ...VEHICLE, name: 'Spawn ciężarówki' },
     moto:       { ...VEHICLE, name: 'Spawn motocykla' },
@@ -42,7 +42,74 @@ const TERRAIN = {};  // wypełniane przez terrain-<mapa>.js
 const RELIEF = {};   // obraz rzeźby terenu relief-<mapa>.webp
 const enabled = new Set(Object.keys(CATS));
 const $ = id => document.getElementById(id);
-let map, sync;
+let map, sync, measure, ruler, tool = null, pins = [], pinsKey;
+
+// Narzędzia: własne znaczniki (zapisywane w przeglądarce, osobno dla każdej mapy) i linijka.
+const dist = m => m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toLocaleString('pl', { maximumFractionDigits: 2 })} km`;
+const length = pts => pts.reduce((sum, p, i) => i ? sum + map.distance(pts[i - 1], p) : 0, 0);
+const tools = document.createElement('div');
+tools.className = 'leaflet-bar tools';
+tools.innerHTML = '<button type="button" data-tool="pin" title="Dodaj znacznik: kliknij na mapie" aria-label="Dodaj znacznik">📍</button>'
+    + '<button type="button" data-tool="ruler" title="Zmierz odległość: klikaj kolejne punkty, Esc kończy" aria-label="Zmierz odległość">📏</button>';
+L.DomEvent.disableClickPropagation(tools);
+tools.onclick = e => { const t = e.target.closest('button')?.dataset.tool; if (t) setTool(tool === t ? null : t); };
+addEventListener('keydown', e => e.key === 'Escape' && setTool(null));
+
+// Wyłączenie linijki czyści pomiar.
+function setTool(t) {
+    tool = t;
+    for (const b of tools.children) b.setAttribute('aria-pressed', b.dataset.tool === t);
+    map.getContainer().classList.toggle('tool', !!t);
+    t ? map.doubleClickZoom.disable() : map.doubleClickZoom.enable();
+    if (t !== 'ruler') {
+        measure.clearLayers();
+        ruler = L.polyline([], { color: '#c92a2a', weight: 2, dashArray: '6 4', interactive: false }).addTo(measure);
+    }
+}
+
+function onMapClick(e) {
+    if (tool === 'pin') {
+        const name = prompt('Nazwa znacznika:', '');
+        setTool(null);
+        if (name === null) return;
+        const p = [Math.round(e.latlng.lng), Math.round(e.latlng.lat), name.trim() || 'Znacznik'];
+        pins.push(p);
+        savePins();
+        addPin(p);
+    } else if (tool === 'ruler') {
+        ruler.addLatLng(e.latlng);
+        measure.addLayer(L.circleMarker(e.latlng, { radius: 3, color: '#c92a2a', fillOpacity: 1, interactive: false }));
+        const pts = ruler.getLatLngs();
+        if (pts.length > 1) measure.addLayer(L.tooltip({ permanent: true, direction: 'right', offset: [6, 0] }).setLatLng(e.latlng).setContent(dist(length(pts))));
+    }
+}
+
+function loadPins() {
+    try {
+        const a = JSON.parse(localStorage.getItem(pinsKey));
+        return Array.isArray(a) ? a : [];
+    } catch {
+        return [];
+    }
+}
+
+function savePins() {
+    try { localStorage.setItem(pinsKey, JSON.stringify(pins)); } catch { /* np. tryb prywatny: znaczniki tylko do odświeżenia */ }
+}
+
+function addPin(p) {  // p = [x, y, nazwa]
+    const el = document.createElement('div');
+    el.className = 'pin';
+    el.append(document.createElement('b'), Object.assign(document.createElement('span'), { textContent: p[2] }));
+    L.marker([p[1], p[0]], { icon: L.divIcon({ className: '', html: el, iconSize: null }), title: `${p[2]} (kliknij, aby usunąć)` })
+        .on('click', e => {
+            if (!confirm(`Usunąć znacznik „${p[2]}”?`)) return;
+            pins.splice(pins.indexOf(p), 1);
+            savePins();
+            e.target.remove();
+        })
+        .addTo(map);
+}
 
 // Własny podkład z plików misji: roślinność, drogi gruntowe, budynki i siatka co 1 km z podpisami "x · y" (km).
 const Terrain = L.GridLayer.extend({
@@ -143,7 +210,30 @@ function show(key) {
         if (!img.complete) img.addEventListener('load', refresh);
     }
     map.fitBounds(bounds);
-    map.on('mousemove', e => $('coords').value = `X ${Math.round(e.latlng.lng)}  Y ${Math.round(e.latlng.lat)}`);
+    map.on('mousemove', e => {
+        const pts = ruler.getLatLngs();
+        $('coords').value = `X ${Math.round(e.latlng.lng)}  Y ${Math.round(e.latlng.lat)}`
+            + (tool === 'ruler' && pts.length ? `  ·  ${dist(length([...pts, e.latlng]))}` : '');
+    });
+    map.on('click', onMapClick);
+    Object.assign(L.control({ position: 'topleft' }), { onAdd: () => tools }).addTo(map);
+    measure = L.layerGroup().addTo(map);
+    setTool(null);
+    pinsKey = 'dayz-pins-' + key;
+    pins = loadPins();
+    pins.forEach(addPin);
+
+    // Wyszukiwarka: podpowiedzi z nazw miejsc, Enter lub wybór z listy przenosi mapę.
+    $('places').replaceChildren(...[...new Set(m.names.map(n => n[3]))].sort((a, b) => a.localeCompare(b, 'pl')).map(t => new Option(t)));
+    $('search').value = '';
+    $('search').onchange = () => {
+        const q = $('search').value.trim().toLowerCase();
+        const hit = q && (m.names.find(n => n[3].toLowerCase() === q) || m.names.find(n => n[3].toLowerCase().includes(q)));
+        if (!hit) return;
+        map.setView([hit[2], hit[1]], Math.max(map.getZoom(), 4));
+        L.popup({ closeButton: false }).setLatLng([hit[2], hit[1]])
+            .setContent(Object.assign(document.createElement('b'), { textContent: hit[3] })).openOn(map);
+    };
 
     const layers = {};
     for (const [cat, x, y, radius] of m.points) {
@@ -192,7 +282,7 @@ const setAll = on => {
 $('all').onclick = () => setAll(true);
 $('none').onclick = () => setAll(false);
 
-$('maps').innerHTML =Object.entries(MAPS).map(([key, m]) => `<a href="#${key}">${m.name}</a>`).join('');
+$('maps').innerHTML = Object.entries(MAPS).map(([key, m]) => `<a href="#${key}">${m.name}</a>`).join('');
 if (innerWidth < 600) $('panel').open = false;
 const route = () => show(MAPS[location.hash.slice(1)] ? location.hash.slice(1) : Object.keys(MAPS)[0]);
 addEventListener('hashchange', route);

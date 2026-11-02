@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="dayz - livonia map">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dayz/build_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/dayz/build_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dayz/data.js" beforeDir="false" afterPath="$PROJECT_DIR$/dayz/data.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dayz/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/dayz/script.js" afterDir="false" />
-    </list>
+    <list default="true" id="68c0d7fb-a705-4cd0-921a-7f73ef7b1942" name="Changes" comment="dayz - police cars, police events, gas, cars and turn on/off all filters" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -44,23 +39,23 @@
 }</component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.7751771529695248" />
-      <entry key="MS500" value="2.3358297633222413" />
-      <entry key="S2" value="3.2928936040107897" />
-      <entry key="S5" value="3.679128827196365" />
-      <entry key="S10" value="3.83240112017095" />
-      <entry key="S30" value="3.9424563875566307" />
-      <entry key="S60" value="3.9710129415763697" />
-      <entry key="M2" value="3.9854522291394954" />
-      <entry key="M5" value="3.9941678183915856" />
-      <entry key="M10" value="3.997081753589276" />
-      <entry key="M15" value="3.9980716018985407" />
-      <entry key="M30" value="4.0102237309081765" />
-      <entry key="H1" value="4.288199492652797" />
-      <entry key="H2" value="5.496391462362497" />
-      <entry key="H4" value="7.442765514647328" />
-      <entry key="D1" value="10.94550360856431" />
-      <entry key="W1" value="11.839908977807474" />
+      <entry key="MS100" value="1.0919498257796283" />
+      <entry key="MS500" value="2.0151577181588314" />
+      <entry key="S2" value="4.445328411148495" />
+      <entry key="S5" value="7.398352194881191" />
+      <entry key="S10" value="10.160869514283053" />
+      <entry key="S30" value="13.58327231835227" />
+      <entry key="S60" value="15.25396138766691" />
+      <entry key="M2" value="17.01883100478681" />
+      <entry key="M5" value="19.053575002662562" />
+      <entry key="M10" value="20.464699839674164" />
+      <entry key="M15" value="21.33360361651619" />
+      <entry key="M30" value="22.706369495054865" />
+      <entry key="H1" value="23.903101734102968" />
+      <entry key="H2" value="25.574752016729118" />
+      <entry key="H4" value="27.81391829903569" />
+      <entry key="D1" value="31.79048707666467" />
+      <entry key="W1" value="32.81592107685512" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -82,23 +77,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.1062445941246912" />
-      <entry key="MS500" value="2.012081608143599" />
-      <entry key="S2" value="3.1793005702644432" />
-      <entry key="S5" value="3.6295333362861095" />
-      <entry key="S10" value="3.8068226181736073" />
-      <entry key="S30" value="3.933747603016211" />
-      <entry key="S60" value="3.96663512552486" />
-      <entry key="M2" value="3.983257419372509" />
-      <entry key="M5" value="3.993288472160216" />
-      <entry key="M10" value="3.996641842925011" />
-      <entry key="M15" value="3.9977782751361706" />
-      <entry key="M30" value="4.010076987005166" />
-      <entry key="H1" value="4.288125328358293" />
-      <entry key="H2" value="5.496352306320495" />
-      <entry key="H4" value="7.442743991608074" />
-      <entry key="D1" value="10.945499360678898" />
-      <entry key="W1" value="11.83990834524981" />
+      <entry key="MS100" value="1.0408393524062174" />
+      <entry key="MS500" value="1.9968506177269771" />
+      <entry key="S2" value="4.435668295952241" />
+      <entry key="S5" value="7.391957782013047" />
+      <entry key="S10" value="10.156430393286959" />
+      <entry key="S30" value="13.581266246160817" />
+      <entry key="S60" value="15.252823656100178" />
+      <entry key="M2" value="17.01818778938871" />
+      <entry key="M5" value="19.053266179682392" />
+      <entry key="M10" value="20.464483410154834" />
+      <entry key="M15" value="21.33341901562629" />
+      <entry key="M30" value="22.70623950328152" />
+      <entry key="H1" value="23.903021210376288" />
+      <entry key="H2" value="25.57470520775519" />
+      <entry key="H4" value="27.813891679533466" />
+      <entry key="D1" value="31.790481754991298" />
+      <entry key="W1" value="32.81592028392805" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -369,8 +364,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Poprawki favicon" />
-    <MESSAGE value="Zmiana favicon" />
     <MESSAGE value="Dodanie img, edycja index.html" />
     <MESSAGE value="Dodanie sekcji trials, dodanie 5 triali, opisów, obrazków" />
     <MESSAGE value="Updated style.css, email address changed" />
@@ -394,6 +387,8 @@
     <MESSAGE value="dayz" />
     <MESSAGE value="dayz - posterunki i gejzery" />
     <MESSAGE value="dayz - livonia map" />
-    <option name="LAST_COMMIT_MESSAGE" value="dayz - livonia map" />
+    <MESSAGE value="dayz - player spawn" />
+    <MESSAGE value="dayz - police cars, police events, gas, cars and turn on/off all filters" />
+    <option name="LAST_COMMIT_MESSAGE" value="dayz - police cars, police events, gas, cars and turn on/off all filters" />
   </component>
 </project>
